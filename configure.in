@@ -36,12 +36,11 @@ AC_ARG_ENABLE(debug,
 
 dnl ############## Check for tools to build documentation
 
-AC_PATH_PROG( [ASCIIDOC], [asciidoc], , 
-              [$PATH:/usr/local/bin:/usr/local/asciidoc] )
-AC_SUBST( ASCIIDOC )
+AC_PATH_PROG( [POD2MAN], [pod2man] )
+AC_SUBST( POD2MAN )
 
-AC_PATH_PROG( [SGML2MAN], [docbook2man]  )
-AC_SUBST( SGML2MAN )
+AC_PATH_PROG( [POD2TEXT], [pod2text]  )
+AC_SUBST( POD2TEXT )
 
 
 dnl ############## Library Checks
