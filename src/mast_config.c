@@ -45,7 +45,7 @@ mast_config_init( )
 	config->timeout = 10;
 	config->ssrc = 0;
 	config->payload_type = -1;
-	config->payload_size = 0;
+	config->payload_size = 1450;
 	
 	config->use_stdio = 0;
 	config->loop_file = 0;
