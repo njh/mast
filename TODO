@@ -1,11 +1,18 @@
 
 
+Put all configuration in config.h (not silly -DUSE_FOO)
+
+
 Finish convertion from pcm6cast to MAST.
 	- ipv4 examples
 	- merge in new multicast socket code
 	
+SDL won't compile on OS X / fink anymore :( (??)
+	- is trying to link against SDLmain for some reason
 
 Add JACK support
+	- see jack.udp source code (sw-23)
+
 Add support for direct playout using OSS - rather than SDL
 
 Make fink+Debian packages
