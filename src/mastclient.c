@@ -39,7 +39,7 @@
 
 #include "config.h"
 #include "udp_socket.h"
-#include "mastcast.h"
+#include "mast.h"
 #include "rtp.h"
 
 

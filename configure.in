@@ -2,7 +2,6 @@ AC_PREREQ(2.57)
 
 
 
-
 dnl ############# Initialisation
 
 AC_INIT([mast], [0.2a], [njh@ecs.soton.ac.uk])
@@ -16,11 +15,13 @@ dnl AM_MAINTAINER_MODE
 AM_CONFIG_HEADER(src/config.h)
 
 
+
 dnl ############# Compiler and tools Checks
 
 AC_PROG_CC
 AC_PROG_INSTALL
 AC_C_BIGENDIAN
+
 
 
 dnl ############# Configure Arguments
@@ -62,14 +63,6 @@ AM_PATH_SDL($SDL_VERSION,
 AC_SUBST(USE_SDL)
 
 
-dnl Check for JACK audio
-AC_CHECK_HEADER([jack/jack.h], have_jack=yes, have_jack=no, [])
-AM_CONDITIONAL(HAVE_JACK,test "$have_jack" = yes)
-if test "$have_jack" = yes; then
-   JACK_LIBS="-ljack"
-   AC_DEFINE(HAVE_JACK, ,[Define to enable JACK support])
-fi
-
 
 dnl ############## Header Checks
 
@@ -87,22 +80,21 @@ AC_CHECK_HEADER(sys/soundcard.h,
 AC_SUBST(USE_OSS)
 
 
+dnl Check for JACK audio
+AC_CHECK_HEADER([jack/jack.h], have_jack=yes, have_jack=no, [])
+AM_CONDITIONAL(HAVE_JACK,test "$have_jack" = yes)
+if test "$have_jack" = yes; then
+   JACK_LIBS="-ljack"
+   AC_DEFINE(HAVE_JACK, ,[Define to enable JACK support])
+fi
+
+
 
 dnl ############## Type checks
 
 AC_CHECK_TYPE(u_int32_t, unsigned long)
 AC_CHECK_TYPE(u_int16_t, unsigned short)
 AC_CHECK_TYPE(u_int8_t, unsigned char)
-
-
-
-dnl ############## Decide what to build
-
-
-BIN_TO_BUILD=" mastcast mastclient"
-
-dnl # mastcast wants libsndfile, oss, jack
-dnl # mastclient wants libsndfile, libsdl, jack
 
 
 
@@ -115,21 +107,21 @@ if test x$Debugging = xEnabled; then
 fi
 
 
+
 dnl ############## Final Output
 
-AC_OUTPUT(Makefile src/Makefile scripts/Makefile doc/Makefile debian/Makefile)
+AC_OUTPUT(Makefile src/Makefile doc/Makefile)
 
 
 
 dnl ############## Display Message
 
 echo "
-  $PACKAGE $VERSION
+  Multicast Audio Streaming Toolkit $VERSION
   Copyright (C) 2003-2005 University of Southampton
 
   Install path .......... $prefix
   Debugging ............. $Debugging
-  Compling ..............$BIN_TO_BUILD
   
 Next type 'make' and then 'make install'."
 

@@ -1,6 +1,5 @@
 
-EXTRA_PROGRAMS = mast mastclient
-bin_PROGRAMS = @BIN_TO_BUILD@
+bin_PROGRAMS = mastcast mastclient
 
 
 mastcast_SOURCES = \

@@ -4,6 +4,6 @@ VERSION: configure.in
 	echo "${PACKAGE}" > VERSION; \
 	echo "${VERSION}" >> VERSION
 
-SUBDIRS = src scripts doc debian
+SUBDIRS = src doc
 EXTRA_DIST = VERSION bootstrap
 

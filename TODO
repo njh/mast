@@ -1,13 +1,14 @@
 
 
 Finish convertion from pcm6cast to MAST.
+	- ipv4 examples
+	- merge in new multicast socket code
+	
 
 Add JACK support
-
-
-Make fink package definition
-
 Add support for direct playout using OSS - rather than SDL
+
+Make fink+Debian packages
 
 There is a problem with audio playback using SDL,
 audio turns to static after a few seconds.
