@@ -24,21 +24,21 @@
 
 
 typedef struct {
-	int syncword;
-	int layer;
-	int version;
-	int error_protection;
-	int bitrate_index;
-	int samplerate_index;
-	int padding;
-	int extension;
-	int mode;
-	int mode_ext;
-	int copyright;
-	int original;
-	int emphasis;
-	int stereo;
-	int bitrate;
+	unsigned int syncword;
+	unsigned int layer;
+	unsigned int version;
+	unsigned int error_protection;
+	unsigned int bitrate_index;
+	unsigned int samplerate_index;
+	unsigned int padding;
+	unsigned int extension;
+	unsigned int mode;
+	unsigned int mode_ext;
+	unsigned int copyright;
+	unsigned int original;
+	unsigned int emphasis;
+	unsigned int channels;
+	unsigned int bitrate;
 	unsigned int samplerate;
 	unsigned int samples;
 	unsigned int framesize;
@@ -47,5 +47,6 @@ typedef struct {
 
 
 // Get parse the header of a frame of mpeg audio
-int mpa_header(char* buff, mpa_header_t *mh);
+int mpa_header_parse( const unsigned char* buff, mpa_header_t *mh);
 
+void mpa_header_print( mpa_header_t *mh );

@@ -68,7 +68,7 @@ int usage() {
 	
 }
 
-
+/*
 static void
 parse_cmd_line(int argc, char **argv, config_t* conf)
 {
@@ -156,18 +156,48 @@ parse_cmd_line(int argc, char **argv, config_t* conf)
 		usage();
 	}
 	
-	/* Make sure the port number is even */
+	// Make sure the port number is even
 	if (conf->port%2 == 1) conf->port--;
 	
 }
+*/
 
 static void main_loop()
 {
 	mpa_header_t mh;
-	char sync;
+	unsigned char buf[8192];
+	int count=0;
 	
+	while(!feof(stdin)) {
+		unsigned int byte = fgetc(stdin);
+		
+		if (byte == 0xFF) {
+			
+			// Read in the following 3 bytes of header
+			buf[0] = byte;
+			fread( &buf[1], 1, 3, stdin);
+			
+			if (mpa_header_parse( buf, &mh )) {
+			
+				fseek( stdin, mh.framesize-4, SEEK_CUR );
+				fread( buf, 1, 4, stdin);
+			
+				if (mpa_header_parse( buf, &mh )) {
+					fprintf(stderr, "\nFound sync at byte 0x%x : 0x%2x %2x %2x %2x.\n",
+			 			count, buf[0], buf[1], buf[2], buf[3]);
+
+					mpa_header_print( &mh );
+				}
+				
+			}
+			
+		}
+	
+		count++;
+	}
 
 }
+
 
 int main(int argc, char **argv)
 {
@@ -180,7 +210,7 @@ int main(int argc, char **argv)
 
 	
 	// Parse the command line
-	parse_cmd_line( argc, argv, config );
+	//parse_cmd_line( argc, argv, config );
 
 	
 

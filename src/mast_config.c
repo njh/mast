@@ -32,7 +32,7 @@
 config_t*
 mast_config_init( )
 {
-	config_t* config = (char*)malloc( sizeof(config_t) );
+	config_t* config = (config_t*)malloc( sizeof(config_t) );
 	if (!config) {
 		fprintf(stderr,"malloc failed to allocate memory for config structure.\n");
 		exit(-1);

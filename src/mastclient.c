@@ -381,7 +381,7 @@ main(int argc, char **argv)
 	
 
 	// Run the main process loop
-	client_main_loop( &config, mcast_socket );
+	client_main_loop( config, mcast_socket );
 
 
 	// Close UDP socket
