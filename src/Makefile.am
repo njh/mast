@@ -1,11 +1,12 @@
 
-EXTRA_PROGRAMS = pcm6cast pcm6client
+EXTRA_PROGRAMS = mast mastclient
 bin_PROGRAMS = @BIN_TO_BUILD@
 
 
-pcm6cast_SOURCES = \
-	pcm6cast.c \
-	pcm6cast.h \
+mastcast_SOURCES = \
+	mastcast.c \
+	mastcast.h \
+	mast.h \
 	udp6_socket.c \
 	udp_socket.h \
 	rtp.c \
@@ -28,14 +29,15 @@ pcm6cast_SOURCES = \
 	sfifo.h \
 	sfifo.c
 	
-pcm6cast_CFLAGS = @USE_SNDFILE@ @USE_OSS@ @SNDFILE_CFLAGS@
-pcm6cast_LDFLAGS = @SNDFILE_LIBS@
+mastcast_CFLAGS = @USE_SNDFILE@ @USE_OSS@ @SNDFILE_CFLAGS@
+mastcast_LDFLAGS = @SNDFILE_LIBS@
 
 
 
-pcm6client_SOURCES = \
-	pcm6client.c \
-	pcm6cast.h \
+mastclient_SOURCES = \
+	mastclient.c \
+	mastclient.h \
+	mastcast.h \
 	client.c \
 	udp6_socket.c \
 	udp_socket.h \
@@ -59,5 +61,5 @@ pcm6client_SOURCES = \
 	sfifo.h \
 	sfifo.c
 
-pcm6client_CFLAGS = @USE_SNDFILE@ @USE_SDL@ @USE_OSS@ @SNDFILE_CFLAGS@ @SDL_CFLAGS@
-pcm6client_LDFLAGS = @SNDFILE_LIBS@ @SDL_LIBS@
+mastclient_CFLAGS = @USE_SNDFILE@ @USE_SDL@ @USE_OSS@ @SNDFILE_CFLAGS@ @SDL_CFLAGS@
+mastclient_LDFLAGS = @SNDFILE_LIBS@ @SDL_LIBS@

@@ -1,7 +1,9 @@
 /*
- *  pcm6cast: Multicast PCM audio over IPv6
+ *  MAST: Multicast Audio Streaming Toolkit
  *
- *  Copyright (C) 2003 Nicholas J. Humfrey
+ *  By Nicholas J. Humfrey <njh@ecs.soton.ac.uk>
+ *
+ *  Copyright (C) 2003-2005 University of Southampton
  *
  *  This library is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU Lesser General Public

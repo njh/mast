@@ -2,8 +2,7 @@
 ASCIIDOC = asciidoc
 SGML2MAN = docbook2man
 
-man_MANS = pcm6cast.1 pcm6client.1 pcm6archive.1 \
-           pcm6shout.1 pcm6shout.conf.5
+man_MANS = mastcast.1 mastclient.1
 
 
 HTMLMANPAGES = $(man_MANS:%=%.html)

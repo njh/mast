@@ -39,7 +39,7 @@ Have a small / simple packet buffer to re-order minor packet ordering problems
 
 Check for duplicated packets and verify timestamps
 
-Fix timing problems in pcm6cast which are causing Jitter problems
+Fix timing problems in mastcast which are causing Jitter problems
  - Looked at this and can't see a better solution ?
  - Timing is almost exactly the same as rat when broadcasting from sound card
 
@@ -50,7 +50,7 @@ Display Current Play state info with \r
 
 Allow choice of interface for Multicast
 
-Perl script to open SDP files using pcm6client
+Perl script to open SDP files using mastclient
 
  - Output using threads/OSS
  - Problems with SDL - tuning into static

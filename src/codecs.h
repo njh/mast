@@ -1,25 +1,24 @@
-/* codecs.h
- * Copyright (C) 2002 QT4Linux and OpenQuicktime Teams
+/*
+ *  MAST: Multicast Audio Streaming Toolkit
  *
- * The A-Law codec is based on code by Erik de Castro Lopo from
- * the libsndfile library: http://www.zip.com.au/~erikd/libsndfile/
+ *  By Nicholas J. Humfrey <njh@ecs.soton.ac.uk>
  *
- * This file is part of OpenQuicktime, a free QuickTime library.
+ *  Copyright (C) 2003-2005 University of Southampton
  *
- * OpenQuicktime is free software; you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as published by
- * the Free Software Foundation.
+ *  This library is free software; you can redistribute it and/or
+ *  modify it under the terms of the GNU Lesser General Public
+ *  License as published by the Free Software Foundation; either
+ *  version 2.1 of the License, or (at your option) any later version.
  *
- * OpenQuicktime is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Lesser General Public License for more details.
+ *  This library is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ *  Lesser General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
- *
- * $Id: codec_alaw.c,v 1.9 2003/01/30 00:20:12 nj_humfrey Exp $
+ *  You should have received a copy of the GNU Lesser General Public
+ *  License along with this library; if not, write to the Free Software
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *  
  */
 
 
