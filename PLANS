@@ -23,10 +23,12 @@ audio/mpa-robust
 audio/DAT12
 audio/speex ?
 
+Floating Point/32bit
 
-mastclient	-	Client / Listener
-mastcast	-	Broadcaster
-mastshout	-	Multicast to ice/shoutcast
-mastmpa		-	MPEG Audio broadcaster
-mastarchive	-	Archive an audio stream (mix multiple sources ?)
-mastreflect	-	Reflect UDP packets (Unicast,ASM&SSM)
+
+  mastclient	-	Client / Listener -> Jack
+  mastcast	-		Broadcaster <- Jack
+X mastshout	-		Multicast to ice/shoutcast
+  mastmpa -			MPEG Audio broadcaster
+X mastarchive	-	Archive an audio stream (mix multiple sources ?)
+  mastreflect	-	Reflect UDP packets (Unicast,ASM&SSM)

@@ -1,0 +1,67 @@
+<!DOCTYPE refentry PUBLIC "-//OASIS//DTD DocBook V4.1//EN">
+
+<refentry>
+<refmeta>
+<refentrytitle>pcm6shout</refentrytitle>
+<manvolnum>1</manvolnum>
+</refmeta>
+<refnamediv>
+    <refname>pcm6shout</refname>
+    <refpurpose>encode and send a multicast raw audio stream to an icecast/shoutcast server</refpurpose>
+</refnamediv>
+<refsynopsisdiv>
+<simpara>
+<emphasis>pcm6shout</emphasis> pcm6shout.conf
+</simpara>
+
+</refsynopsisdiv>
+<refsect1>
+<title>DESCRIPTION</title>
+<simpara>
+pcm6shout(1) receives an audio RTP stream and encodes it to either
+MPEG audio or Ogg Vorbis. It is then sent to an icecast/shoutcast
+server using libshout.
+</simpara>
+
+<simpara>
+pcm6shout(1) is setup using a configuration file and the only
+option it takes on the command line is the name of the file to load
+its configuration from. See pcm6shout.conf(5) for details of the format
+of the configuration file.
+</simpara>
+
+<note><simpara>
+libmp3lame is needed to encode to MP3 and libogg and libvorbis
+is needed to encode to Ogg Vorbis.
+</simpara></note>
+</refsect1>
+<refsect1>
+<title>AUTHOR</title>
+<simpara>
+Written by Nicholas J. Humfrey, &lt;njh@ecs.soton.ac.uk&gt;
+</simpara>
+
+</refsect1>
+<refsect1>
+<title>RESOURCES</title>
+<simpara>
+Main web site: http://www.ecs.soton.ac.uk/~njh/pcm6cast/
+</simpara>
+
+</refsect1>
+<refsect1>
+<title>SEE ALSO</title>
+<simpara>
+pcm6shout.conf(5), pcm6client(1), pcm6cast(1)
+</simpara>
+
+</refsect1>
+<refsect1>
+<title>COPYING</title>
+<simpara>
+Copyright (C) 2003,2004 University of Southampton. Free use of this software is
+granted under the terms of the GNU Lesser General Public License (LGPL)
+</simpara>
+
+</refsect1>
+</refentry>

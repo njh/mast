@@ -1,0 +1,317 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1"/>
+<meta name="generator" content="AsciiDoc 5.0.8"/>
+<meta name="author" content="Nicholas J. Humfrey"/>
+<meta name="author-email" content="njh@ecs.soton.ac.uk"/>
+<title>pcm6shout.conf</title>
+</head>
+<body>
+<hr/>
+<h1>
+    PCM6SHOUT.CONF(5) Manual Page
+</h1>
+<hr/>
+<h2>NAME</h2>
+<p>pcm6shout.conf -
+   configuration file for pcm6shout(1)
+</p>
+<h2>SYNOPSIS</h2>
+<p>
+The configuration file is the only way to pass options and settings
+to pcm6shout(1). This man page describes all the available options
+and where applicable, their default values. The configuration file
+maybe be located anywhere on the file system and the filename does
+not need to be pcm6shout.conf.
+</p>
+<h2>FILE FORMAT</h2>
+<p>
+The format of the pcm6shout configuration file is very simple. There is one
+configuration option per line in the file. Each option is formatted as
+option's name, followed by a space, followed by the option's value.
+</p>
+<p>
+Blank lines and lines beginning with a hash (#) are ignored. The maximum
+length of a single line is 255 characters. Each configuration option
+should only appear once.
+</p>
+<h2>OPTIONS</h2>
+<dl>
+<dt><b>
+multicast_ip
+</b></dt>
+<dd>
+<p>
+        The address of the IPv6 multicast group to receive packets on.
+        There is no default value for this option.
+</p>
+</dd>
+<dt><b>
+multicast_port
+</b></dt>
+<dd>
+<p>
+        The port to receive packets on. Should be an even number. RTCP
+        reports are sent on one port higher. Port numbers above 1024 are
+        usually used. There is no default value for this option.
+</p>
+</dd>
+<dt><b>
+multicast_ttl
+</b></dt>
+<dd>
+<p>
+        The TTL for RTCP report packets. Default value is 127.
+</p>
+</dd>
+<dt><b>
+multicast_timeout
+</b></dt>
+<dd>
+<p>
+        The time in seconds to wait for a packet. Set to 0 to disable
+        timeouts. Default is to wait 10 seconds.
+</p>
+</dd>
+<dt><b>
+multicast_ssrc
+</b></dt>
+<dd>
+<p>
+        Only accept packets from this SSRC, expressed as a hexadecimal number.
+        Default is to accept packets from the SSRC of the first packet received.
+</p>
+</dd>
+<dt><b>
+audio_format
+</b></dt>
+<dd>
+<p>
+        Either "<b>MP3</b>" or "<b>Vorbis</b>". Chooses the format that the audio is
+        encoded to. Default format is MP3.
+</p>
+</dd>
+<dt><b>
+mp3_bitrate
+</b></dt>
+<dd>
+<p>
+        The <b>bitrate</b> of the encoded MP3 in <b>kbps</b>. Default bitrate is 128.
+        See lame --longhelp for a list of valid bitrates.
+</p>
+</dd>
+<dt><b>
+mp3_mode
+</b></dt>
+<dd>
+<p>
+        Either "<b>Mono</b>", "<b>Joint</b>" or "<b>Stereo</b>". Joint will encode the difference
+        between the two channels, which will result in better quality audio
+        if the two channels are similar. Default mode is Joint.
+</p>
+</dd>
+<dt><b>
+mp3_quality
+</b></dt>
+<dd>
+<p>
+        True quality is determined by the bitrate but this variable will effect
+        quality by selecting expensive or cheap algorithms.
+        Quality is an integer between 0 and 9. Default quality is 3.
+</p>
+<ul>
+<li>
+<p>
+<b>0</b>   best quality, very slow
+</p>
+</li>
+<li>
+<p>
+<b>2</b>   near-best quality, not too slow
+</p>
+</li>
+<li>
+<p>
+<b>5</b>   good quality, fast
+</p>
+</li>
+<li>
+<p>
+<b>7</b>   ok quality, really fast
+</p>
+</li>
+<li>
+<p>
+<b>9</b>   worst quality, very fast
+</p>
+</li>
+</ul>
+</dd>
+<dt><b>
+vorbis_quality
+</b></dt>
+<dd>
+<p>
+        The <b>quality</b> of the Ogg Vorbis stream is chosen using a
+        floating point number between 0 and 10.
+</p>
+<ul>
+<li>
+<p>
+<b>0.0</b>  is lowest quality, least bandwidth.
+</p>
+</li>
+<li>
+<p>
+<b>4.0</b>  is default (about 128 kbps VBR).
+</p>
+</li>
+<li>
+<p>
+<b>10.0</b> is highest quality, most bandwidth.
+</p>
+</li>
+</ul>
+</dd>
+<dt><b>
+vorbis_downmix
+</b></dt>
+<dd>
+<p>
+        <b>True</b> or <b>False</b>. Downmix a stereo source stream to mono before
+        encoding to Ogg Vorbis. Default is to not downmix.
+</p>
+</dd>
+<dt><b>
+shout_host
+</b></dt>
+<dd>
+<p>
+        The <b>IP address</b> or <b>hostname</b> of the Icecast/Shoutcast server to connect to.
+        Default host is localhost.
+</p>
+</dd>
+<dt><b>
+shout_port
+</b></dt>
+<dd>
+<p>
+        The port of the Icecast/Shoutcast server. Default is port 8000.
+</p>
+</dd>
+<dt><b>
+shout_protocol
+</b></dt>
+<dd>
+<p>
+        The <b>protocol</b> to use for communicating with the server. Use "<b>http</b>" for
+        an Icecast 2 Server, "<b>shoutcast</b>" for a Shoutcast server, or "<b>audiocast</b>"
+        for an Icecast 1 Server. Default protocol is http.
+</p>
+</dd>
+<dt><b>
+shout_password
+</b></dt>
+<dd>
+<p>
+        The <b>source password</b> for connecting to the server.
+        There is no default password.
+</p>
+</dd>
+<dt><b>
+shout_username
+</b></dt>
+<dd>
+<p>
+        Optional username for the server. Default username is "source".
+</p>
+</dd>
+<dt><b>
+shout<sub>is</sub>public
+</b></dt>
+<dd>
+<p>
+        <b>True</b> or <b>False</b>. Should this stream be advertised on public directories ?
+        Default is not to be public.
+</p>
+</dd>
+<dt><b>
+shout_name
+</b></dt>
+<dd>
+<p>
+        The <b>name</b> of the stream. Default is "Unconfigured pcm6shout stream".
+</p>
+</dd>
+<dt><b>
+shout_genre
+</b></dt>
+<dd>
+<p>
+        The audio <b>genre</b> of the stream. Default is no genre.
+</p>
+</dd>
+<dt><b>
+shout_url
+</b></dt>
+<dd>
+<p>
+        A <b>URL</b> for users to find out more information about the stream.
+        Default is no URL.
+</p>
+</dd>
+<dt><b>
+shout_description
+</b></dt>
+<dd>
+<p>
+        A textual <b>description</b> about the content of the stream.
+        Default is no description.
+</p>
+</dd>
+<dt><b>
+shout_mount
+</b></dt>
+<dd>
+<p>
+        Mountpoint for Icecast servers. This allows you to server more than one
+        audio stream with a streaming server. For example "/stream_low.ogg".
+        Default is to use the default mount (/).
+</p>
+</dd>
+<dt><b>
+shout_dumpfile
+</b></dt>
+<dd>
+<p>
+        The filename for archives of the stream to be recorded remotely on
+        the server. Default is not to have a dump file.
+</p>
+</dd>
+</dl>
+<h2>AUTHOR</h2>
+<p>
+Written by Nicholas J. Humfrey, &lt;njh@ecs.soton.ac.uk&gt;
+</p>
+<h2>RESOURCES</h2>
+<p>
+Main web site: http://www.ecs.soton.ac.uk/~njh/pcm6cast/
+</p>
+<h2>SEE ALSO</h2>
+<p>
+pcm6shout(1), pcm6client(1), pcm6cast(1)
+</p>
+<h2>COPYING</h2>
+<p>
+Copyright &copy; 2003,2004 University of Southampton. Free use of this software is
+granted under the terms of the GNU Lesser General Public License (LGPL)
+</p>
+<p></p>
+<p></p>
+<hr/><p><small>
+Version 0.1<br/>
+Last updated 19-May-2004 10:57:49 BST
+</small></p>
+</body>
+</html>

@@ -1,0 +1,135 @@
+AC_PREREQ(2.57)
+
+
+
+
+dnl ############# Initialisation
+
+AC_INIT([mast], [0.2a], [njh@ecs.soton.ac.uk])
+
+AC_CONFIG_SRCDIR(src/mastcast.c)
+AC_CONFIG_AUX_DIR(build)
+AC_CANONICAL_SYSTEM
+
+AM_INIT_AUTOMAKE
+dnl AM_MAINTAINER_MODE
+AM_CONFIG_HEADER(src/config.h)
+
+
+dnl ############# Compiler and tools Checks
+
+AC_PROG_CC
+AC_PROG_INSTALL
+AC_C_BIGENDIAN
+
+
+dnl ############# Configure Arguments
+
+AC_ARG_ENABLE(debug,
+              [--enable-debug=[no/yes] turn on debugging],
+              [ Debugging="Enabled" 
+                AC_DEFINE(DEBUG, 1, [ Define if debugging is enabled. ]) ],
+              [ Debugging="Disabled" ]
+)
+
+
+
+dnl ############## Library Checks
+
+dnl Checks for libraries.  We check for the library only if the function is
+dnl not available without the library.
+AC_CHECK_FUNC(gethostbyaddr, , [AC_CHECK_LIB(nsl, gethostbyaddr)])
+AC_CHECK_FUNC(socket, , [AC_CHECK_LIB(socket, socket)])
+
+
+dnl Check for IPv6 support
+AC_CHECK_FUNC(getipnodebyname)
+
+dnl Check for libsndfile
+PKG_CHECK_MODULES(SNDFILE, sndfile >= 1.0.0,
+	[ USE_SNDFILE="-DUSE_SNDFILE" ],
+	[ AC_MSG_WARN([*** libsndfile library is not found.]) ]
+)
+AC_SUBST(USE_SNDFILE)
+
+
+dnl Check for SDL
+SDL_VERSION=1.2.0
+AM_PATH_SDL($SDL_VERSION,
+            [ USE_SDL="-DUSE_SDL" ],
+            [ AC_MSG_WARN([*** SDL version $SDL_VERSION not found.]) ]
+)
+AC_SUBST(USE_SDL)
+
+
+dnl Check for JACK audio
+AC_CHECK_HEADER([jack/jack.h], have_jack=yes, have_jack=no, [])
+AM_CONDITIONAL(HAVE_JACK,test "$have_jack" = yes)
+if test "$have_jack" = yes; then
+   JACK_LIBS="-ljack"
+   AC_DEFINE(HAVE_JACK, ,[Define to enable JACK support])
+fi
+
+
+dnl ############## Header Checks
+
+AC_HEADER_STDC
+dnl AC_CHECK_HEADERS(standards.h signal.h)
+dnl AC_CHECK_HEADERS(string.h strings.h sys/resource.h sys/types.h unistd.h)
+dnl AC_CHECK_HEADERS(sys/bitypes.h sys/socket.h)
+
+
+dnl Check for Linux (OSS) sound support
+AC_CHECK_HEADER(sys/soundcard.h, 
+		[ USE_OSS="-DUSE_OSS" ],
+		[ AC_MSG_WARN([*** OSS/Linux sound card support isn't available]) ]
+)
+AC_SUBST(USE_OSS)
+
+
+
+dnl ############## Type checks
+
+AC_CHECK_TYPE(u_int32_t, unsigned long)
+AC_CHECK_TYPE(u_int16_t, unsigned short)
+AC_CHECK_TYPE(u_int8_t, unsigned char)
+
+
+
+dnl ############## Decide what to build
+
+
+BIN_TO_BUILD=" mastcast mastclient"
+
+dnl # mastcast wants libsndfile, oss, jack
+dnl # mastclient wants libsndfile, libsdl, jack
+
+
+
+dnl ############## Compiler and Linker Flags
+CFLAGS="$CFLAGS -Wunused -Wall "
+LDFLAGS="$LDFLAGS"
+
+if test x$Debugging = xEnabled; then
+	CFLAGS="$CFLAGS -g -Werror"
+fi
+
+
+dnl ############## Final Output
+
+AC_OUTPUT(Makefile src/Makefile scripts/Makefile doc/Makefile debian/Makefile)
+
+
+
+dnl ############## Display Message
+
+echo "
+  $PACKAGE $VERSION
+  Copyright (C) 2003-2005 University of Southampton
+
+  Install path .......... $prefix
+  Debugging ............. $Debugging
+  Compling ..............$BIN_TO_BUILD
+  
+Next type 'make' and then 'make install'."
+

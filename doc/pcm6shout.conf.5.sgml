@@ -1,0 +1,368 @@
+<!DOCTYPE refentry PUBLIC "-//OASIS//DTD DocBook V4.1//EN">
+
+<refentry>
+<refmeta>
+<refentrytitle>pcm6shout.conf</refentrytitle>
+<manvolnum>5</manvolnum>
+</refmeta>
+<refnamediv>
+    <refname>pcm6shout.conf</refname>
+    <refpurpose>configuration file for pcm6shout(1)</refpurpose>
+</refnamediv>
+<refsynopsisdiv>
+<simpara>
+The configuration file is the only way to pass options and settings
+to pcm6shout(1). This man page describes all the available options
+and where applicable, their default values. The configuration file
+maybe be located anywhere on the file system and the filename does
+not need to be pcm6shout.conf.
+</simpara>
+
+</refsynopsisdiv>
+<refsect1>
+<title>FILE FORMAT</title>
+<simpara>
+The format of the pcm6shout configuration file is very simple. There is one
+configuration option per line in the file. Each option is formatted as
+option's name, followed by a space, followed by the option's value.
+</simpara>
+
+<simpara>
+Blank lines and lines beginning with a hash (#) are ignored. The maximum
+length of a single line is 255 characters. Each configuration option
+should only appear once.
+</simpara>
+
+</refsect1>
+<refsect1>
+<title>OPTIONS</title>
+<variablelist>
+<varlistentry>
+<term>
+multicast_ip
+</term>
+<listitem>
+<simpara>
+        The address of the IPv6 multicast group to receive packets on.
+        There is no default value for this option.
+</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>
+multicast_port
+</term>
+<listitem>
+<simpara>
+        The port to receive packets on. Should be an even number. RTCP
+        reports are sent on one port higher. Port numbers above 1024 are
+        usually used. There is no default value for this option.
+</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>
+multicast_ttl
+</term>
+<listitem>
+<simpara>
+        The TTL for RTCP report packets. Default value is 127.
+</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>
+multicast_timeout
+</term>
+<listitem>
+<simpara>
+        The time in seconds to wait for a packet. Set to 0 to disable
+        timeouts. Default is to wait 10 seconds.
+</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>
+multicast_ssrc
+</term>
+<listitem>
+<simpara>
+        Only accept packets from this SSRC, expressed as a hexadecimal number.
+        Default is to accept packets from the SSRC of the first packet received.
+</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>
+audio_format
+</term>
+<listitem>
+<simpara>
+        Either "<emphasis>MP3</emphasis>" or "<emphasis>Vorbis</emphasis>". Chooses the format that the audio is
+        encoded to. Default format is MP3.
+</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>
+mp3_bitrate
+</term>
+<listitem>
+<simpara>
+        The <emphasis>bitrate</emphasis> of the encoded MP3 in <emphasis>kbps</emphasis>. Default bitrate is 128.
+        See lame --longhelp for a list of valid bitrates.
+</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>
+mp3_mode
+</term>
+<listitem>
+<simpara>
+        Either "<emphasis>Mono</emphasis>", "<emphasis>Joint</emphasis>" or "<emphasis>Stereo</emphasis>". Joint will encode the difference
+        between the two channels, which will result in better quality audio
+        if the two channels are similar. Default mode is Joint.
+</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>
+mp3_quality
+</term>
+<listitem>
+<simpara>
+        True quality is determined by the bitrate but this variable will effect
+        quality by selecting expensive or cheap algorithms.
+        Quality is an integer between 0 and 9. Default quality is 3.
+</simpara>
+<itemizedlist>
+<listitem>
+<simpara>
+<emphasis>0</emphasis>   best quality, very slow
+</simpara>
+</listitem>
+<listitem>
+<simpara>
+<emphasis>2</emphasis>   near-best quality, not too slow
+</simpara>
+</listitem>
+<listitem>
+<simpara>
+<emphasis>5</emphasis>   good quality, fast
+</simpara>
+</listitem>
+<listitem>
+<simpara>
+<emphasis>7</emphasis>   ok quality, really fast
+</simpara>
+</listitem>
+<listitem>
+<simpara>
+<emphasis>9</emphasis>   worst quality, very fast
+</simpara>
+</listitem>
+</itemizedlist>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>
+vorbis_quality
+</term>
+<listitem>
+<simpara>
+        The <emphasis>quality</emphasis> of the Ogg Vorbis stream is chosen using a
+        floating point number between 0 and 10.
+</simpara>
+<itemizedlist>
+<listitem>
+<simpara>
+<emphasis>0.0</emphasis>  is lowest quality, least bandwidth.
+</simpara>
+</listitem>
+<listitem>
+<simpara>
+<emphasis>4.0</emphasis>  is default (about 128 kbps VBR).
+</simpara>
+</listitem>
+<listitem>
+<simpara>
+<emphasis>10.0</emphasis> is highest quality, most bandwidth.
+</simpara>
+</listitem>
+</itemizedlist>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>
+vorbis_downmix
+</term>
+<listitem>
+<simpara>
+        <emphasis>True</emphasis> or <emphasis>False</emphasis>. Downmix a stereo source stream to mono before
+        encoding to Ogg Vorbis. Default is to not downmix.
+</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>
+shout_host
+</term>
+<listitem>
+<simpara>
+        The <emphasis>IP address</emphasis> or <emphasis>hostname</emphasis> of the Icecast/Shoutcast server to connect to.
+        Default host is localhost.
+</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>
+shout_port
+</term>
+<listitem>
+<simpara>
+        The port of the Icecast/Shoutcast server. Default is port 8000.
+</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>
+shout_protocol
+</term>
+<listitem>
+<simpara>
+        The <emphasis>protocol</emphasis> to use for communicating with the server. Use "<emphasis>http</emphasis>" for
+        an Icecast 2 Server, "<emphasis>shoutcast</emphasis>" for a Shoutcast server, or "<emphasis>audiocast</emphasis>"
+        for an Icecast 1 Server. Default protocol is http.
+</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>
+shout_password
+</term>
+<listitem>
+<simpara>
+        The <emphasis>source password</emphasis> for connecting to the server.
+        There is no default password.
+</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>
+shout_username
+</term>
+<listitem>
+<simpara>
+        Optional username for the server. Default username is "source".
+</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>
+shout<subscript>is</subscript>public
+</term>
+<listitem>
+<simpara>
+        <emphasis>True</emphasis> or <emphasis>False</emphasis>. Should this stream be advertised on public directories ?
+        Default is not to be public.
+</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>
+shout_name
+</term>
+<listitem>
+<simpara>
+        The <emphasis>name</emphasis> of the stream. Default is "Unconfigured pcm6shout stream".
+</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>
+shout_genre
+</term>
+<listitem>
+<simpara>
+        The audio <emphasis>genre</emphasis> of the stream. Default is no genre.
+</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>
+shout_url
+</term>
+<listitem>
+<simpara>
+        A <emphasis>URL</emphasis> for users to find out more information about the stream.
+        Default is no URL.
+</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>
+shout_description
+</term>
+<listitem>
+<simpara>
+        A textual <emphasis>description</emphasis> about the content of the stream.
+        Default is no description.
+</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>
+shout_mount
+</term>
+<listitem>
+<simpara>
+        Mountpoint for Icecast servers. This allows you to server more than one
+        audio stream with a streaming server. For example "/stream_low.ogg".
+        Default is to use the default mount (/).
+</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>
+shout_dumpfile
+</term>
+<listitem>
+<simpara>
+        The filename for archives of the stream to be recorded remotely on
+        the server. Default is not to have a dump file.
+</simpara>
+</listitem>
+</varlistentry>
+</variablelist>
+</refsect1>
+<refsect1>
+<title>AUTHOR</title>
+<simpara>
+Written by Nicholas J. Humfrey, &lt;njh@ecs.soton.ac.uk&gt;
+</simpara>
+
+</refsect1>
+<refsect1>
+<title>RESOURCES</title>
+<simpara>
+Main web site: http://www.ecs.soton.ac.uk/~njh/pcm6cast/
+</simpara>
+
+</refsect1>
+<refsect1>
+<title>SEE ALSO</title>
+<simpara>
+pcm6shout(1), pcm6client(1), pcm6cast(1)
+</simpara>
+
+</refsect1>
+<refsect1>
+<title>COPYING</title>
+<simpara>
+Copyright (C) 2003,2004 University of Southampton. Free use of this software is
+granted under the terms of the GNU Lesser General Public License (LGPL)
+</simpara>
+
+</refsect1>
+</refentry>

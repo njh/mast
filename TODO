@@ -1,0 +1,61 @@
+
+
+Finish convertion from pcm6cast to MAST.
+
+Add JACK support
+
+
+Make fink package definition
+
+Add support for direct playout using OSS - rather than SDL
+
+There is a problem with audio playback using SDL,
+audio turns to static after a few seconds.
+I have seen to same problem on Mac OS X and Debian.
+(both little and big endian)
+
+
+
+Change sources if one drops out
+
+Abort after timeout if no valid packets have been received
+
+Choice of scheme for packet loss recovery
+ - None
+ - Silence
+ - Repeat
+
+
+** Add RTCP Support **
+
+Add session announement use SAP
+Simple SAP client too ?
+
+
+Have a small / simple packet buffer to re-order minor packet ordering problems
+ - I implemented a simple version of this 
+   There seems to be far more lost packets, than out of order ones
+   so I removed the 'hacked in' support for this
+
+Check for duplicated packets and verify timestamps
+
+Fix timing problems in pcm6cast which are causing Jitter problems
+ - Looked at this and can't see a better solution ?
+ - Timing is almost exactly the same as rat when broadcasting from sound card
+
+Allow client to only play from specified SRC IP
+ - and remove the SSRC selecting code ?
+
+Display Current Play state info with \r
+
+Allow choice of interface for Multicast
+
+Perl script to open SDP files using pcm6client
+
+ - Output using threads/OSS
+ - Problems with SDL - tuning into static
+ - SDL is quite chunky - libao ?
+ - Use portaudio for sound in/out
+
+
+Add support for dynamic payloads - L8 and L16

@@ -1,0 +1,183 @@
+<!DOCTYPE refentry PUBLIC "-//OASIS//DTD DocBook V4.1//EN">
+
+<refentry>
+<refmeta>
+<refentrytitle>pcm6client</refentrytitle>
+<manvolnum>1</manvolnum>
+</refmeta>
+<refnamediv>
+    <refname>pcm6client</refname>
+    <refpurpose>receive IPv6 multicast audio streams</refpurpose>
+</refnamediv>
+<refsynopsisdiv>
+<simpara>
+<emphasis>pcm6client</emphasis> [-m timeout] [-o] [-f filename]
+        [-p payload] [-s ssrc] &lt;multicast group&gt;/&lt;port&gt;
+</simpara>
+
+</refsynopsisdiv>
+<refsect1>
+<title>DESCRIPTION</title>
+<simpara>
+pcm6client(1) is an RTP audio client. Unless another output option is selected
+it plays the audio stream out your default sound output device using SDL. If
+SDL is not installed on your system, you must select a different output option.
+</simpara>
+
+<simpara>
+pcm6client will start playing audio from the first source it receives a packet
+from. If there is more than one transmitter in the multicast group, then the
+one you start listening to will be random. Use the <emphasis>-s</emphasis> option to select a source.
+</simpara>
+
+<simpara>
+There isn't current any packet loss recovery or packet reordering support. This means
+that the audio buffer will empty with each packet lost, and eventually need to re-buffer.
+</simpara>
+
+</refsect1>
+<refsect1>
+<title>OPTIONS</title>
+<variablelist>
+<varlistentry>
+<term>
+-h
+</term>
+<listitem>
+<simpara>
+        Return usage and version information.
+</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>
+-m
+</term>
+<listitem>
+<simpara>
+        Specifies the <emphasis>timeout</emphasis> in seconds for waiting for a packet. If no packet
+        is received in this time then pcm6client(1) aborts. Set to 0 to disable
+        timeout. Default is 10 seconds.
+</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>
+-o
+</term>
+<listitem>
+<simpara>
+        Output the received audio to <emphasis>STDOUT</emphasis>. The number of channels and the sample
+        rate will depend on the payload type received but the sample format is
+        always 16-bit two's complement.
+</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>
+-f
+</term>
+<listitem>
+<simpara>
+        Save received audio to audio file <emphasis>filename</emphasis>. Format of the file depends on
+        the suffix of the filename, but will default to AIFF. Audio is not compressed,
+        so recording for long periods will result in large files. pcm6archive(1) can be
+        used to compress the received audio.
+</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>
+-p
+</term>
+<listitem>
+<simpara>
+        Only accept RTP packets of specified <emphasis>payload type</emphasis>. Other packets of different
+        payload types will be ignored. This is useful with <emphasis>-o</emphasis> to ensure that only
+        the expected audio format is written to STDOUT.
+</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>
+-s
+</term>
+<listitem>
+<simpara>
+        Only accept RTP packets from specified hexadecial <emphasis>SSRC</emphasis>. By default pcm6client will start
+        playing audio from the first SSRC it receives on that multicast group. This option
+        allows you to choose the source you want to receive from.
+</simpara>
+</listitem>
+</varlistentry>
+</variablelist>
+</refsect1>
+<refsect1>
+<title>EXAMPLES</title>
+<simpara>
+<literal>pcm6client FF03::123/5010</literal>
+</simpara>
+
+<simpara>
+Listen to a stream on multicast on multicast group FF02::123 on port 5010
+</simpara>
+
+<simpara>
+<literal>pcm6client -f recording.wav FF03::123/5010</literal>
+</simpara>
+
+<simpara>
+Record stream to WAV audio file.
+</simpara>
+
+</refsect1>
+<refsect1>
+<title>BUGS</title>
+<itemizedlist>
+<listitem>
+<simpara>
+pcm6client(1) does not currently use RTCP (it should)
+</simpara>
+</listitem>
+<listitem>
+<simpara>
+No packet loss compensation / packet re-ordering
+</simpara>
+</listitem>
+<listitem>
+<simpara>
+Audio turns into static sometimes - this seems to be a problem with SDL
+</simpara>
+</listitem>
+</itemizedlist>
+</refsect1>
+<refsect1>
+<title>AUTHOR</title>
+<simpara>
+Written by Nicholas J. Humfrey, &lt;njh@ecs.soton.ac.uk&gt;
+</simpara>
+
+</refsect1>
+<refsect1>
+<title>RESOURCES</title>
+<simpara>
+Main web site: http://www.ecs.soton.ac.uk/~njh/pcm6cast/
+</simpara>
+
+</refsect1>
+<refsect1>
+<title>SEE ALSO</title>
+<simpara>
+pcm6cast(1), pcm6archive(1), pcm6shout(1)
+</simpara>
+
+</refsect1>
+<refsect1>
+<title>COPYING</title>
+<simpara>
+Copyright (C) 2003,2004 University of Southampton. Free use of this software is
+granted under the terms of the GNU Lesser General Public License (LGPL)
+</simpara>
+
+</refsect1>
+</refentry>

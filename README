@@ -1,0 +1,131 @@
+MAST - Multicast Audio Streaming Toolkit
+========================================
+Nicholas J. Humfrey <njh@ecs.soton.ac.uk>
+
+For the latest information on pcm6cast, please see:
+http://www.ecs.soton.ac.uk/~njh/mast/
+
+
+
+What is MAST ?
+--------------
+
+MAST is an audio streaming broadcaster and client using RTP over IPv4 and IPv6 Multicast.
+
+Unlike VAT and RAT, which are designed primerily for audio conferencing, MAST
+is designed to be used for audio distribution and broadcast.
+
+
+**************************************************************************
+NOTE: This version doesn't support RTCP so doesn't inter-operate well with
+RAT but it will do in a future release.
+**************************************************************************
+
+
+
+
+Supported Payloads
+------------------
+
+   0     8000Hz Mono      u-law encoded 16-bit PCM
+   8     8000Hz Mono      A-law encoded 16-bit PCM
+   10    44.1kHz Stereo   Raw 16-bit Audio
+   11    44.1kHz Mono     Raw 16-bit Audio
+
+
+Details are here:
+http://www.iana.org/assignments/rtp-parameters
+
+
+
+Test Stream
+-----------
+
+You can listen to a test stream coming from Unversity of Southampton:
+
+----------------------------------------------------------
+[hwickabab:~] njh% mastclient FF1E:2001:630:d0:201:83::80/5000
+Connecting to FF1E:2001:630:d0:201:83::80/5000.
+Joined multicast group.
+Waiting for first packet...
+Src IP: 2001:630:d0:201::83
+SSRC: 0x1630b576
+Payload: 0
+Sample Rate: 8000 Hz
+Channels: 1
+Size of first packet: 332 bytes
+----------------------------------------------------------
+
+Please email me if you have any problems listening.
+Please note that you *must* be connected to m6bone.
+(http://www.m6bone.net/)
+
+
+Setting up SDL audio output
+---------------------------
+
+SDL's audio output settings can be configured by setting environment variables.
+
+You can choose the audio driver and sound card in this way.
+
+For details see:
+http://sdldoc.csn.ul.ie/sdlenvvars.php
+
+
+Example usage
+-------------
+
+............................................
+ mastcast -f audiofile.aiff FF03::123/5010
+............................................
+Broadcast a sound file out to multicast
+group FF02::123 and port 5010
+
+............................................
+ mastclient FF03::123/5010
+............................................
+Listen to a stream on multicast on
+multicast group FF02::123 and port 5010
+
+
+............................................
+ mastclient -f recording.wav FF03::123/5010
+............................................
+Record stream to raw audio file	
+
+
+............................................
+ mastcast -d /dev/dsp -p 8 FF03::123/5010
+............................................
+Broadcast audio from sound card using
+payload 8
+
+
+............................................
+ mastclient -q -p 10 -o FF03::123/5010 | \
+ sox -r 44100 -c 2 -w -s -t raw -        \
+     -r 8000  -c 1 -w -s -t raw -      | \
+ mastcast -p 10 -i FF03::124/5008         
+............................................
+Downsample from payload 10 to another
+multicast group using payload 8
+
+
+
+Machines Tested
+---------------
+- PowerMac G4 - Mac OS X 10.2.8 and 10.3.2
+- AMD K6 - Debian Linux 2.4.22
+- i386 - FreeBSD 5.1-RELEASE
+
+
+
+Glossary
+-------
+
+PCM - Pulse Code Modulation
+A method by which an audio signal is represented as digital data.
+
+Virtually all digital audio systems use PCM, including, CD, DAT, F1 format, 1630 format, DASH, DCC, and MD. Many people get confused because "PCM" is also slang for Sony's F1 format which stores PCM digital audio on videotape.
+
+

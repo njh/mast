@@ -1,0 +1,97 @@
+2005-01-29  Nicholas J. Humfrey  <njh@ecs.soton.ac.uk>
+	* pcm6cast is now MAST
+	* began moving code accross and renaming
+
+2004-10-05  Nicholas J. Humfrey  <njh@ecs.soton.ac.uk>
+
+ 	* Changed from audiofile to libsndfile
+ 	* Changed audio buffer form char* to short*
+ 		- the length of audio passed about is now measured
+ 		  in samples rather than bytes
+ 	* Fixed a stupid mistake in the rtp_packet_t structure
+	* Updated README with new test stream group
+	* Other fixes/improvements
+	
+2004-05-19  Nicholas J. Humfrey  <njh@ecs.soton.ac.uk>
+
+ 	* Created Debian package definition
+	   - it is distributed as part of the main source
+
+2004-05-18  Nicholas J. Humfrey  <njh@ecs.soton.ac.uk>
+
+	* Changed asciidoc Makefile to generate SGML instead of XML
+	  This is due to the more common availabity of Docbook SGML tools
+
+2004-03-02  Nicholas J. Humfrey  <njh@ecs.soton.ac.uk>
+
+	* Added mp3_quality option to pcm6shout to change the encode quality of LAME
+
+2004-02-19  Nicholas J. Humfrey  <njh@ecs.soton.ac.uk>
+
+	* Corrections to documentation
+
+2004-01-09  Nicholas J. Humfrey  <njh@ecs.soton.ac.uk>
+
+	* Released pcm6cast 0.1j
+	* Finished all inital versions of man pages
+	* Minor changes to README and INSTALL files for asciidoc
+
+2004-01-02  Nicholas J. Humfrey  <njh@ecs.soton.ac.uk>
+
+	* Wrote man page for pcm6archive using asciidoc
+	* Now creates VERSION file containing current package version
+	* added multicast_ssrc option to pcm6shout
+
+2003-12-14  Nicholas J. Humfrey  <njh@ecs.soton.ac.uk>
+
+	* Released pcm6cast 0.1i
+	* Changed the size of SDL buffer from 0.5 seconds to 1 second
+
+2003-12-13  Nicholas J. Humfrey  <njh@ecs.soton.ac.uk>
+
+	* Added downmixing to pcm6shout/vorbis
+	* Updated test stream in README
+	* Fixed problem in configure.in with CFLAGS variable
+	* Fixed bug in pcm6shout with the order LAME is setup
+
+2003-12-08  Nicholas J. Humfrey  <njh@ecs.soton.ac.uk>
+
+	* Released pcm6cast 0.1h
+	* Finished support for Ogg Vorbis in pcm6shout
+	* Added verbose setting for clients (make quiet using -q on pcm6client)
+
+2003-11-27  Nicholas J. Humfrey  <njh@ecs.soton.ac.uk>
+
+	* Passes information about audio to server correctly.
+
+2003-11-26  Nicholas J. Humfrey  <njh@ecs.soton.ac.uk>
+
+	* Now uses libshout version 2.0
+	* pcm6shout configuration directive additions and changes
+	* Added Mono (-m) option to pcm6archive
+
+2003-11-24  Nicholas J. Humfrey  <njh@ecs.soton.ac.uk>
+
+	* Released pcm6cast 0.1f
+	* Fixed timeout problems on Linux
+	* Fixed dependancies on audiofile
+	* Fix for FreeBSD machines without AFMT_S16_NE
+	* Made changing payload size with pcm6cast work
+
+2003-11-21  Nicholas J. Humfrey  <njh@ecs.soton.ac.uk>
+
+	* Released pcm6cast 0.1e
+	* Fixed problem with checking for SDL
+	* Detached dependancy on audiofile/SDL
+	* Option for client to only accept specified payload type
+	* pcm6shout - encode audio from multicast stream to Shoutcast server
+	* OSS support works on FreeBSD as well as Linux
+
+2003-11-06  Nicholas J. Humfrey  <njh@ecs.soton.ac.uk>
+
+	* Added pcm6archive script to archive streams
+	* Audio IO is now in seperate files
+	
+2003-08-20  Nicholas J. Humfrey  <njh@ecs.soton.ac.uk>
+
+	* Initial public release.
