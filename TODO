@@ -1,4 +1,6 @@
 
+Use POD instead of asciidoc for documentation.
+
 Finish convertion from pcm6cast to MAST.
 	- ipv4 examples
 	- merge in new multicast socket code
