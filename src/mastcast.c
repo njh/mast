@@ -36,7 +36,7 @@
 
 
 #include "config.h"
-#include "mast.h"
+#include "mast_config.h"
 #include "rtp.h"
 #include "audio.h"
 #include "mcast_socket.h"
@@ -46,36 +46,14 @@
 
 
 /* Global Variables */
-config_t config;
+config_t *config = NULL;
 audio_t *audio = NULL;
 
-
-static void
-init_config( config_t* config )
-{
-	
-	config->ttl = 5;
-	config->port = 0;
-	config->ip = NULL;
-	
-	config->timeout = 10;
-	config->ssrc = 0;
-	config->payload_type = -1;
-	config->payload_size = 0;
-	
-	config->use_stdio = 0;
-	config->loop_file = 0;
-	config->devname = NULL;
-	config->filename = NULL;
-	
-	config->audio_init_callback = NULL;
-
-}
 
 
 
 /* Return the difference between two times as microseconds */
-long
+static long
 diff_timeval(struct timeval * ep, struct timeval * sp)
 {
         if (sp->tv_usec > ep->tv_usec) {
@@ -88,7 +66,8 @@ diff_timeval(struct timeval * ep, struct timeval * sp)
 
 
 /* Add microseconds to a timeval */
-void add_usec2timeval( struct timeval * tv, long add )
+static void
+add_usec2timeval( struct timeval * tv, long add )
 {
 	tv->tv_usec += add;
 
@@ -104,7 +83,7 @@ static void
 main_loop( mcast_socket_t* rtp_socket, rtp_packet_t* rtp_packet )
 {
 	struct timeval due, now;
-	int payload_frames = config.payload_size / audio->encoded_frame_size;
+	int payload_frames = config->payload_size / audio->encoded_frame_size;
 	int payload_duration = payload_frames * ((float)1/audio->samplerate * 1000000);
 	int delay=0, endcoded_bytes = 0;
 	
@@ -120,11 +99,11 @@ main_loop( mcast_socket_t* rtp_socket, rtp_packet_t* rtp_packet )
 		add_usec2timeval( &due, payload_duration );
 
 		/* Read and encode the audio */
-		endcoded_bytes = audio_encode( audio, &rtp_packet->payload, config.payload_size );
+		endcoded_bytes = audio_encode( audio, &rtp_packet->payload, config->payload_size );
 		
 		/* Assume end of file ? */
 		if (endcoded_bytes < 1) {
-			if (config.loop_file) {
+			if (config->loop_file) {
 				// Go back to start
 				audio_file_rewind( audio );
 				continue;
@@ -135,7 +114,7 @@ main_loop( mcast_socket_t* rtp_socket, rtp_packet_t* rtp_packet )
 
 
 		/* Did we get enough bytes ? */
-		if (endcoded_bytes != config.payload_size) {
+		if (endcoded_bytes != config->payload_size) {
 			fprintf(stderr, "Warning: audio_encode() didn't return enough encoded audio\n");
 			/* sending out a smaller packet crashes rat :( */
 		}
@@ -163,7 +142,7 @@ main_loop( mcast_socket_t* rtp_socket, rtp_packet_t* rtp_packet )
 		fdue = due.tv_sec + ((float)due.tv_usec / 1000000);
 		
 		/*fprintf(stderr, "Sent packet: ts=%u, seq=%u, len=%u\n",
-		rtp_timestamp, rtp_seq_num, config.payload_size);
+		rtp_timestamp, rtp_seq_num, config->payload_size);
 
 		fprintf( stderr, "samplerate = %d, payload_frames = %d, duration = %d, delay = %ld\n",
 				audio->samplerate, payload_frames, (int)( (float)1/audio->samplerate * 1000000 ), delay );
@@ -181,31 +160,6 @@ main_loop( mcast_socket_t* rtp_socket, rtp_packet_t* rtp_packet )
 
 }
 
-
-void print_config() {
-
-
-#if DEBUG
-	fprintf(stderr,"config.ttl=%d\n", config.ttl);
-	fprintf(stderr,"config.port=%d\n", config.port);
-	fprintf(stderr,"config.ip=%s\n", config.ip);
-	fprintf(stderr,"config.ssrc=0x%x\n", config.ssrc);
-	fprintf(stderr,"config.payload=%d\n", config.payload_type);
-	fprintf(stderr,"config.payload_size=%d\n", config.payload_size);
-	fprintf(stderr,"config.use_stdio=%d\n", config.use_stdio);
-#ifdef HAVE_OSS
-	fprintf(stderr,"config.devname=%s\n", config.devname);
-#endif
-	fprintf(stderr,"config.filename=%s\n", config.filename);
-#endif
-
-	fprintf(stderr,"Audio Rate: %d Hz\n", audio->samplerate);
-	fprintf(stderr,"Audio Sample Size: 16 bit\n");
-	fprintf(stderr,"Audio Channels: %d\n", audio->channels);
-	fprintf(stderr,"RTP Payload Len: %d\n", config.payload_size );
-	fprintf(stderr,"RTP Payload Type: %d\n\n", config.payload_type );
-
-}
 
 
 int usage() {
@@ -343,28 +297,33 @@ int main(int argc, char **argv)
 	mcast_socket_t *rtp_socket;
  	rtp_packet_t *rtp_packet;
 	
-	
-	init_config( &config );
+
+	// Set sensible defaults
+	config = mast_config_init( );
+
 	
 	// Parse the command line
-	parse_cmd_line( argc, argv, &config );
+	parse_cmd_line( argc, argv, config );
 	
 
 	/* Open audio file */
-	audio = audio_open_encoder( &config );
+	audio = audio_open_encoder( config );
 	
 
 	/* Create and set default values for RTP packet */
-	rtp_packet = rtp_packet_init( &config );
+	rtp_packet = rtp_packet_init( config );
 	rtp_packet_set_frame_size( rtp_packet, audio->encoded_frame_size );
 	 
 	// Create multicast sockets
-	rtp_socket = mcast_socket_create( config.ip, config.port, config.ttl, 0 );
+	rtp_socket = mcast_socket_create( config->ip, config->port, config->ttl, 0 );
 	//rtcp_socket = mcast_socket_create( config.ip, config.port+1, config.ttl, 0 );
 
 
 	// Display some information
-	print_config();
+	mast_config_print( config );
+	fprintf(stderr,"Audio Rate: %d Hz\n", audio->samplerate);
+	fprintf(stderr,"Audio Sample Size: 16 bit\n");
+	fprintf(stderr,"Audio Channels: %d\n", audio->channels);
 	 
 	 
 	main_loop( rtp_socket, rtp_packet );
@@ -378,6 +337,10 @@ int main(int argc, char **argv)
 	//mcast_socket_close(rtcp_socket);
 	
 	rtp_packet_delete( rtp_packet );
+	
+	// Clean up configuration structure
+	mast_config_delete( &config );
+	
 	 
 	// Success !
 	return 0;

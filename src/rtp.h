@@ -80,6 +80,12 @@ typedef struct {
 
 
 
+extern rtp_packet_t* rtp_packet_init( config_t* config );
+extern void rtp_packet_set_frame_size( rtp_packet_t* rtp_packet, int frame_size );
+extern void rtp_packet_send( mcast_socket_t* rtp_socket, rtp_packet_t* rtp_packet, int payload_len);
+extern int rtp_packet_recv( mcast_socket_t* mcast_socket, rtp_packet_t* packet );
+extern void rtp_packet_delete( rtp_packet_t* rtp_packet );
+
 
 #endif
 

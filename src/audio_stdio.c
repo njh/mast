@@ -31,8 +31,8 @@
 #include <string.h>
 
 #include "config.h"
+#include "mast_config.h"
 #include "audio.h"
-#include "mast.h"
 
 
 

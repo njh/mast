@@ -1,12 +1,13 @@
 
-bin_PROGRAMS = mastcast mastclient
+bin_PROGRAMS = mastcast mastclient mpacast
 AM_CFLAGS = @SNDFILE_CFLAGS@
 AM_LDFLAGS = @SNDFILE_LIBS@
 
 
 mastcast_SOURCES = \
 	mastcast.c \
-	mast.h \
+	mast_config.h \
+	mast_config.c \
 	mcast_socket.c \
 	mcast_socket.h \
 	rtp.c \
@@ -28,8 +29,8 @@ mastcast_SOURCES = \
 	
 mastclient_SOURCES = \
 	mastclient.c \
-	mast.h \
-	client.c \
+	mast_config.h \
+	mast_config.c \
 	mcast_socket.c \
 	mcast_socket.h \
 	rtp.c \
@@ -48,3 +49,21 @@ mastclient_SOURCES = \
 	md5c.c \
 	md5.h \
 	global.h
+
+
+mpacast_SOURCES = \
+	mpacast.c \
+	mast_config.h \
+	mast_config.c \
+	mcast_socket.c \
+	mcast_socket.h \
+	mpa_header.c \
+	mpa_header.h \
+	rtp.c \
+	rtp.h \
+	random32.c \
+	random32.h \
+	md5c.c \
+	md5.h \
+	global.h
+

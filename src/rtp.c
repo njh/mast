@@ -41,7 +41,7 @@
 #include "random32.h"
 
 #include "config.h"
-#include "mast.h"
+#include "mast_config.h"
 #include "rtp.h"
 
 

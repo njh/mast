@@ -25,7 +25,7 @@
 #ifndef	_AUDIO_H_
 #define	_AUDIO_H_
 
-#include "mast.h"
+#include "mast_config.h"
 
 
 typedef struct audio_struct {

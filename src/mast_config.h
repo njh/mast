@@ -22,11 +22,8 @@
  */
 
 
-#ifndef	_MAST_H_
-#define	_MAST_H_
-
-#include "mcast_socket.h"
-#include "rtp.h"
+#ifndef	_MAST_CONFIG_H_
+#define	_MAST_CONFIG_H_
 
 
 typedef struct config_s {
@@ -51,27 +48,13 @@ typedef struct config_s {
 } config_t;
 
 
-
 #define DEFAULT_PAYLOAD		10
 #define MAX_STR_LEN			255
 
 
-
-/* In client.c */
-
-extern void client_setup_signals();
-extern void client_init_config( config_t* config );
-extern void client_main_loop(config_t* config, mcast_socket_t* rtp_socket);
-
-
-
-/* In rtp.c */
-
-extern rtp_packet_t* rtp_packet_init( config_t* config );
-extern void rtp_packet_set_frame_size( rtp_packet_t* rtp_packet, int frame_size );
-extern void rtp_packet_send( mcast_socket_t* rtp_socket, rtp_packet_t* rtp_packet, int payload_len);
-extern int rtp_packet_recv( mcast_socket_t* mcast_socket, rtp_packet_t* packet );
-extern void rtp_packet_delete( rtp_packet_t* rtp_packet );
+extern config_t* mast_config_init( );
+extern void mast_config_print( config_t* config );
+extern void mast_config_delete( config_t** config );
 
 
 #endif
