@@ -63,10 +63,9 @@ PKG_CHECK_MODULES(SNDFILE, sndfile >= 1.0.0,
 )
 
 dnl Check for JACK
-dnl AC_CHECK_HEADERS(jack/jack.h)
-AC_CHECK_LIB(jack, jack_client_new,
+PKG_CHECK_MODULES(JACK, jack,
 	[ JACKsupport="Enabled"
-	  AC_DEFINE(HAVE_JACK, 1, [ Define if JACK audio is available ]) ],
+	  AC_DEFINE(HAVE_JACK, 1, [ Define if JACK audio server is available ]) ],
 	[ JACKsupport="Disabled" ],
 )
 
