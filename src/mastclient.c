@@ -123,7 +123,7 @@ parse_cmd_line(int argc, char **argv, config_t* conf)
 	}
 	
 	
-#ifndef USE_OSS
+#ifndef HAVE_OSS
 	if (conf->devname) {
 		fprintf(stderr, "Error: Soundcard/OSS support isn't available.\n\n");
 		usage();
@@ -136,15 +136,11 @@ parse_cmd_line(int argc, char **argv, config_t* conf)
 #endif
 
 	if (!conf->devname && !conf->use_stdio && !conf->filename) {
-#ifdef USE_SDL	
-		conf->use_sdl = 1;
-#else
-		fprintf(stderr, "Error: Neither OSS or SDL is available - please choose file or stdout.\n\n");
+		fprintf(stderr, "Error: OSS isn't available - please choose file or stdout.\n\n");
 		usage();
-#endif
 	}
 	
-#ifndef USE_SNDFILE
+#ifndef HAVE_SNDFILE
 	if(conf->filename) {
 		fprintf(stderr, "Error: libsndfile isn't available.\n\n");
 		usage();
@@ -191,7 +187,6 @@ parse_cmd_line(int argc, char **argv, config_t* conf)
 	fprintf(stderr,"config.ip=%s\n", conf->ip);
 	fprintf(stderr,"config.ssrc=0x%x\n", conf->ssrc);
 	fprintf(stderr,"config.use_stdio=%d\n", conf->use_stdio);
-	fprintf(stderr,"config.use_sdl=%d\n", conf->use_sdl);
 	fprintf(stderr,"config.devname=%s\n", conf->devname);
 	fprintf(stderr,"config.filename=%s\n", conf->filename);
 	fprintf(stderr,"config.timeout=%d\n", conf->timeout);

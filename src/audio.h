@@ -79,12 +79,6 @@ extern void audio_close( audio_t* audio );
 extern void audio_stdio_write( audio_t* audio, int samples );
 extern int  audio_stdio_read( audio_t* audio, int samples );
 
-
-/* SDL */
-extern void audio_sdl_open_output( audio_t* audio );
-extern void audio_sdl_write( audio_t* audio, int samples );
-extern void audio_sdl_close( audio_t* audio );
-
 /* File */
 extern void audio_file_open_input( audio_t *audio, char* filename );
 extern void audio_file_open_output( audio_t *audio, char* filename );

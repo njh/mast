@@ -89,7 +89,6 @@ client_init_config( config_t* config )
 	config->payload_size = 0;
 	
 	config->use_stdio = 0;
-	config->use_sdl = 0;
 	config->loop_file = 0;
 	config->devname = NULL;
 	config->filename = NULL;

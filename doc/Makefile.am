@@ -12,6 +12,7 @@ ASCMANPAGES = $(man_MANS:%=%.asc)
 
 doc: $(man_MANS) $(HTMLMANPAGES) $(SGMLMANPAGES) README.html INSTALL.html
 
+
 README.html: ../README
 	$(ASCIIDOC) -d article -b html -o $@ $<
 	

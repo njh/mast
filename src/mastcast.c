@@ -64,7 +64,6 @@ init_config( config_t* config )
 	config->payload_size = 0;
 	
 	config->use_stdio = 0;
-	config->use_sdl = 0;
 	config->loop_file = 0;
 	config->devname = NULL;
 	config->filename = NULL;
@@ -194,7 +193,7 @@ void print_config() {
 	fprintf(stderr,"config.payload=%d\n", config.payload_type);
 	fprintf(stderr,"config.payload_size=%d\n", config.payload_size);
 	fprintf(stderr,"config.use_stdio=%d\n", config.use_stdio);
-#ifdef USE_OSS
+#ifdef HAVE_OSS
 	fprintf(stderr,"config.devname=%s\n", config.devname);
 #endif
 	fprintf(stderr,"config.filename=%s\n", config.filename);
@@ -219,7 +218,7 @@ int usage() {
 	fprintf(stderr, " -f <filename> File to stream\n");
 	fprintf(stderr, " -l loop file\n");
 	fprintf(stderr, " -i read audio from stdin\n");
-#ifdef USE_OSS
+#ifdef HAVE_OSS
 	fprintf(stderr, " -d <dev> read audio device\n");
 #endif
 	fprintf(stderr, "%s package version %s.\n", PACKAGE, VERSION);
@@ -280,14 +279,14 @@ parse_cmd_line(int argc, char **argv, config_t* conf)
 			usage();
 	}
 
-#ifndef USE_OSS
+#ifndef HAVE_OSS
 	if (conf->devname) {
 		fprintf(stderr, "Error: OSS soundcard support isn't available.\n");
 		usage();
 	}
 #endif
 
-#ifndef USE_SNDFILE
+#ifndef HAVE_SNDFILE
 	if(conf->filename) {
 		fprintf(stderr, "Error: libsndfile isn't available.\n\n");
 		usage();

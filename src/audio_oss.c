@@ -37,7 +37,7 @@
 #include "audio.h"
 
 
-#ifdef USE_OSS
+#ifdef HAVE_OSS
 
 #include <sys/soundcard.h>
 #include <sys/ioctl.h>

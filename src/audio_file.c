@@ -35,7 +35,7 @@
 
 
 
-#ifdef USE_SNDFILE
+#ifdef HAVE_SNDFILE
 
 #include <sndfile.h>
 

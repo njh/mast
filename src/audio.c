@@ -170,7 +170,7 @@ audio_t* audio_open_encoder( config_t *config )
 	}
 
 
-#ifdef USE_SNDFILE
+#ifdef HAVE_SNDFILE
 	else if (config->filename) {
 		audio_file_open_input( audio, config->filename );
 		audio->read_callback = audio_file_read;
@@ -179,7 +179,7 @@ audio_t* audio_open_encoder( config_t *config )
 	}
 #endif
 	
-#ifdef USE_OSS
+#ifdef HAVE_OSS
 	else if (config->devname) {
 		// open audio device
 		audio_oss_open_input( audio, config->devname );
@@ -213,7 +213,7 @@ audio_t* audio_open_decoder( config_t *config )
 		
 	}
 
-#ifdef USE_SNDFILE
+#ifdef HAVE_SNDFILE
 	else if (config->filename) {
 		/* Open output file */
 		audio_file_open_output( audio, config->filename );
@@ -222,16 +222,7 @@ audio_t* audio_open_decoder( config_t *config )
 	}
 #endif
 
-#ifdef USE_SDL	
-	else if (config->use_sdl) {
-		// open SDL for output
-		audio_sdl_open_output( audio );
-		audio->write_callback = audio_sdl_write;
-		audio->close_callback = audio_sdl_close;
-	}
-#endif
-
-#ifdef USE_OSS
+#ifdef HAVE_OSS
 	else if (config->devname) {
 		// open audio device
 		audio_oss_open_output( audio, config->devname );

@@ -40,7 +40,6 @@ typedef struct config_s {
 	int payload_size;
 	
 	int use_stdio;
-	int use_sdl;
 	int loop_file;
 	char* devname;
 	char* filename;

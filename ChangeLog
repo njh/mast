@@ -1,6 +1,7 @@
 2005-01-29  Nicholas J. Humfrey  <njh@ecs.soton.ac.uk>
 	* pcm6cast is now MAST
 	* began moving code accross and renaming
+	* Removed support for SDL (in preference of JACK)
 
 2004-10-05  Nicholas J. Humfrey  <njh@ecs.soton.ac.uk>
 

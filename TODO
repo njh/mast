@@ -1,26 +1,18 @@
 
-
-Put all configuration in config.h (not silly -DUSE_FOO)
-
-
 Finish convertion from pcm6cast to MAST.
 	- ipv4 examples
 	- merge in new multicast socket code
-	
-SDL won't compile on OS X / fink anymore :( (??)
-	- is trying to link against SDLmain for some reason
+
+Only try to rebuild documentation if tools are available
+
+Re-simplify the client (we only have one client again now - no mastshout)
 
 Add JACK support
 	- see jack.udp source code (sw-23)
 
-Add support for direct playout using OSS - rather than SDL
+Add support for direct playout using OSS
 
 Make fink+Debian packages
-
-There is a problem with audio playback using SDL,
-audio turns to static after a few seconds.
-I have seen to same problem on Mac OS X and Debian.
-(both little and big endian)
 
 
 
@@ -59,11 +51,5 @@ Display Current Play state info with \r
 Allow choice of interface for Multicast
 
 Perl script to open SDP files using mastclient
-
- - Output using threads/OSS
- - Problems with SDL - tuning into static
- - SDL is quite chunky - libao ?
- - Use portaudio for sound in/out
-
 
 Add support for dynamic payloads - L8 and L16
