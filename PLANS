@@ -1,4 +1,7 @@
 
+Static Types that could be added
+--------------------------------
+
 0 - PCMU		Built-in
 3 - GSM			libgsm (static in fink)
 
@@ -16,19 +19,31 @@
 14 - MPA		mpglib / toolame
 
 
+
+Dynamic Types that couble be added
+----------------------------------
+
 audio/L8
 audio/L20
 audio/L24
 audio/mpa-robust
 audio/DAT12
-audio/speex ?
-
-Floating Point/32bit
 
 
-  mastclient	-	Client / Listener -> Jack
-  mastcast	-		Broadcaster <- Jack
-X mastshout	-		Multicast to ice/shoutcast
-  mastmpa -			MPEG Audio broadcaster
-X mastarchive	-	Archive an audio stream (mix multiple sources ?)
-  mastreflect	-	Reflect UDP packets (Unicast,ASM&SSM)
+
+Doesn't exist (yet)
+-------------------
+
+audio/L32		- 32 bit Integer 
+audio/F32		- 32 bit IEEE floats (as used by JACK !)
+
+
+
+Programmes in MAST
+------------------
+
+mastclient		Client / Listener -> Jack
+mastcast		Broadcaster <- Jack
+mastmpa			MPEG Audio broadcaster
+mastreflect		Reflect UDP packets (Unicast,ASM&SSM)
+
