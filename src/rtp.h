@@ -25,7 +25,7 @@
 #define	_RTP_H_
 
 
-#include "udp_socket.h"
+#include "mcast_socket.h"
 
 
 
@@ -68,13 +68,13 @@ typedef struct {
 	int frame_size;				// Size (in bytes) of a frame of audio
 	
 	// IP address the packet came from
-	char src_ip[INET6_ADDRSTRLEN];
+	char src_ip[NI_MAXHOST];
 	
 	// Is this a valid/available packet
 	int valid;
 
-	rtp_hdr_t head;
-	char payload;
+	rtp_hdr_t head;		// Packet's header
+	char payload;		// Packet's payload
 
 } rtp_packet_t;
 

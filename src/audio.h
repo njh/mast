@@ -26,7 +26,6 @@
 #define	_AUDIO_H_
 
 #include "mast.h"
-#include "sfifo.h"
 
 
 typedef struct audio_struct {
@@ -41,7 +40,6 @@ typedef struct audio_struct {
 	/* Size in bytes of a single frame of raw audio */
 	//int raw_frame_size;
 	
-	sfifo_t fifo;
 	short* buffer;	/* Audio sample buffer */
 	int buf_size;	/* Number of samples that fit in buffer */
 	

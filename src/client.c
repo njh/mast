@@ -38,7 +38,7 @@
 
 
 #include "config.h"
-#include "udp_socket.h"
+#include "mcast_socket.h"
 #include "audio.h"
 #include "mast.h"
 #include "rtp.h"
@@ -102,7 +102,7 @@ client_init_config( config_t* config )
 
 
 void
-client_main_loop(config_t* config, udp_socket_t* rtp_socket)
+client_main_loop(config_t* config, mcast_socket_t* rtp_socket)
 {
 	unsigned int last_seq=0, ssrc = 0;
 	rtp_packet_t *packet = NULL;

@@ -30,7 +30,7 @@ struct {
 
 
 static void
-send_rtcp_packet( udp_socket_t* rtcp_socket ) {
+send_rtcp_packet( mcast_socket_t* rtcp_socket ) {
 	int packet_len = sizeof(rtcp_packet.sr_common) + sizeof(rtcp_packet.sr) +
 	                 sizeof(rtcp_packet.sdes_common) +
 	                 4 + sizeof(rtcp_packet.sdes_cname) + sizeof(rtcp_packet.sdes_name);
@@ -76,7 +76,7 @@ send_rtcp_packet( udp_socket_t* rtcp_socket ) {
 	memcpy(rtcp_packet.sdes_name.data,  "Mr   Nicholas   James  Humfrey", 30);
 	
 	
-	udp_socket_send( rtcp_socket, &rtcp_packet, packet_len );
+	mcast_socket_send( rtcp_socket, &rtcp_packet, packet_len );
 }
 
 

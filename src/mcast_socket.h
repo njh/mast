@@ -22,8 +22,8 @@
  */
 
 
-#ifndef	_UDP_SOCKET_H_
-#define	_UDP_SOCKET_H_
+#ifndef	_MCAST_SOCKET_H_
+#define	_MCAST_SOCKET_H_
 
 
 #include <sys/types.h>
@@ -32,26 +32,49 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#include <netdb.h>
 
 
 
 typedef struct {
 
-	int sock;
-	struct sockaddr_in6 sin;
-	struct ipv6_mreq imr;
+
+	/* I am using a pair of Socket File Descriptors
+	   because I have had problems sending packets out on
+	   a socket which has been bound to a port and an address.
+	   Only seems to be an issue on BSD - works ok on Linux.
+	   
+	   sendto(): 'Operation not supported'
+	   
+	   Not the best solution.. but makes things work.
+	*/
+	int fd_recv;
+	int fd_trans;
+
+	struct addrinfo ainfo;
+	struct sockaddr_storage saddr;
+	struct ipv6_mreq imr6;
+	struct ip_mreq imr;
 	
-	int timeout;
+	int timeout;	// timeout for receiving packets, or 0 for no timeout
+	int loopback;	// receive packets we send ?
+	int hops;		// multicast hops/ttl
+	int multicast;	// true if we joined multicast group
 	
-} udp_socket_t;
+	char origin_addr[NI_MAXHOST];
+	
+} mcast_socket_t;
+
+/*** Fixme: mcast_socket_t could be opaque to outside code */
 
 
-extern udp_socket_t* udp_socket_create(char *udp_host, int udp_port, int udp_ttl, int bind);
-extern void udp_socket_set_timeout( udp_socket_t* udp_socket, int timeout );
-extern unsigned int udp_socket_send( udp_socket_t* udp_socket, void* data, unsigned int len);
-extern unsigned int udp_socket_recv( udp_socket_t* udp_socket, 
-							void* data, unsigned  int len, struct sockaddr_in6 *from);
-extern void udp_socket_close( udp_socket_t* udp_socket);
+extern mcast_socket_t* mcast_socket_create(char *host, int port, int hops, int loopback);
+extern void mcast_socket_set_timeout( mcast_socket_t* mcast_socket, int timeout );
+extern int mcast_socket_get_timeout( mcast_socket_t* mcast_socket );
+extern char* mcast_socket_get_family( mcast_socket_t* mcast_socket );
+extern int mcast_socket_send( mcast_socket_t* mcast_socket, void* data, unsigned int len);
+extern int mcast_socket_recv( mcast_socket_t* mcast_socket, void* data, unsigned int len, char *from, int from_len);
+extern void mcast_socket_close( mcast_socket_t* mcast_socket);
 
 
 #endif

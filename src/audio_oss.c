@@ -190,14 +190,6 @@ void
 audio_oss_write( audio_t* audio, int samples )
 {
 	// samples is the total number of samples (left+right)
-
-/*
-	sfifo_write( &audio->fifo, audio->buffer, decoded_bytes);
-
-	// Unpause once the buffer is 80% full
-	if (sfifo_used(&audio->fifo) > (sfifo_size(&audio->fifo)*0.8) ) SDL_PauseAudio(0);
-*/
-
 	int samples_written = fwrite( audio->buffer, 2, samples, audio->fp );
 	if (samples_written == -1) {
 		perror("audio write to OSS");

@@ -98,7 +98,7 @@ void rtp_packet_set_frame_size( rtp_packet_t* rtp_packet, int frame_size )
 
 }
 
-void rtp_packet_send( udp_socket_t* rtp_socket, rtp_packet_t* rtp_packet, int payload_len )
+void rtp_packet_send( mcast_socket_t* rtp_socket, rtp_packet_t* rtp_packet, int payload_len )
 {
 	int packet_len = payload_len + sizeof(rtp_hdr_t);
 	int seq_num = rtp_packet->head.seq;
@@ -109,7 +109,7 @@ void rtp_packet_send( udp_socket_t* rtp_socket, rtp_packet_t* rtp_packet, int pa
 	rtp_packet->head.ts = htonl(time_stamp);
 	rtp_packet->head.seq = htons(seq_num);
 	
-	if (udp_socket_send( rtp_socket, &rtp_packet->head, packet_len )<=0) {
+	if (mcast_socket_send( rtp_socket, &rtp_packet->head, packet_len )<=0) {
 		perror("sendto failed");
 	}
 
@@ -127,11 +127,13 @@ void rtp_packet_send( udp_socket_t* rtp_socket, rtp_packet_t* rtp_packet, int pa
 
 
 
-int rtp_packet_recv( udp_socket_t* rtp_socket, rtp_packet_t* packet )
+int rtp_packet_recv( mcast_socket_t* rtp_socket, rtp_packet_t* packet )
 {
-	struct sockaddr_in6 incoming_sin;
-
-	int len=udp_socket_recv( rtp_socket, &packet->head, packet->packet_buffer_len, &incoming_sin );
+	char from[NI_MAXHOST];
+	
+	int len=mcast_socket_recv( rtp_socket, 
+			&packet->head, packet->packet_buffer_len,
+			from, NI_MAXHOST );
 	
 	/* Failure ? */	 
 	if (len <= 0) return len;
@@ -143,7 +145,7 @@ int rtp_packet_recv( udp_socket_t* rtp_socket, rtp_packet_t* packet )
 	packet->head.seq = ntohs( packet->head.seq );
 	
 	/* Convert the IP6 address to a string */
-	inet_ntop(AF_INET6, &(incoming_sin.sin6_addr), packet->src_ip, INET6_ADDRSTRLEN);
+	strncpy( packet->src_ip, from, NI_MAXHOST );
 	
 	/* Calculate the size of the payload */
 	packet->payload_size = len - sizeof( packet->head );

@@ -39,7 +39,7 @@
 #include "mast.h"
 #include "rtp.h"
 #include "audio.h"
-#include "udp_socket.h"
+#include "mcast_socket.h"
 
 
 #define PROGRAM_NAME "mastcast"
@@ -101,7 +101,7 @@ void add_usec2timeval( struct timeval * tv, long add )
 
 
 static void
-main_loop( udp_socket_t* rtp_socket, rtp_packet_t* rtp_packet )
+main_loop( mcast_socket_t* rtp_socket, rtp_packet_t* rtp_packet )
 {
 	struct timeval due, now;
 	int payload_frames = config.payload_size / audio->encoded_frame_size;
@@ -340,7 +340,7 @@ parse_cmd_line(int argc, char **argv, config_t* conf)
 
 int main(int argc, char **argv)
 {
-	udp_socket_t *rtp_socket;
+	mcast_socket_t *rtp_socket;
  	rtp_packet_t *rtp_packet;
 	
 	
@@ -359,8 +359,8 @@ int main(int argc, char **argv)
 	rtp_packet_set_frame_size( rtp_packet, audio->encoded_frame_size );
 	 
 	// Create multicast sockets
-	rtp_socket = udp_socket_create( config.ip, config.port, config.ttl, 0 );
-	//rtcp_socket = udp_socket_create( config.ip, config.port+1, config.ttl, 0 );
+	rtp_socket = mcast_socket_create( config.ip, config.port, config.ttl, 0 );
+	//rtcp_socket = mcast_socket_create( config.ip, config.port+1, config.ttl, 0 );
 
 
 	// Display some information
@@ -374,8 +374,8 @@ int main(int argc, char **argv)
 	audio_close( audio );
 	
 	
-	udp_socket_close(rtp_socket);
-	//udp_socket_close(rtcp_socket);
+	mcast_socket_close(rtp_socket);
+	//mcast_socket_close(rtcp_socket);
 	
 	rtp_packet_delete( rtp_packet );
 	 

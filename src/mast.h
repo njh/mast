@@ -22,10 +22,10 @@
  */
 
 
-#ifndef	_PCM6CAST_H_
-#define	_PCM6CAST_H_
+#ifndef	_MAST_H_
+#define	_MAST_H_
 
-#include "udp_socket.h"
+#include "mcast_socket.h"
 #include "rtp.h"
 
 
@@ -61,7 +61,7 @@ typedef struct config_s {
 
 extern void client_setup_signals();
 extern void client_init_config( config_t* config );
-extern void client_main_loop(config_t* config, udp_socket_t* rtp_socket);
+extern void client_main_loop(config_t* config, mcast_socket_t* rtp_socket);
 
 
 
@@ -69,8 +69,8 @@ extern void client_main_loop(config_t* config, udp_socket_t* rtp_socket);
 
 extern rtp_packet_t* rtp_packet_init( config_t* config );
 extern void rtp_packet_set_frame_size( rtp_packet_t* rtp_packet, int frame_size );
-extern void rtp_packet_send( udp_socket_t* rtp_socket, rtp_packet_t* rtp_packet, int payload_len);
-extern int rtp_packet_recv( udp_socket_t* udp_socket, rtp_packet_t* packet );
+extern void rtp_packet_send( mcast_socket_t* rtp_socket, rtp_packet_t* rtp_packet, int payload_len);
+extern int rtp_packet_recv( mcast_socket_t* mcast_socket, rtp_packet_t* packet );
 extern void rtp_packet_delete( rtp_packet_t* rtp_packet );
 
 

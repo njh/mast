@@ -38,7 +38,7 @@
 
 
 #include "config.h"
-#include "udp_socket.h"
+#include "mcast_socket.h"
 #include "mast.h"
 #include "rtp.h"
 
@@ -198,7 +198,7 @@ parse_cmd_line(int argc, char **argv, config_t* conf)
 
 int main(int argc, char **argv)
 {
-	udp_socket_t *udp_socket = NULL;
+	mcast_socket_t *mcast_socket = NULL;
 
 	// Set sensible defaults
 	client_init_config( &config );
@@ -209,8 +209,11 @@ int main(int argc, char **argv)
 	
 	
 	// Create UDP Socket
-	udp_socket = udp_socket_create( config.ip, config.port, config.ttl, 1 );
-	udp_socket_set_timeout( udp_socket, config.timeout );
+	mcast_socket = mcast_socket_create( config.ip, config.port, config.ttl, 1 );
+	if (!mcast_socket) return 1;
+	
+	// Configure timeout on socket
+	mcast_socket_set_timeout( mcast_socket, config.timeout );
 	
 
 	// Catch Signals
@@ -218,11 +221,11 @@ int main(int argc, char **argv)
 	
 
 	// Run the main process loop
-	client_main_loop( &config, udp_socket );
+	client_main_loop( &config, mcast_socket );
 
 
 	// Close UDP socket
-	udp_socket_close( udp_socket );
+	mcast_socket_close( mcast_socket );
 	
 	
 	// Success
