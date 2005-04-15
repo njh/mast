@@ -451,17 +451,18 @@ mcast_socket_create(char *host, int port, int hops, int loopback)
 	}
 	
 	
-	// Bind the recieving socket
-	if (_bind_socket( sock->fd_recv, sock )) {
-		mcast_socket_close(sock);
-		return NULL;
-	}
 	
 
 	// Join multicast group ?
 	sock->multicast = _is_multicast( &sock->saddr );
 	if( sock->multicast == 1) {
 
+		// Bind the recieving socket
+		if (_bind_socket( sock->fd_recv, sock )) {
+			mcast_socket_close(sock);
+			return NULL;
+		}
+		
 		if (_set_socketopts( sock )<0) {
 			fprintf(stderr, "Failed to set socket options.\n");
 			sock->multicast = 0;
@@ -479,6 +480,12 @@ mcast_socket_create(char *host, int port, int hops, int loopback)
 
 	} else if (sock->multicast == 0) {
 		int one=1;
+		
+		// Bind the recieving socket
+		//if (_bind_socket( sock->fd_recv, sock )) {
+		//	mcast_socket_close(sock);
+		//	return NULL;
+		//}
 		
 		if (setsockopt(sock->fd_recv, SOL_SOCKET, SO_BROADCAST, &one, sizeof(one)))
 		{

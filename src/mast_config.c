@@ -66,7 +66,7 @@ void
 mast_config_print( config_t* config )
 {
 
-#if DEBUG
+#ifdef DEBUG
 	fprintf(stderr,"config->ttl=%d\n", config->ttl);
 	fprintf(stderr,"config->port=%d\n", config->port);
 	fprintf(stderr,"config->ip=%s\n", config->ip);

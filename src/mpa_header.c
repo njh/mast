@@ -122,9 +122,9 @@ static void parse_header(mpa_header_t *mh, u_int32_t header)
 // For debugging
 void mpa_header_print( mpa_header_t *mh )
 {
-	if (mh->version==1)			fprintf(stderr, "version=1\n");
-	else if (mh->version==2)	fprintf(stderr, "version=2\n");
-	else if (mh->version==3)	fprintf(stderr, "version=2.5\n");
+	if (mh->version==1)			fprintf(stderr, "version=MPEG-1\n");
+	else if (mh->version==2)	fprintf(stderr, "version=MPEG-2\n");
+	else if (mh->version==3)	fprintf(stderr, "version=MPEG-2.5\n");
 	else 						fprintf(stderr, "version=unknown\n");
 
 	fprintf(stderr, "layer=%d\n", mh->layer);

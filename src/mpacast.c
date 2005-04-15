@@ -68,15 +68,14 @@ int usage() {
 	
 }
 
-/*
+
 static void
 parse_cmd_line(int argc, char **argv, config_t* conf)
 {
 	int ch;
 
-
 	// Parse the options/switches
-	while ((ch = getopt(argc, argv, "hs:t:if:lp:y:z:")) != -1)
+	while ((ch = getopt(argc, argv, "hs:t:if:lz:")) != -1)
 	switch (ch) {
 		case 's': {
 			// ssrc
@@ -104,9 +103,6 @@ parse_cmd_line(int argc, char **argv, config_t* conf)
 		break;
 		case 't':
 			conf->ttl = atoi(optarg);
-		break;
-		case 'p':
-			conf->payload_type = atoi(optarg);
 		break;
 		case 'z':
 			conf->payload_size = atoi(optarg);
@@ -160,40 +156,89 @@ parse_cmd_line(int argc, char **argv, config_t* conf)
 	if (conf->port%2 == 1) conf->port--;
 	
 }
-*/
 
-static void main_loop()
+
+
+static FILE*
+open_source( config_t* conf )
+{
+	FILE* src = NULL;
+	
+	if (conf->use_stdio) {
+		src = stdin;
+	} else if (conf->filename) {
+		src = fopen( conf->filename, "r" );
+		if (!src) perror( "Failed to open file for reading" );
+	} else {
+		fprintf(stderr, "open_source() failed: not STDIN or filename.\n");
+		exit(-1);
+	}
+
+	return src;
+}
+
+static void
+main_loop( mcast_socket_t* rtp_socket, rtp_packet_t* rtp_packet, FILE* src )
 {
 	mpa_header_t mh;
 	unsigned char buf[8192];
-	int count=0;
+	int synced=0;
 	
-	while(!feof(stdin)) {
-		unsigned int byte = fgetc(stdin);
+	while(!feof(src)) {
+		unsigned int byte = fgetc(src);
 		
 		if (byte == 0xFF) {
 			
 			// Read in the following 3 bytes of header
 			buf[0] = byte;
-			fread( &buf[1], 1, 3, stdin);
-			
+			fread( &buf[1], 1, 3, src);
+
+
+			// Get information about the frame
 			if (mpa_header_parse( buf, &mh )) {
 			
-				fseek( stdin, mh.framesize-4, SEEK_CUR );
-				fread( buf, 1, 4, stdin);
-			
-				if (mpa_header_parse( buf, &mh )) {
-					fprintf(stderr, "\nFound sync at byte 0x%x : 0x%2x %2x %2x %2x.\n",
-			 			count, buf[0], buf[1], buf[2], buf[3]);
+				// Once we see two valid MPEG Audio frames in a row
+				// then we consider ourselves synced
+				if (!synced) {
+					// ignore the rest of the first frame
+					fread( &buf[4], 1, mh.framesize-4, src);
 
-					mpa_header_print( &mh );
+					// read in next header
+					fread( buf, 1, 4, src);			
+					if (mpa_header_parse( buf, &mh )) {
+						#ifdef DEBUG
+							mpa_header_print( &mh );
+						#endif
+						synced = 1;
+					}
+				}
+
+				
+				// If synced then do something with the frame of MPEG audio
+				if (synced) {
+				
+					// Read in the rest of the frame
+					fread( &buf[4], 1, mh.framesize-4, src);
+					
+					// Copy into RTP packet
+					memcpy( &rtp_packet->payload, buf, mh.framesize );
+					
+					// Send the packet
+					rtp_packet_send( rtp_socket, rtp_packet, mh.framesize );
+					
+					fprintf(stderr,".");
 				}
 				
+			} else {
+				if (synced) fprintf(stderr, "Lost sync.\n");
+				synced=0;
 			}
 			
+		} else {
+			if (synced) fprintf(stderr, "Lost sync.\n");
+			synced=0;
 		}
-	
-		count++;
+
 	}
 
 }
@@ -203,24 +248,29 @@ int main(int argc, char **argv)
 {
 	mcast_socket_t *rtp_socket;
  	rtp_packet_t *rtp_packet;
+ 	FILE *src = NULL;
 	
 
 	// Set sensible defaults
 	config = mast_config_init( );
-
+	config->payload_type = 14;	// MPEG Audio
 	
 	// Parse the command line
-	//parse_cmd_line( argc, argv, config );
+	parse_cmd_line( argc, argv, config );
 
-	
+	// Open the input source
+	src = open_source( config );
 
 	/* Create and set default values for RTP packet */
 	rtp_packet = rtp_packet_init( config );
 	//rtp_packet_set_frame_size( rtp_packet, encoded_frame_size );
 	 
 	// Create multicast sockets
-	//rtp_socket = mcast_socket_create( config->ip, config->port, config->ttl, 0 );
-	//rtcp_socket = mcast_socket_create( config->ip, config->port+1, config->ttl, 0 );
+	rtp_socket = mcast_socket_create( config->ip, config->port, config->ttl, 0 );
+	if (!rtp_socket) {
+		fprintf(stderr, "mcast_socket_create returned NULL\n");
+		return -1;
+	}
 
 
 	// Display some information
@@ -228,17 +278,16 @@ int main(int argc, char **argv)
 	
 	
 	
-	// Do stuff
-	main_loop();
+	// Do 'stuff'
+	main_loop( rtp_socket, rtp_packet, src );
 	
-	 
+	
+	// Clean up
 	mcast_socket_close(rtp_socket);
-	//mcast_socket_close(rtcp_socket);
-	
 	rtp_packet_delete( rtp_packet );
-	
-	// Clean up configuration structure
 	mast_config_delete( &config );
+	fclose( src );
+	
 	 
 	// Success !
 	return 0;

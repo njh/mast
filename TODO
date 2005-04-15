@@ -105,6 +105,6 @@ Programmes in MAST
 mastclient		Client / Listener -> Jack
 mastcast		Broadcaster <- Jack
 mastmpa			MPEG Audio broadcaster
+mparec			Record/archive MPEG Audio streams
 mastreflect		Reflect UDP packets (Unicast,ASM&SSM)
-
 
