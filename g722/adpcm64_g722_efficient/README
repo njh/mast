@@ -1,0 +1,23 @@
+This directory contains the source code for the 
+CCITT G.722 standard speech compression/decompression
+algorithm. The code was originally written by Milton Anderson
+(milton@thumper.bellcore.com) from BELLCORE, and has
+been modified by Chengxiang Lu and Alex Hauptmann from the Speech Group, 
+Computer Science Department, Carnegie Mellon University to be fairly fast 
+and efficient, while retaining high fidelity. 
+
+decoder.c contains all the code to decompress an encoded file.
+Usage: adpcm_decoder  < adpcm_file > pcm_file
+
+encoder.c contains all the code to compress a raw speech file 
+Usage: adpcm_coder < pcm_file > adpcm_file
+
+sample test files are provided:
+
+pcminb.dat (raw speech data, PCM, 16khz, 16 bit (signed)).
+
+Read the file adpcm.tex or adpcm.ps for more information.
+
+If you have questions, please contact Alex Hauptmann (alex@cs.cmu.edu)
+or Chengxiang Lu (lu+@cs.cmu.edu).
+

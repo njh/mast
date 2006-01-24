@@ -1,0 +1,20 @@
+\begin{thebibliography}{1}
+
+\bibitem{IwadareandNishitani88}
+M.~Iwadare and T~Nishitani.
+\newblock 64 kbit/s audio signal transmission approaches using 32 kbit/s adpcm
+  channel banks.
+\newblock {\em IEEE Journal on selected areas in communication}, 6(2):307 --
+  313, February 1988.
+
+\bibitem{JayantandNoll84}
+N.S. Jayant and P.~Noll.
+\newblock {\em Digital Coding of Waveforms}.
+\newblock Prentice Hall, Englewood Cliffs, NJ, 1984.
+
+\bibitem{Papamichalis87}
+P.E. Papamichalis.
+\newblock {\em Practical Approaches to Speech Coding}.
+\newblock Prentice-Hall, Englewood Cliffs, NJ, 1987.
+
+\end{thebibliography}
