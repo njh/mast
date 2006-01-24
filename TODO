@@ -62,7 +62,7 @@ Perl script to open SDP files using mastclient
 Static Types that could be added
 --------------------------------
 
-0 - PCMU		Built-in
+0 - PCMU		(G711) Built-in
 3 - GSM			libgsm (static in fink)
 
 5 - DVI4		adpcm.c (source code)
@@ -70,8 +70,11 @@ Static Types that could be added
 16 - DVI4
 17 - DVI4
 
+
+
 7 - LPC10		(asterisk source code?)
-8 - PCMA		Built-in
+8 - PCMA		(G711) Built-in
+9 - G722		Built-in
 
 10 - L16		Built-in
 11 - L16		Built-in
