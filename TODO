@@ -83,8 +83,8 @@ Static Types that could be added
 
 
 
-Dynamic Types that couble be added
-----------------------------------
+Dynamic Types that could be added
+---------------------------------
 
 audio/L8
 audio/L20
@@ -105,9 +105,9 @@ audio/L32F		- 32 bit IEEE floats (as used by JACK !)
 Programmes in MAST
 ------------------
 
-mastclient		Client / Listener -> Jack
-mastcast		Broadcaster <- Jack
-mastmpa			MPEG Audio broadcaster
-mparec			Record/archive MPEG Audio streams
-mastreflect		Reflect UDP packets (Unicast,ASM&SSM)
+mast_client		Client / Listener -> Jack
+mast_cast		Broadcaster <- Jack
+mast_mpacast	MPEG Audio broadcaster
+mast_record		Record/archive raw audio streams
+mast_reflect	Reflect UDP packets (Unicast,ASM&SSM)
 
