@@ -1,15 +1,20 @@
 
-bin_PROGRAMS = mastcast mastclient mpacast
-AM_CFLAGS = @SNDFILE_CFLAGS@
-AM_LDFLAGS = @SNDFILE_LIBS@
+bin_PROGRAMS = mast_record
 
+mast_record_SOURCES = \
+	gethostname.c \ 
+	mast_record.c
 
-mastcast_SOURCES = \
+mast_mpacast_SOURCES = \
+	gethostname.c \ 
+	mast_mpacast.c \
+	mpa_header.c \
+	mpa_header.h 
+
+mast_cast_SOURCES = \
 	mastcast.c \
 	mast_config.h \
 	mast_config.c \
-	mcast_socket.c \
-	mcast_socket.h \
 	rtp.c \
 	rtp.h \
 	audio.c \
@@ -27,12 +32,10 @@ mastcast_SOURCES = \
 	md5.h \
 	global.h
 	
-mastclient_SOURCES = \
+mast_client_SOURCES = \
 	mastclient.c \
 	mast_config.h \
 	mast_config.c \
-	mcast_socket.c \
-	mcast_socket.h \
 	rtp.c \
 	rtp.h \
 	audio.c \
@@ -55,10 +58,6 @@ mpacast_SOURCES = \
 	mpacast.c \
 	mast_config.h \
 	mast_config.c \
-	mcast_socket.c \
-	mcast_socket.h \
-	mpa_header.c \
-	mpa_header.h \
 	rtp.c \
 	rtp.h \
 	random32.c \

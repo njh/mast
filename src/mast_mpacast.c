@@ -55,13 +55,11 @@ config_t *config=NULL;
 
 int usage() {
 	
-	fprintf(stderr, "%s [options] <addr>/<port>\n", PROGRAM_NAME);
+	fprintf(stderr, "%s [options] <addr>/<port> [file1 file2...]\n", PROGRAM_NAME);
 	fprintf(stderr, "  -s <ssrc> (if unspecified it is random)\n");
 	fprintf(stderr, "  -t <ttl> Time to live (default 5)\n");
 	fprintf(stderr, "  -z <payload size> Maximum payload size (1450)\n");
-	fprintf(stderr, "  -f <filename> MPEG Audio file to stream\n");
 	fprintf(stderr, "  -l loop file\n");
-	fprintf(stderr, "  -i read MPEG Audio from stdin\n");
 	fprintf(stderr, "%s package version %s.\n", PACKAGE, VERSION);
 	
 	exit(1);
@@ -271,6 +269,7 @@ int main(int argc, char **argv)
 		fprintf(stderr, "mcast_socket_create returned NULL\n");
 		return -1;
 	}
+
 
 
 	// Display some information

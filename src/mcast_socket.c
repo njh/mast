@@ -424,9 +424,17 @@ mcast_socket_create(char *host, int port, int hops, int loopback)
 	
 	
 	/* Lookup address, get info */
-	if (_get_addrinfo( host, port, &sock->ainfo, &sock->saddr )) {
+	if (0) {
+	if ( _get_addrinfo( host, port, &sock->ainfo, &sock->saddr )) {
 		mcast_socket_close(sock);
 		return NULL;
+	}
+	} else {
+		sock->ainfo.ai_family = AF_INET;
+		sock->ainfo.ai_socktype = SOCK_DGRAM;
+		sock->ainfo.ai_protocol = IPPROTO_UDP;
+		
+		sock->saddr
 	}
 	
 

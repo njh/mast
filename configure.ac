@@ -50,7 +50,7 @@ AC_SUBST( POD2TEXT )
 dnl ############## Library Checks
 
 dnl Check for libsndfile
-PKG_CHECK_MODULES(SNDFILE, sndfile >= 1.0.0,
+PKG_CHECK_MODULES(SNDFILE, sndfile >= 1.0.0, ,
 	[ AC_MSG_ERROR(
 		[ Version 1.0.0 or greater of libsndfile is required.
 		It can be downloaded from http://www.mega-nerd.com/libsndfile/ ])
@@ -97,7 +97,7 @@ AC_CHECK_TYPE(u_int8_t, unsigned char)
 
 
 dnl ############## Compiler and Linker Flags
-CFLAGS="$CFLAGS $ORTP_CFLAGS $LIBSNDFILE_CFLAGS"
+CFLAGS="$CFLAGS -std=c99 $ORTP_CFLAGS $LIBSNDFILE_CFLAGS"
 LDFLAGS="$LDFLAGS $ORTP_LIBS $LIBSNDFILE_LIBS"
 
 if test x$Debugging = xEnabled; then
