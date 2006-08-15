@@ -7,13 +7,13 @@ dnl ############# Initialisation
 
 AC_INIT([mast], [0.2a], [njh@ecs.soton.ac.uk])
 
-AC_CONFIG_SRCDIR( src/mastcast.c )
-AC_CONFIG_AUX_DIR( build) 
+AC_CONFIG_SRCDIR(src/mastcast.c)
+AC_CONFIG_AUX_DIR(build) 
 AC_CANONICAL_SYSTEM
 
 dnl Version 1.7 of automake is recommended
-AM_INIT_AUTOMAKE( 1.7 )
-AM_CONFIG_HEADER( build/config.h )
+AM_INIT_AUTOMAKE(1.7)
+AM_CONFIG_HEADER(build/config.h)
 
 
 
@@ -51,31 +51,33 @@ dnl ############## Library Checks
 
 dnl Check for libsndfile
 PKG_CHECK_MODULES(SNDFILE, sndfile >= 1.0.0,
-	[ sndfileSupport="Enabled" 
-	  AC_DEFINE(HAVE_SNDFILE, 1, [ Define if libsndfile v1.X is available ]) ],
-	[ sndfileSupport="Disabled" ]
-)
-
-dnl Check for JACK
-PKG_CHECK_MODULES(JACK, jack,
-	[ JACKsupport="Enabled"
-	  AC_DEFINE(HAVE_JACK, 1, [ Define if JACK audio server is available ]) ],
-	[ JACKsupport="Disabled" ]
+	[ AC_MSG_ERROR(
+		[ Version 1.0.0 or greater of libsndfile is required.
+		It can be downloaded from http://www.mega-nerd.com/libsndfile/ ])
+	]
 )
 
 dnl Check for ortp
-PKG_CHECK_MODULES(ORTP, ortp >= 0.7.1, ,
-	[ AC_MSG_ERROR([ Version 1.7.1 or greater of the ortp library is required to build MAST. It can be downloaded from http://www.linphone.org/ortp/ ]) ]
+PKG_CHECK_MODULES(ORTP, ortp >= 0.9.1, ,
+	[ AC_MSG_ERROR(
+		[ Version 0.9.1 or greater of the oRTP library is required to build MAST.
+		It can be downloaded from http://www.linphone.org/ortp/ ])
+	]
 )
+
+dnl Check for JACK
+dnl PKG_CHECK_MODULES(JACK, jack,
+dnl 	[ JACKsupport="Enabled"
+dnl 	  AC_DEFINE(HAVE_JACK, 1, [ Define if JACK audio server is available ]) ],
+dnl 	[ JACKsupport="Disabled" ]
+dnl )
 
 
 
 dnl ############## Header Checks
 
 AC_HEADER_STDC
-dnl AC_CHECK_HEADERS(standards.h signal.h)
-dnl AC_CHECK_HEADERS(string.h strings.h sys/resource.h sys/types.h unistd.h)
-dnl AC_CHECK_HEADERS(sys/bitypes.h sys/socket.h)
+AC_CHECK_HEADERS([stdlib.h string.h unistd.h signal.h])
 
 dnl Check for Linux (OSS) sound support
 AC_CHECK_HEADER(sys/soundcard.h, 
@@ -95,11 +97,13 @@ AC_CHECK_TYPE(u_int8_t, unsigned char)
 
 
 dnl ############## Compiler and Linker Flags
-CFLAGS="$CFLAGS $ORTP_CFLAGS -Wunused -Wall "
-LDFLAGS="$LDFLAGS $ORTP_LIBS "
+CFLAGS="$CFLAGS $ORTP_CFLAGS $LIBSNDFILE_CFLAGS"
+LDFLAGS="$LDFLAGS $ORTP_LIBS $LIBSNDFILE_LIBS"
 
 if test x$Debugging = xEnabled; then
-	CFLAGS="$CFLAGS -g -Werror"
+	CFLAGS="$CFLAGS -g -Wunused -Wall -Werror"
+else
+	CFLAGS="$CFLAGS -O2"
 fi
 
 
@@ -114,13 +118,12 @@ dnl ############## Display Message
 
 echo "
   Multicast Audio Streaming Toolkit $VERSION
-  Copyright (C) 2003-2005 University of Southampton
+  Copyright (C) 2003-2006 University of Southampton
 
   Install path .......... $prefix
   Debugging ............. $Debugging
   OSS support ........... $OSSsupport
   JACK support .......... $JACKsupport
-  libsndfile support .... $sndfileSupport
   
 Next type 'make' and then 'make install'."
 
