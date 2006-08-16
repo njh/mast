@@ -26,6 +26,7 @@
 #include <netdb.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <stdarg.h>
 
 #include "config.h"
 #include "mast.h"
@@ -65,5 +66,37 @@ char* gethostname_fqdn()
 
 	// What else can we try?
 	return NULL;
+}
+
+
+
+// Handle an error and store the error message
+void message_handler( int level, const char* file, int line, char *fmt, ... )
+{
+	va_list args;
+	
+	// If debugging is enabled then display the filename and line number
+#ifdef DEBUGGING
+	fprintf( stderr, "[%s:%d] ", file, line );
+#endif
+	
+	// Display the error message
+	switch( level ) {
+		case MSG_LEVEL_DEBUG:	fprintf( stderr, "Debug: " ); break;
+		case MSG_LEVEL_INFO:	fprintf( stderr, "Info: " ); break;
+		case MSG_LEVEL_WARNING:	fprintf( stderr, "Warning: " ); break;
+		case MSG_LEVEL_ERROR:	fprintf( stderr, "Error: " ); break;
+	}
+	
+	// Display the message
+	va_start( args, fmt );
+	vfprintf( stderr, fmt, args );
+	fprintf( stderr, "\n" );
+	va_end( args );
+	
+	// If it is an error, then stop
+	if (level==MSG_LEVEL_ERROR) {
+		exit(-1);
+	}
 }
 

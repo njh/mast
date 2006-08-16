@@ -1,15 +1,15 @@
 
-bin_PROGRAMS = mast_record
+bin_PROGRAMS = mast_mpacast
 
 mast_record_SOURCES = \
-	gethostname.c \ 
+	gethostname.c \
 	mast_record.c
 
 mast_mpacast_SOURCES = \
-	gethostname.c \ 
 	mast_mpacast.c \
 	mpa_header.c \
-	mpa_header.h 
+	mpa_header.h \
+	util.c
 
 mast_cast_SOURCES = \
 	mastcast.c \

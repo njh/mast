@@ -5,7 +5,7 @@ AC_PREREQ(2.57)
 
 dnl ############# Initialisation
 
-AC_INIT([mast], [0.2a], [njh@ecs.soton.ac.uk])
+AC_INIT([MAST], [0.2a], [njh@ecs.soton.ac.uk])
 
 AC_CONFIG_SRCDIR(src/mastcast.c)
 AC_CONFIG_AUX_DIR(build) 
@@ -13,7 +13,7 @@ AC_CANONICAL_SYSTEM
 
 dnl Version 1.7 of automake is recommended
 AM_INIT_AUTOMAKE(1.7)
-AM_CONFIG_HEADER(build/config.h)
+AM_CONFIG_HEADER(src/config.h)
 
 
 
@@ -32,7 +32,7 @@ dnl ############# Configure Arguments
 AC_ARG_ENABLE(debug,
               [--enable-debug=[no/yes] turn on debugging],
               [ Debugging="Enabled" 
-                AC_DEFINE(DEBUG, 1, [ Define if debugging is enabled. ]) ],
+                AC_DEFINE(DEBUGGING, 1, [ Define if debugging is enabled. ]) ],
               [ Debugging="Disabled" ]
 )
 

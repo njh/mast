@@ -31,132 +31,118 @@
 #include <errno.h>
 #include <string.h>
 
-#include <sys/types.h>
-#include <sys/time.h>
+#include <ortp/ortp.h>
 
 
 #include "config.h"
-#include "mast_config.h"
-#include "mcast_socket.h"
-#include "rtp.h"
+#include "mast.h"
 #include "mpa_header.h"
 
 
-#define PROGRAM_NAME "mpacast"
+#define PROGRAM_NAME "mast_mpacast"
 
 
 /* Global Variables */
-config_t *config=NULL;
+char* g_addr = NULL;
+int g_port = DEFAULT_RTP_PORT;
+int g_ssrc = DEFAULT_RTP_SSRC;
+int g_ttl = DEFAULT_MULTICAST_TTL;
+int g_mtu = DEFAULT_MAX_PAYLOAD_SIZE;
+int g_loop = 0;
+int g_running = TRUE;
 
 
+// RTP Payload Type for MPEG Audio
+PayloadType	payload_type_mpeg_audio={
+	PAYLOAD_AUDIO_PACKETIZED, // type
+	90000,	// clock rate
+	0,		// bytes per sample N/A
+	NULL,	// zero pattern N/A
+	0,		// pattern_length N/A
+	0,		// normal_bitrate
+	"mpa",	// MIME Type
+	0		// flags
+};
 
 
 
 
 int usage() {
 	
-	fprintf(stderr, "%s [options] <addr>/<port> [file1 file2...]\n", PROGRAM_NAME);
+	fprintf(stderr, "%s version %s.\n\n", PACKAGE_NAME, VERSION);
+	fprintf(stderr, "%s [options] <addr>[/<port>] [file1 file2...]\n", PROGRAM_NAME);
 	fprintf(stderr, "  -s <ssrc> (if unspecified it is random)\n");
 	fprintf(stderr, "  -t <ttl> Time to live (default 5)\n");
-	fprintf(stderr, "  -z <payload size> Maximum payload size (1450)\n");
+	fprintf(stderr, "  -m <payload size> Maximum payload size (1450)\n");
 	fprintf(stderr, "  -l loop file\n");
-	fprintf(stderr, "%s package version %s.\n", PACKAGE, VERSION);
 	
 	exit(1);
-	
 }
 
 
+
+
+
 static void
-parse_cmd_line(int argc, char **argv, config_t* conf)
+parse_cmd_line(int argc, char **argv)
 {
 	int ch;
 
 	// Parse the options/switches
-	while ((ch = getopt(argc, argv, "hs:t:if:lz:")) != -1)
-	switch (ch) {
-		case 's': {
-			// ssrc
-			char * ssrc_str = optarg;
-			
-			// Remove 0x from the start of the string
-			if (optarg[0] == '0' && (optarg[1] == 'x' || optarg[1] == 'X')) {
-				ssrc_str += 2;
-			}
-			
-			if (sscanf(ssrc_str, "%x", &conf->ssrc)<=0) {
-				fprintf(stderr, "Error: SSRC should be a hexadeicmal number.\n\n");
-				usage();
-			}
+	while ((ch = getopt(argc, argv, "hs:t:lm:")) != -1) {
+		switch (ch) {
+			case 's':
+				// ssrc
+				g_ssrc = atoi( optarg );
 			break;
+			case 'l':
+				g_loop = 1;
+			break;
+			case 't':
+				g_ttl = atoi(optarg);
+			break;
+			case 'm':
+				g_mtu = atoi(optarg);
+			break;
+			case '?':
+			case 'h':
+			default:
+				usage();
 		}
-		case 'f':
-			conf->filename = optarg;
-		break;
-		case 'i':
-			conf->use_stdio = 1;
-		break;
-		case 'l':
-			conf->loop_file = 1;
-		break;
-		case 't':
-			conf->ttl = atoi(optarg);
-		break;
-		case 'z':
-			conf->payload_size = atoi(optarg);
-		break;
-		case '?':
-		case 'h':
-		default:
-			usage();
 	}
 
-
+/*
 	if (conf->loop_file && !conf->filename) {
 		fprintf(stderr, "Error: Can't loop unless streaming a file.\n");
 		usage();
 	}
-	
-	if (!conf->filename && !conf->use_stdio) {
-		fprintf(stderr, "Error: no input source selected.\n");
-		usage();
-	}
-	
+*/
+
 	
 	// Parse the ip address and port
 	if (argc > optind) {
-		conf->ip = argv[optind];
-		optind++;
+		char* port_str = NULL;
 		
-		if (argc > optind) {
-			conf->port = atoi(argv[optind]);
-		} else {
-			// Look for port in 
-			char* port = strchr(conf->ip, '/');
-			if (port && strlen(port)>1) {
-				*port = 0;
-				port++;
-				conf->port = atoi(port);
-			}
-		}
-		
-		if (!conf->port) {
-			fprintf(stderr, "Error: missing port parameter.\n\n");
-			usage();
+		g_addr = argv[optind++];
+		port_str = strchr(g_addr, '/');
+		if (port_str && strlen(port_str)>1) {
+			*port_str = 0;
+			port_str++;
+			g_port = atoi(port_str);
 		}
 	
 	} else {
-		fprintf(stderr, "Error: missing IP/port.\n\n");
+		fprintf(stderr, "Error: missing address/port.\n\n");
 		usage();
 	}
 	
 	// Make sure the port number is even
-	if (conf->port%2 == 1) conf->port--;
+	if (g_port%2 == 1) g_port--;
 	
 }
 
 
-
+/*
 static FILE*
 open_source( config_t* conf )
 {
@@ -174,7 +160,10 @@ open_source( config_t* conf )
 
 	return src;
 }
+*/
 
+
+/*
 static void
 main_loop( mcast_socket_t* rtp_socket, rtp_packet_t* rtp_packet, FILE* src )
 {
@@ -240,54 +229,87 @@ main_loop( mcast_socket_t* rtp_socket, rtp_packet_t* rtp_packet, FILE* src )
 	}
 
 }
+*/
 
+static RtpSession * init_rtp_session()
+{
+	RtpSession *session;
+	char cname[ STR_BUF_SIZE ];
+	char tool[ STR_BUF_SIZE ];
+	char *hostname;
+	
+	// Initialise ortp
+	ortp_set_log_level_mask( ORTP_WARNING|ORTP_ERROR|ORTP_FATAL );
+	ortp_init();
+	
+	// Set the MPEG Audio payload type to 14 in the AV profile
+	rtp_profile_set_payload(&av_profile, RTP_MPEG_AUDIO_PT, &payload_type_mpeg_audio);
+
+
+	// Create new session
+	session=rtp_session_new(RTP_SESSION_SENDONLY);
+	rtp_session_set_remote_addr(session, g_addr, g_port);
+	rtp_session_set_multicast_ttl(session, g_ttl);
+	rtp_session_set_payload_type(session, RTP_MPEG_AUDIO_PT);
+	
+	// Static SSRC?
+	if (g_ssrc) {
+		DEBUG("g_ssrc=%d", g_ssrc);
+		rtp_session_set_ssrc(session, g_ssrc);
+	}
+	
+	// Set RTCP parameters
+	hostname = gethostname_fqdn();
+	snprintf( cname, STR_BUF_SIZE, "%s@%s", PACKAGE, hostname );
+	snprintf( tool, STR_BUF_SIZE, "%s (%s/%s)", PROGRAM_NAME, PACKAGE, PACKAGE_VERSION );
+	free( hostname );
+	
+	DEBUG("rtcp->cname=%s", cname);
+	DEBUG("rtcp->tool=%s", tool);
+	
+	rtp_session_set_source_description(
+		session,		// RtpSession*
+		cname,			// CNAME
+		NULL,			// name
+		NULL,			// email
+		NULL,			// phone
+		NULL,			// loc
+		tool,			// tool
+		NULL			// note
+	);
+	
+	return session;
+}
+
+static void shutdown_rtp_session( RtpSession* session )
+{
+
+	rtp_session_uninit( session );
+	ortp_exit();	
+
+}
 
 int main(int argc, char **argv)
 {
-	mcast_socket_t *rtp_socket;
- 	rtp_packet_t *rtp_packet;
- 	FILE *src = NULL;
+	RtpSession *session;
+
+	// Parse command line parameters
+	parse_cmd_line( argc, argv );
 	
-
-	// Set sensible defaults
-	config = mast_config_init( );
-	config->payload_type = 14;	// MPEG Audio
+	DEBUG( "g_addr=%s", g_addr );
+	DEBUG( "g_port=%d", g_port );
 	
-	// Parse the command line
-	parse_cmd_line( argc, argv, config );
-
-	// Open the input source
-	src = open_source( config );
-
-	/* Create and set default values for RTP packet */
-	rtp_packet = rtp_packet_init( config );
-	//rtp_packet_set_frame_size( rtp_packet, encoded_frame_size );
-	 
-	// Create multicast sockets
-	rtp_socket = mcast_socket_create( config->ip, config->port, config->ttl, 0 );
-	if (!rtp_socket) {
-		fprintf(stderr, "mcast_socket_create returned NULL\n");
-		return -1;
+	
+	// Create an RTP session
+	session = init_rtp_session();
+	
+	while(g_running) {
+		
+	
 	}
-
-
-
-	// Display some information
-	mast_config_print( config );
 	
+	shutdown_rtp_session(session);
 	
-	
-	// Do 'stuff'
-	main_loop( rtp_socket, rtp_packet, src );
-	
-	
-	// Clean up
-	mcast_socket_close(rtp_socket);
-	rtp_packet_delete( rtp_packet );
-	mast_config_delete( &config );
-	fclose( src );
-	
-	 
 	// Success !
 	return 0;
 }

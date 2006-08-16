@@ -26,6 +26,20 @@
 #define	_MAST_H_
 
 
+// Defaults
+#define DEFAULT_RTP_SSRC			(0)
+#define DEFAULT_MULTICAST_TTL		(5)
+#define DEFAULT_MAX_PAYLOAD_SIZE	(1450)
+#define DEFAULT_RTP_PORT			(5004)
+
+// Standard string buffer size
+#define STR_BUF_SIZE				(1025)
+
+// Payload type for MPEG Audio
+#define RTP_MPEG_AUDIO_PT			(14)
+
+
+
 // Use by gethostname()
 #ifndef HOST_NAME_MAX
 #ifdef _POSIX_HOST_NAME_MAX
@@ -39,15 +53,28 @@
 #define DOMAIN_NAME_MAX	(1024)
 #endif
 
-// Standard string buffer size
-#define STR_BUF_SIZE			1025
 
 
+// Message levels
+#define MSG_LEVEL_DEBUG		(1)
+#define MSG_LEVEL_INFO		(2)
+#define MSG_LEVEL_WARNING	(3)
+#define MSG_LEVEL_ERROR		(4)
 
+// Only display debugging messages if debugging is enabled
+#ifdef DEBUGGING
+#define DEBUG(s ...)  message_handler( MSG_LEVEL_DEBUG, __FILE__, __LINE__, s )
+#else
+#define DEBUG
+#endif
 
-// In gethostname.c
+#define INFO(s ...)  message_handler( MSG_LEVEL_INFO, __FILE__, __LINE__, s )
+#define WARNING(s ...)  message_handler( MSG_LEVEL_WARNING, __FILE__, __LINE__, s )
+#define ERROR(s ...)  message_handler( MSG_LEVEL_ERROR, __FILE__, __LINE__, s )
+
+// In util.c
 extern char* gethostname_fqdn();
-
+extern void message_handler( int level, const char* file, int line, char *fmt, ... );
 
 
 #endif
