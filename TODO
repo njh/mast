@@ -101,13 +101,3 @@ audio/L32		- 32 bit Integer
 audio/L32F		- 32 bit IEEE floats (as used by JACK !)
 
 
-
-Programmes in MAST
-------------------
-
-mast_client		Client / Listener -> Jack
-mast_cast		Broadcaster <- Jack
-mast_mpacast	MPEG Audio broadcaster
-mast_record		Record/archive raw audio streams
-mast_reflect	Reflect UDP packets (Unicast,ASM&SSM)
-

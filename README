@@ -16,10 +16,15 @@ Unlike VAT and RAT, which are designed primerily for audio conferencing, MAST
 is designed to be used for audio distribution and broadcast.
 
 
-**************************************************************************
-NOTE: This version doesn't support RTCP so doesn't inter-operate well with
-RAT but it will do in a future release.
-**************************************************************************
+
+Tools in MAST
+-------------
+
+mast_client		Client / Listener -> Jack
+mast_cast		Broadcaster <- Jack
+mast_mpacast	MPEG Audio broadcaster
+mast_record		Record/archive raw audio streams
+mast_reflect	Reflect UDP packets (Unicast,ASM&SSM)
 
 
 
