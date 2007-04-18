@@ -62,24 +62,29 @@ Perl script to open SDP files using mastclient
 Static Types that could be added
 --------------------------------
 
-0 - PCMU		(G711) Built-in
-3 - GSM			libgsm (static in fink)
+0	audio/PCMU		8000	1		(G.711) Built-in
+3	audio/GSM		8000	1		libgsm (static library)
 
-5 - DVI4		adpcm.c (source code)
-6 - DVI4
-16 - DVI4
-17 - DVI4
-
+5	audio/DVI4		8000	1		adpcm.c
+6	audio/DVI4		16000	1		adpcm.c
+7	audio/LPC		8000	1		(asterisk source?)
 
 
-7 - LPC10		(asterisk source code?)
-8 - PCMA		(G711) Built-in
-9 - G722		Built-in
+8	audio/PCMA		8000	1		(G.711) Built-in
+9	audio/G722		8000	1		Built-in
 
-10 - L16		Built-in
-11 - L16		Built-in
+10	audio/L16		44100	2		Built-in
+11	audio/L16		44100	1		Built-in
 
-14 - MPA		mpglib / toolame
+12	audio/QCELP		8000	1		MPlayer source code?
+
+14	audio/MPA		*		*		mpglib / toolame
+
+16	audio/DVI4		11025	1		adpcm.c
+17	audio/DVI4		22050	1		adpcm.c
+
+
+See RFC4856 for RTP MIME type registration.
 
 
 
@@ -91,6 +96,7 @@ audio/L20
 audio/L24
 audio/mpa-robust
 audio/DAT12
+audio/speex
 
 
 

@@ -13,18 +13,23 @@ What is MAST ?
 MAST is an audio streaming broadcaster and client using RTP over IPv4 and IPv6 Multicast.
 
 Unlike VAT and RAT, which are designed primerily for audio conferencing, MAST
-is designed to be used for audio distribution and broadcast.
+is designed to be used for audio distribution and broadcast. It is currently limited 
+to recieving a single audio source, unlike RAT which can mix serveral sources.
+
+It supports many of the audio payload type  in the Audio-visual Profile (RTP/AVP).
 
 
 
 Tools in MAST
 -------------
 
-mast_client		Client / Listener -> Jack
-mast_cast		Broadcaster <- Jack
-mast_mpacast	MPEG Audio broadcaster
-mast_record		Record/archive raw audio streams
-mast_reflect	Reflect UDP packets (Unicast,ASM&SSM)
+mast_listen		Client / Listener -> Jack/SDL
+mast_cast		Live Audio Broadcaster <- Jack
+mast_filecast	Audio file broadcaster
+mast_rawcast	MPEG Audio file broadcaster
+mast_record		Record/archive audio stream to audio file
+mast_rawrecord	Record/archive raw audio streams
+mast_transcast	Reflect and transcode RTP streams
 
 
 
@@ -49,7 +54,7 @@ Test Stream
 You can listen to a test stream coming from Unversity of Southampton:
 
 ----------------------------------------------------------
-[hwickabab:~] njh% mastclient FF1E:2001:630:d0:201:83::80/5000
+[hwickabab:~] njh% mast_client FF1E:2001:630:d0:201:83::80/5000
 Connecting to FF1E:2001:630:d0:201:83::80/5000.
 Joined multicast group.
 Waiting for first packet...
