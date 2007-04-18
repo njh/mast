@@ -82,7 +82,7 @@ static void parse_header(mpa_header_t *mh, u_int32_t header)
 	if ((mh->syncword & 0x01) == 0)
 		mh->version = 3;
 
-	mh->layer = 4-((header >> 17) & 0x03);
+	mh->layer = 4 - ((header >> 17) & 0x03);
 	if (mh->layer==4)
 		mh->layer=0;
 		

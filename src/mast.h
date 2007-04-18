@@ -55,6 +55,9 @@
 
 
 
+#define DEFAULT_RTP_PORT		"5004"
+#define RTP_PAYLOAD_TYPE_MPA	(14)
+
 // Message levels
 #define MSG_LEVEL_DEBUG		(1)
 #define MSG_LEVEL_INFO		(2)
