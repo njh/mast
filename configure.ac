@@ -59,9 +59,9 @@ AC_SUBST( BUILD_DOC )
 dnl ############## Library Checks
 
 dnl Check for ortp
-PKG_CHECK_MODULES(ORTP, ortp >= 0.9.1, ,
+PKG_CHECK_MODULES(ORTP, ortp >= 0.13.1, ,
 	[ AC_MSG_ERROR(
-		[ Version 0.9.1 or greater of the oRTP library is required to build MAST.
+		[ Version 0.13.1 or greater of the oRTP library is required to build MAST.
 		It can be downloaded from http://www.linphone.org/ortp/ ])
 	]
 )
