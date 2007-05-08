@@ -49,6 +49,9 @@ Display Current Play state info with \r
 
 Allow choice of interface for Multicast
 
+Add SDP generation and RTSP announce support.
+
+
 Perl script to open SDP files using mast_listen
 
 
