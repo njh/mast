@@ -164,3 +164,38 @@ void mast_setup_signals()
 }
 
 
+
+// Parse a DSCP class name into an integer
+int mast_parse_dscp( const char* value )
+{
+
+	if (!strcmp(value,"BE"))         return 0x00;
+	
+	else if (!strcmp(value,"CS0"))   return 0x00;
+	else if (!strcmp(value,"CS1"))   return 0x08;
+	else if (!strcmp(value,"CS2"))   return 0x10;
+	else if (!strcmp(value,"CS3"))   return 0x18;
+	else if (!strcmp(value,"CS4"))   return 0x20;
+	else if (!strcmp(value,"CS5"))   return 0x28;
+	else if (!strcmp(value,"CS6"))   return 0x30;
+	else if (!strcmp(value,"CS7"))   return 0x38;
+	
+	else if (!strcmp(value,"AF11"))  return 0x0A;
+	else if (!strcmp(value,"AF12"))  return 0x0C;
+	else if (!strcmp(value,"AF13"))  return 0x0E;
+	else if (!strcmp(value,"AF21"))  return 0x12;
+	else if (!strcmp(value,"AF22"))  return 0x14;
+	else if (!strcmp(value,"AF23"))  return 0x16;
+	else if (!strcmp(value,"AF31"))  return 0x1a;
+	else if (!strcmp(value,"AF32"))  return 0x1C;
+	else if (!strcmp(value,"AF33"))  return 0x1E;
+	else if (!strcmp(value,"AF41"))  return 0x22;
+	else if (!strcmp(value,"AF42"))  return 0x24;
+	else if (!strcmp(value,"AF43"))  return 0x26;
+	
+	else if (!strcmp(value,"EF"))    return 0x2E;
+
+	// Accept integers too
+	return atoi( value );
+}
+

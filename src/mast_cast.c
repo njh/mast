@@ -31,104 +31,35 @@
 #include <errno.h>
 #include <string.h>
 
-#include <sndfile.h>
 #include <ortp/ortp.h>
 
 #include "config.h"
 #include "mast.h"
 
 
-#define PROGRAM_NAME "mast_filecast"
+#define PROGRAM_NAME "mast_cast"
 
 
 /* Global Variables */
-int loop_file = FALSE;
 int payload_size = DEFAULT_PAYLOAD_SIZE;
 char* remote_address = NULL;
 int remote_port = DEFAULT_RTP_PORT;
 char* chosen_payload_type = DEFAULT_PAYLOAD_TYPE;
-char* filename = NULL;
 
 
 
 
-/* 
-  format_duration_string() 
-  Create human readable duration string from libsndfile info
-*/
-static char* format_duration_string( SF_INFO *sfinfo )
-{
-	float seconds;
-	int minutes;
-	char * string = malloc( STR_BUF_SIZE );
-	
-	if (sfinfo->frames==0 || sfinfo->samplerate==0) {
-		snprintf( string, STR_BUF_SIZE, "Unknown" );
-		return string;
-	}
-	
-	// Calculate the number of minutes and seconds
-	seconds = sfinfo->frames / sfinfo->samplerate;
-	minutes = (seconds / 60 );
-	seconds -= (minutes * 60);
-
-	// Create a string out of it
-	snprintf( string, STR_BUF_SIZE, "%imin %1.1fsec", minutes, seconds);
-
-	return string;
-}
-
-
-/* 
-  print_file_info() 
-  Display information about input and output files
-*/
-static void print_file_info( SNDFILE *inputfile, SF_INFO *sfinfo )
-{
-	SF_FORMAT_INFO format_info;
-	SF_FORMAT_INFO subformat_info;
-	char sndlibver[128];
-	char *duration = NULL;
-	
-	// Get the format
-	format_info.format = sfinfo->format & SF_FORMAT_TYPEMASK;
-	sf_command (inputfile, SFC_GET_FORMAT_INFO, &format_info, sizeof(format_info)) ;
-
-	// Get the sub-format info
-	subformat_info.format = sfinfo->format & SF_FORMAT_SUBMASK;
-	sf_command (inputfile, SFC_GET_FORMAT_INFO, &subformat_info, sizeof(subformat_info)) ;
-
-	// Get the version of libsndfile
-	sf_command (NULL, SFC_GET_LIB_VERSION, sndlibver, sizeof(sndlibver));
-
-	// Get human readable duration of the input file
-	duration = format_duration_string( sfinfo );
-
-	printf( "---------------------------------------------------------\n");
-	printf( "%s (http://www.mega-nerd.com/libsndfile/)\n", sndlibver);
-	printf( "Input File: %s\n", filename );
-	printf( "Input Format: %s, %s\n", format_info.name, subformat_info.name );
-	printf( "Input Sample Rate: %d Hz\n", sfinfo->samplerate );
-	if (sfinfo->channels == 1) printf( "Input Channels: Mono\n" );
-	else if (sfinfo->channels == 2) printf( "Input Channels: Stereo\n" );
-	else printf( "Input Channels: %d\n", sfinfo->channels );
-	printf( "Input Duration: %s\n", duration );
-	printf( "---------------------------------------------------------\n");
-	
-	free( duration );
-}
 
 
 static int usage() {
 	
 	printf( "Multicast Audio Streaming Toolkit (version %s)\n", PACKAGE_VERSION);
-	printf( "%s [options] <address>[/<port>] <filename>\n", PROGRAM_NAME);
+	printf( "%s [options] <address>[/<port>]\n", PROGRAM_NAME);
 	printf( "    -s <ssrc>     Source identifier (if unspecified it is random)\n");
 	printf( "    -t <ttl>      Time to live\n");
 	printf( "    -p <payload>  The payload type to send\n");
 	printf( "    -z <size>     Set the per-packet payload size\n");
 	printf( "    -d <dcsp>     DCSP Quality of Service value\n");
-	printf( "    -l            Loop the audio file\n");
 	
 	exit(1);
 	
@@ -184,10 +115,6 @@ static void parse_cmd_line(int argc, char **argv, RtpSession* session)
 			}
 		break;
 		
-		case 'l':
-			loop_file = TRUE;
-		break;
-		
 		case '?':
 		case 'h':
 		default:
@@ -222,15 +149,6 @@ static void parse_cmd_line(int argc, char **argv, RtpSession* session)
 	}
 	
 
-	// Get the input file
-	if (argc > optind) {
-		filename = argv[optind];
-		optind++;
-	} else {
-		MAST_ERROR("missing audio input filename");
-		usage();
-	}
-	
 }
 
 
@@ -238,15 +156,13 @@ static void parse_cmd_line(int argc, char **argv, RtpSession* session)
 int main(int argc, char **argv)
 {
 	RtpSession* session = NULL;
-	SNDFILE* file = NULL;
 	char* mime_type = NULL;
-	SF_INFO sfinfo;
 	mast_payload_t *pt = NULL;
 	PayloadType* opt = NULL;
 	int bytes_per_frame = 0;
-	sf_count_t frames_per_packet = 0;
 	short *audio_buffer = NULL;
-	int user_ts = 0;
+	int frames_per_packet = 0;
+	//int user_ts = 0;
 
 	
 	// Initialise the oRTP library
@@ -265,19 +181,12 @@ int main(int argc, char **argv)
 	parse_cmd_line( argc, argv, session );
 
 	
-	// Open the input file by filename
-	memset( &sfinfo, 0, sizeof(sfinfo) );
-	file = sf_open(filename, SFM_READ, &sfinfo);
-	if (file == NULL) {
-		MAST_FATAL("Failed to open input file:\n%s", sf_strerror(NULL));
-	}
-	
-	
+
 	// Work out the payload type to use
-	pt = mast_make_payloadtype( chosen_payload_type, sfinfo.samplerate, sfinfo.channels );
-	if (rtp_session_set_send_payload_type( session, pt->number )) {
-		MAST_FATAL("Failed to set payload type");
-	}
+	//pt = mast_make_payloadtype( chosen_payload_type, sfinfo.samplerate, sfinfo.channels );
+	//if (rtp_session_set_send_payload_type( session, pt->number )) {
+	//	MAST_FATAL("Failed to set payload type");
+	//}
 
 	// Calulate the number of samples per packet
 	opt = rtp_profile_get_payload( &av_profile, pt->number );
@@ -288,16 +197,14 @@ int main(int argc, char **argv)
 	// And load a codec for the payload
 	
 
-	// Display some information about the input file
-	print_file_info( file, &sfinfo );
-	
+
 	// Display some information about output stream
 	mime_type = mast_mime_string(pt);
 	printf( "Remote address: %s/%d\n", remote_address,  remote_port );
 	printf( "Payload type: %s (pt=%d)\n", mime_type, pt->number );
 	printf( "Bytes per packet: %d\n", payload_size );
-	printf( "Bytes per frame: %d\n", bytes_per_frame );
-	printf( "Frames per packet: %d\n", (int)frames_per_packet );
+	//printf( "Bytes per frame: %d\n", bytes_per_frame );
+	//printf( "Frames per packet: %d\n", (int)frames_per_packet );
 	printf( "---------------------------------------------------------\n");
 	free( mime_type );
 	
@@ -323,46 +230,20 @@ int main(int argc, char **argv)
 	// The main loop
 	while( mast_still_running() )
 	{
-		sf_count_t frames_read = sf_readf_short( file, audio_buffer, frames_per_packet );
-		
-		// Was there an error?
-		if (frames_read < 0) {
-			MAST_ERROR("Failed to read from file: %s", sf_strerror( file ) );
-			break;
-		}
-		
-		
+		//read_audio();
+
 		//encode_audio();
 	
 		// Send out an RTP packet
-		rtp_session_send_with_ts(session, (uint8_t*)audio_buffer, frames_read*bytes_per_frame, user_ts);
-		user_ts+=frames_read;
+		//rtp_session_send_with_ts(session, (uint8_t*)audio_buffer, frames_read*bytes_per_frame, user_ts);
+		//user_ts+=frames_read;
 
 
-		// Reached end of file?
-		if (frames_read < frames_per_packet) {
-			MAST_DEBUG("Reached end of file (frames_read=%d)", (int)frames_read);
-			if (loop_file) {
-				// Seek back to the beginning
-				if (sf_seek( file, 0, SEEK_SET )) {
-					MAST_ERROR("Failed to seek to start of file: %s", sf_strerror( file ) );
-					break;
-				}
-			} else {
-				// End of file, exit main loop
-				break;
-			}
-		}
-		
+			
 	}
 
 
 	 
-	// Close Audio file
-	if (sf_close( file )) {
-		MAST_ERROR("Failed to close input file:\n%s", sf_strerror(file));
-	}
-	
 	// Close RTP session
 	rtp_session_destroy(session);
 	ortp_exit();

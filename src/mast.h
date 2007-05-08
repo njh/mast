@@ -22,6 +22,9 @@
  */
 
 
+#include <ortp/ortp.h>
+
+
 #ifndef	_MAST_H_
 #define	_MAST_H_
 
@@ -37,7 +40,7 @@
 #define STR_BUF_SIZE				(255)
 
 // Payload type for MPEG Audio
-#define RTP_PAYLOAD_TYPE_MPA		(14)
+#define RTP_MPEG_AUDIO_PT			(14)
 
 
 
@@ -102,6 +105,7 @@ void mast_set_source_sdes( RtpSession *session );
 void mast_message_handler( int level, const char* file, int line, char *fmt, ... );
 int mast_still_running();
 void mast_setup_signals();
+int mast_parse_dscp( const char* value );
 
 // In payloadtype.c
 mast_payload_t* mast_make_payloadtype( const char* chosen, int samplerate, int channels );

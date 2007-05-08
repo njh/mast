@@ -43,9 +43,9 @@
 
 /* Global Variables */
 int running = TRUE;					// true while the programme is running
-char *arg_filename = NULL;			// filename of output file
-char *arg_address = NULL;			// ip address / multicast group
-char *arg_port = DEFAULT_RTP_PORT;	// port number
+char *g_filename = NULL;			// filename of output file
+char *g_address = NULL;			// ip address / multicast group
+int g_port = DEFAULT_RTP_PORT;	// port number
 
 
 
@@ -84,11 +84,11 @@ void parse_args(int argc, char **argv)
 
 
 	// Extract the address
-	arg_address = argv[1];
-	for(i=0; i<strlen(arg_address); i++) {
-		if (arg_address[i]=='/') {
-			arg_address[i] = '\0';
-			arg_port = &arg_address[i+1];
+	g_address = argv[1];
+	for(i=0; i<strlen(g_address); i++) {
+		if (g_address[i]=='/') {
+			g_address[i] = '\0';
+			g_port = atoi(&g_address[i+1]);
 			break;
 		}
 	}
@@ -96,7 +96,7 @@ void parse_args(int argc, char **argv)
 	// Extra argument?
 	if (argc==3) {
 		// Output filename
-		arg_filename = argv[2];
+		g_filename = argv[2];
 	}
 
 }
@@ -116,17 +116,17 @@ void signal_handler(int signum)
 
 
 
-char* check_payload( mblk_t *hdr, mblk_t *body, int *payload_len, int *ts_delta )
+unsigned char* check_payload( mblk_t *hdr, mblk_t *body, int *payload_len, int *ts_delta )
 {
 	int payload_type = rtp_get_payload_type(hdr);
 	
 
 	switch( payload_type ) {
 	
-		case RTP_PAYLOAD_TYPE_MPA: {
+		case RTP_MPEG_AUDIO_PT: {
 			mpa_header_t mh;
 			u_int32_t frag_offset = ((u_int32_t)body->b_rptr[1] << 8) | ((u_int32_t)body->b_rptr[0]);
-			char *payload = body->b_rptr+4+frag_offset;
+			unsigned char *payload = body->b_rptr+4+frag_offset;
 			if (frag_offset != 0) {
 				fprintf( stderr, "Warning: frag_offset != 0\n" );
 			}
@@ -158,29 +158,6 @@ char* check_payload( mblk_t *hdr, mblk_t *body, int *payload_len, int *ts_delta 
 
 
 
-void config_rtcp( RtpSession *session ) {
-	char cname[ STR_BUF_SIZE ];
-	char tool[ STR_BUF_SIZE ];
-	char *hostname=NULL;
-
-
-	hostname = gethostname_fqdn();
-	snprintf( cname, STR_BUF_SIZE, "%s@%s", PACKAGE_NAME, hostname );
-	snprintf( tool, STR_BUF_SIZE, "%s (%s %s)", PROGRAM_NAME, PACKAGE_NAME, PACKAGE_VERSION );
-	free( hostname );
-	
-	rtp_session_set_source_description(
-		session,			// RtpSession*
-		cname,				// CNAME
-		NULL,				// name
-		NULL,				// email
-		NULL,				// phone
-		NULL,				// loc
-		tool,				// tool
-		NULL				// note
-	);
-
-}
 
 
 int main(int argc, char **argv)
@@ -193,13 +170,13 @@ int main(int argc, char **argv)
 	// Parse commandline parameters
 	parse_args( argc, argv );
 	
-	fprintf(stderr, "Source Address: %s\n", arg_address);
-	fprintf(stderr, "Source Port: %s\n", arg_port);
+	fprintf(stderr, "Source Address: %s\n", g_address);
+	fprintf(stderr, "Source Port: %d\n", g_port);
 	
 	// Open output file ?
-	if (arg_filename) {
-		fprintf(stderr, "Output file: %s\n", arg_filename);
-		output_file = fopen( arg_filename, "wb" );
+	if (g_filename) {
+		fprintf(stderr, "Output file: %s\n", g_filename);
+		output_file = fopen( g_filename, "wb" );
 		if (output_file==NULL) {
 			perror("failed to open output file");
 			exit(-5);
@@ -215,7 +192,7 @@ int main(int argc, char **argv)
 	ortp_init();
 	
 	/* Add MPEG Audio payload type 14 in the AV profile.*/
-	rtp_profile_set_payload(&av_profile, RTP_PAYLOAD_TYPE_MPA, &payload_type_mpeg_audio);
+	rtp_profile_set_payload(&av_profile, RTP_MPEG_AUDIO_PT, &payload_type_mpeg_audio);
 
 	
 	signal(SIGINT,signal_handler);
@@ -224,11 +201,11 @@ int main(int argc, char **argv)
 
 	// Create new session
 	session=rtp_session_new(RTP_SESSION_RECVONLY);
-	rtp_session_set_local_addr(session, arg_address, atoi(arg_port));
+	rtp_session_set_local_addr(session, g_address, g_port);
 
 	
 	// Set RTCP parameters
-	config_rtcp( session );
+	mast_set_source_sdes( session );
 	
 	
 	
@@ -238,7 +215,7 @@ int main(int argc, char **argv)
 		// Fetch a packet
 		mblk_t *pkt = rtp_session_recvm_with_ts(session, ts );
 		if (pkt!=NULL) {
-			char *payload = NULL;
+			unsigned char *payload = NULL;
 			int payload_len = 0;
 			int ts_delta = 0;
 

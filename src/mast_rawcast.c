@@ -47,7 +47,7 @@ char* g_addr = NULL;
 int g_port = DEFAULT_RTP_PORT;
 int g_ssrc = DEFAULT_RTP_SSRC;
 int g_ttl = DEFAULT_MULTICAST_TTL;
-int g_mtu = DEFAULT_MAX_PAYLOAD_SIZE;
+int g_mtu = DEFAULT_PAYLOAD_SIZE;
 int g_loop = 0;
 int g_running = TRUE;
 
@@ -234,9 +234,6 @@ main_loop( mcast_socket_t* rtp_socket, rtp_packet_t* rtp_packet, FILE* src )
 static RtpSession * init_rtp_session()
 {
 	RtpSession *session;
-	char cname[ STR_BUF_SIZE ];
-	char tool[ STR_BUF_SIZE ];
-	char *hostname;
 	
 	// Initialise ortp
 	ortp_set_log_level_mask( ORTP_WARNING|ORTP_ERROR|ORTP_FATAL );
@@ -254,29 +251,12 @@ static RtpSession * init_rtp_session()
 	
 	// Static SSRC?
 	if (g_ssrc) {
-		DEBUG("g_ssrc=%d", g_ssrc);
+		MAST_DEBUG("g_ssrc=%d", g_ssrc);
 		rtp_session_set_ssrc(session, g_ssrc);
 	}
 	
 	// Set RTCP parameters
-	hostname = gethostname_fqdn();
-	snprintf( cname, STR_BUF_SIZE, "%s@%s", PACKAGE, hostname );
-	snprintf( tool, STR_BUF_SIZE, "%s (%s/%s)", PROGRAM_NAME, PACKAGE_NAME, PACKAGE_VERSION );
-	free( hostname );
-	
-	DEBUG("rtcp->cname=%s", cname);
-	DEBUG("rtcp->tool=%s", tool);
-	
-	rtp_session_set_source_description(
-		session,		// RtpSession*
-		cname,			// CNAME
-		NULL,			// name
-		NULL,			// email
-		NULL,			// phone
-		NULL,			// loc
-		tool,			// tool
-		NULL			// note
-	);
+	mast_set_source_sdes( session );
 	
 	return session;
 }
@@ -296,8 +276,8 @@ int main(int argc, char **argv)
 	// Parse command line parameters
 	parse_cmd_line( argc, argv );
 	
-	DEBUG( "g_addr=%s", g_addr );
-	DEBUG( "g_port=%d", g_port );
+	MAST_DEBUG( "g_addr=%s", g_addr );
+	MAST_DEBUG( "g_port=%d", g_port );
 	
 	
 	// Create an RTP session
