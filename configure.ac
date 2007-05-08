@@ -40,22 +40,23 @@ AC_ARG_ENABLE(debug,
 
 dnl ############## Check for tools to build documentation
 
-AC_PATH_PROG( [POD2MAN], [pod2man] )
+AC_PATH_PROG( [ASCIIDOC], [asciidoc] )
 AC_SUBST( POD2MAN )
 
-AC_PATH_PROG( [POD2TEXT], [pod2text]  )
-AC_SUBST( POD2TEXT )
+AC_PATH_PROG( [XMLTO], [xmlto] )
+AC_SUBST( XMLTO )
+
+if test "x$ac_cv_path_ASCIIDOC" != "x" -a "x$ac_cv_path_XMLTO" != "x"; then
+	BUILD_DOC="doc"
+else
+	BUILD_DOC=""
+	AC_MSG_WARN([Not building documentation because tools are missing])
+fi
+AC_SUBST( BUILD_DOC )
+
 
 
 dnl ############## Library Checks
-
-dnl Check for libsndfile
-PKG_CHECK_MODULES(SNDFILE, sndfile >= 1.0.0, ,
-	[ AC_MSG_ERROR(
-		[ Version 1.0.0 or greater of libsndfile is required.
-		It can be downloaded from http://www.mega-nerd.com/libsndfile/ ])
-	]
-)
 
 dnl Check for ortp
 PKG_CHECK_MODULES(ORTP, ortp >= 0.9.1, ,
@@ -65,12 +66,17 @@ PKG_CHECK_MODULES(ORTP, ortp >= 0.9.1, ,
 	]
 )
 
-dnl Check for JACK
-dnl PKG_CHECK_MODULES(JACK, jack,
-dnl 	[ JACKsupport="Enabled"
-dnl 	  AC_DEFINE(HAVE_JACK, 1, [ Define if JACK audio server is available ]) ],
-dnl 	[ JACKsupport="Disabled" ]
-dnl )
+dnl Check for libsndfile (it is optional)
+PKG_CHECK_MODULES(SNDFILE, sndfile >= 1.0.0,
+	[ HAVE_SNDFILE="Yes" ],
+	[ HAVE_SNDFILE="No" ]
+)
+
+dnl Check for JACK (it is optional)
+PKG_CHECK_MODULES(JACK, jack,
+	[ HAVE_JACK="Yes" ],
+	[ HAVE_JACK="No" ]
+)
 
 
 
@@ -78,13 +84,6 @@ dnl ############## Header Checks
 
 AC_HEADER_STDC
 AC_CHECK_HEADERS([stdlib.h string.h unistd.h signal.h])
-
-dnl Check for Linux (OSS) sound support
-AC_CHECK_HEADER(sys/soundcard.h, 
-		[ OSSsupport="Enabled"
-		  AC_DEFINE(HAVE_OSS, 1, [ Define if OSS sound support is available ]) ],
-		[ OSSsupport="Disabled" ]
-)
 
 
 
@@ -97,8 +96,8 @@ AC_CHECK_TYPE(u_int8_t, unsigned char)
 
 
 dnl ############## Compiler and Linker Flags
-CFLAGS="$CFLAGS -std=c99 $ORTP_CFLAGS $LIBSNDFILE_CFLAGS"
-LDFLAGS="$LDFLAGS $ORTP_LIBS $LIBSNDFILE_LIBS"
+CFLAGS="$CFLAGS -std=c99 $ORTP_CFLAGS"
+LDFLAGS="$LDFLAGS $ORTP_LIBS"
 
 if test x$Debugging = xEnabled; then
 	CFLAGS="$CFLAGS -g -Wunused -Wall -Werror"
@@ -108,9 +107,27 @@ fi
 
 
 
+dnl ############## Decide what to build
+
+BUILD_PROGRAMS="mast_mpacast mast_rawcast"
+
+if test x$HAVE_JACK = "xYes"; then
+	BUILD_PROGRAMS="$BUILD_PROGRAMS mast_cast mast_listen"
+fi
+
+if test x$HAVE_SNDFILE = "xYes"; then
+	BUILD_PROGRAMS="$BUILD_PROGRAMS mast_filecast mast_record"
+fi
+
+AC_SUBST(BUILD_PROGRAMS)
+
+
+
 dnl ############## Final Output
 
-AC_OUTPUT(Makefile src/Makefile doc/Makefile)
+AC_CONFIG_FILES([Makefile src/Makefile doc/Makefile])
+
+AC_OUTPUT
 
 
 
@@ -118,12 +135,12 @@ dnl ############## Display Message
 
 echo "
   Multicast Audio Streaming Toolkit $VERSION
-  Copyright (C) 2003-2006 University of Southampton
+  Copyright (C) 2003-2007 University of Southampton
 
   Install path .......... $prefix
   Debugging ............. $Debugging
-  OSS support ........... $OSSsupport
-  JACK support .......... $JACKsupport
+  Jack Support .......... $HAVE_JACK
+  Libsndfile support .... $HAVE_SNDFILE
   
 Next type 'make' and then 'make install'."
 

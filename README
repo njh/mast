@@ -16,20 +16,25 @@ Unlike VAT and RAT, which are designed primerily for audio conferencing, MAST
 is designed to be used for audio distribution and broadcast. It is currently limited 
 to recieving a single audio source, unlike RAT which can mix serveral sources.
 
-It supports many of the audio payload type  in the Audio-visual Profile (RTP/AVP).
+It supports many of the audio payload types in the Audio-visual Profile (RTP/AVP).
+
+MAST is licenced under the GNU General Public License, see the file COPYING for details.
+
+
+Limitations
+-----------
 
 
 
 Tools in MAST
 -------------
 
-mast_listen		Client / Listener -> Jack/SDL
+mast_listen		Client / Listener -> Jack
 mast_cast		Live Audio Broadcaster <- Jack
 mast_filecast	Audio file broadcaster
 mast_rawcast	MPEG Audio file broadcaster
 mast_record		Record/archive audio stream to audio file
 mast_rawrecord	Record/archive raw audio streams
-mast_transcast	Reflect and transcode RTP streams
 
 
 
@@ -127,15 +132,5 @@ Machines Tested
 - PowerMac G4 - Mac OS X 10.2.8 and 10.3.2
 - AMD K6 - Debian Linux 2.4.22
 - i386 - FreeBSD 5.1-RELEASE
-
-
-
-Glossary
--------
-
-PCM - Pulse Code Modulation
-A method by which an audio signal is represented as digital data.
-
-Virtually all digital audio systems use PCM, including, CD, DAT, F1 format, 1630 format, DASH, DCC, and MD. Many people get confused because "PCM" is also slang for Sony's F1 format which stores PCM digital audio on videotape.
 
 

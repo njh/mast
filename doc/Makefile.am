@@ -1,17 +1,16 @@
 
-ASCIIDOC = asciidoc
-SGML2MAN = docbook2man
+ASCIIDOC = @ASCIIDOC@
+XMLTO = @XMLTO@
 
 man_MANS = mastcast.1 mastclient.1
 
 
 HTMLMANPAGES = $(man_MANS:%=%.html)
-SGMLMANPAGES = $(man_MANS:%=%.sgml)
+XMLMANPAGES = $(man_MANS:%=%.xml)
 ASCMANPAGES = $(man_MANS:%=%.asc)
 
 
-doc: $(man_MANS) $(HTMLMANPAGES) $(SGMLMANPAGES) README.html INSTALL.html
-
+noinst_DATA = $(HTMLMANPAGES) $(XMLMANPAGES) README.html INSTALL.html
 
 README.html: ../README
 	$(ASCIIDOC) -d article -b html -o $@ $<
@@ -23,18 +22,13 @@ INSTALL.html: ../INSTALL
 $(HTMLMANPAGES): %.html: %.asc
 	$(ASCIIDOC) -d manpage -b html -o $@ $<
 
-$(SGMLMANPAGES): %.sgml: %.asc
-	$(ASCIIDOC) -d manpage -b docbook-sgml -o $@ $<
+$(XMLMANPAGES): %.xml: %.asc
+	$(ASCIIDOC) -d manpage -b docbook -o $@ $<
 
-$(man_MANS): %: %.sgml
-	$(SGML2MAN) $<
+$(man_MANS): %: %.xml
+	$(XMLTO) man $<
 	
-doc-clean:
-	rm -f $(man_MANS) $(HTMLMANPAGES) $(SGMLMANPAGES) 
-	rm -f README.html INSTALL.html
-	rm -f manpage.links manpage.refs
+CLEANFILES = $(man_MANS) $(HTMLMANPAGES) $(XMLMANPAGES) README.html INSTALL.html \
+			 manpage.links manpage.refs
 
-
-EXTRA_DIST = $(man_MANS) $(ASCMANPAGES) $(SGMLMANPAGES) \
-             $(HTMLMANPAGES) README.html INSTALL.html
-
+EXTRA_DIST = $(ASCMANPAGES)

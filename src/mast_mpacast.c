@@ -261,7 +261,7 @@ static RtpSession * init_rtp_session()
 	// Set RTCP parameters
 	hostname = gethostname_fqdn();
 	snprintf( cname, STR_BUF_SIZE, "%s@%s", PACKAGE, hostname );
-	snprintf( tool, STR_BUF_SIZE, "%s (%s/%s)", PROGRAM_NAME, PACKAGE, PACKAGE_VERSION );
+	snprintf( tool, STR_BUF_SIZE, "%s (%s/%s)", PROGRAM_NAME, PACKAGE_NAME, PACKAGE_VERSION );
 	free( hostname );
 	
 	DEBUG("rtcp->cname=%s", cname);

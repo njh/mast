@@ -1,9 +1,9 @@
 BUILT_SOURCES = VERSION
 
 VERSION: configure.ac
-	echo "${PACKAGE}" > VERSION; \
-	echo "${VERSION}" >> VERSION
+	echo "${PACKAGE_NAME}" > VERSION; \
+	echo "${PACKAGE_VERSION}" >> VERSION
 
-SUBDIRS = src doc
+SUBDIRS = src @BUILD_DOC@
 EXTRA_DIST = VERSION autogen.sh
 

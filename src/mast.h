@@ -3,7 +3,7 @@
  *
  *  By Nicholas J. Humfrey <njh@ecs.soton.ac.uk>
  *
- *  Copyright (C) 2003-2006 University of Southampton
+ *  Copyright (C) 2003-2007 University of Southampton
  *
  *  This library is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU Lesser General Public
@@ -33,10 +33,10 @@
 #define DEFAULT_RTP_PORT			(5004)
 
 // Standard string buffer size
-#define STR_BUF_SIZE				(1025)
+#define STR_BUF_SIZE				(255)
 
 // Payload type for MPEG Audio
-#define RTP_MPEG_AUDIO_PT			(14)
+#define RTP_PAYLOAD_TYPE_MPA		(14)
 
 
 
@@ -55,29 +55,32 @@
 
 
 
-#define DEFAULT_RTP_PORT		"5004"
-#define RTP_PAYLOAD_TYPE_MPA	(14)
-
 // Message levels
 #define MSG_LEVEL_DEBUG		(1)
 #define MSG_LEVEL_INFO		(2)
 #define MSG_LEVEL_WARNING	(3)
 #define MSG_LEVEL_ERROR		(4)
+#define MSG_LEVEL_FATAL		(5)
+
 
 // Only display debugging messages if debugging is enabled
 #ifdef DEBUGGING
-#define DEBUG(s ...)  message_handler( MSG_LEVEL_DEBUG, __FILE__, __LINE__, s )
+#define MAST_DEBUG(s ...)  mast_message_handler( MSG_LEVEL_DEBUG, __FILE__, __LINE__, s )
 #else
-#define DEBUG
+#define MAST_DEBUG
 #endif
 
-#define INFO(s ...)  message_handler( MSG_LEVEL_INFO, __FILE__, __LINE__, s )
-#define WARNING(s ...)  message_handler( MSG_LEVEL_WARNING, __FILE__, __LINE__, s )
-#define ERROR(s ...)  message_handler( MSG_LEVEL_ERROR, __FILE__, __LINE__, s )
+#define MAST_INFO(s ...)  mast_message_handler( MSG_LEVEL_INFO, __FILE__, __LINE__, s )
+#define MAST_WARNING(s ...)  mast_message_handler( MSG_LEVEL_WARNING, __FILE__, __LINE__, s )
+#define MAST_ERROR(s ...)  mast_message_handler( MSG_LEVEL_ERROR, __FILE__, __LINE__, s )
+#define MAST_FATAL(s ...)  mast_message_handler( MSG_LEVEL_FATAL, __FILE__, __LINE__, s )
 
 // In util.c
-extern char* gethostname_fqdn();
-extern void message_handler( int level, const char* file, int line, char *fmt, ... );
+char* mast_gethostname();
+void mast_message_handler( int level, const char* file, int line, char *fmt, ... );
+int mast_parse_payloadtype( char* ptstr );
+int mast_still_running();
+void mast_setup_signals();
 
 
 #endif

@@ -1,28 +1,25 @@
 
-Use POD instead of asciidoc for documentation.
-
 Finish convertion from pcm6cast to MAST.
 	- ipv4 examples
 	- merge in new multicast socket code
 
-Only try to rebuild documentation if tools are available
+mast_meter - automatically connect mast_listen to jack_meter
+mast_transcast	Reflect and transcode RTP streams
 
-Re-simplify the client (we only have one client again now - no mastshout)
+Built-in audio resampling (using Secret Rabbit Code)
 
-Add JACK support
+
+
+JACK support
 	- see jack.udp source code (sw-23)
 
-Add support for direct playout using OSS
-
 Make fink+Debian packages
-
-
 
 Change sources if one drops out
 
 Abort after timeout if no valid packets have been received
 
-Choice of scheme for packet loss recovery
+Choice of scheme for packet loss recovery (does oRTP do this?)
  - None
  - Silence
  - Repeat
@@ -52,7 +49,7 @@ Display Current Play state info with \r
 
 Allow choice of interface for Multicast
 
-Perl script to open SDP files using mastclient
+Perl script to open SDP files using mast_listen
 
 
 

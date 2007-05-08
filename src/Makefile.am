@@ -1,13 +1,21 @@
 
-bin_PROGRAMS = mast_rawrecord
+bin_PROGRAMS = @BUILD_PROGRAMS@
 
-EXTRA_PROGRAMS = 
+EXTRA_PROGRAMS = \
 	mast_listen \
 	mast_cast \
 	mast_filecast \
-	mast_mpacast \
+	mast_rawcast \
 	mast_record \
 	mast_rawrecord
+
+
+mast_filecast_CFLAGS = @SNDFILE_CFLAGS@
+mast_filecast_LDADD = @SNDFILE_LIBS@
+mast_filecast_SOURCES = \
+	mast_filecast.c \
+	util.c
+
 
 
 mast_rawrecord_SOURCES = \
@@ -19,13 +27,15 @@ mast_record_SOURCES = \
 	gethostname.c \
 	mast_record.c
 
-mast_mpacast_SOURCES = \
+mast_rawcast_SOURCES = \
 	gethostname.c \
-	mast_mpacast.c \
+	mast_rawcast.c \
 	mpa_header.c \
 	mpa_header.h \
 	util.c
 
+mast_cast_CFLAGS = @JACK_CFLAGS@
+mast_cast_LDADD = @JACK_LIBS@
 mast_cast_SOURCES = \
 	mastcast.c \
 	mast_config.h \

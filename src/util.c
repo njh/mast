@@ -32,7 +32,10 @@
 #include "mast.h"
 
 
-char* gethostname_fqdn()
+
+
+
+char* mast_gethostname()
 {
 	char hostname[ HOST_NAME_MAX ];
 	char domainname[ DOMAIN_NAME_MAX ];
@@ -71,32 +74,82 @@ char* gethostname_fqdn()
 
 
 // Handle an error and store the error message
-void message_handler( int level, const char* file, int line, char *fmt, ... )
+void mast_message_handler( int level, const char* file, int line, char *fmt, ... )
 {
 	va_list args;
+	FILE *fd = stderr;
 	
 	// If debugging is enabled then display the filename and line number
 #ifdef DEBUGGING
-	fprintf( stderr, "[%s:%d] ", file, line );
+	fprintf( fd, "[%s:%d] ", file, line );
 #endif
 	
 	// Display the error message
 	switch( level ) {
-		case MSG_LEVEL_DEBUG:	fprintf( stderr, "Debug: " ); break;
-		case MSG_LEVEL_INFO:	fprintf( stderr, "Info: " ); break;
-		case MSG_LEVEL_WARNING:	fprintf( stderr, "Warning: " ); break;
-		case MSG_LEVEL_ERROR:	fprintf( stderr, "Error: " ); break;
+		case MSG_LEVEL_DEBUG:	fprintf( fd, "Debug: " ); break;
+		case MSG_LEVEL_INFO:	fprintf( fd, "Info: " ); break;
+		case MSG_LEVEL_WARNING:	fprintf( fd, "Warning: " ); break;
+		case MSG_LEVEL_ERROR:	fprintf( fd, "Error: " ); break;
+		case MSG_LEVEL_FATAL:	fprintf( fd, "Fatal Error: " ); break;
 	}
 	
 	// Display the message
 	va_start( args, fmt );
-	vfprintf( stderr, fmt, args );
-	fprintf( stderr, "\n" );
+	vfprintf( fd, fmt, args );
+	fprintf( fd, ".\n" );
 	va_end( args );
 	
 	// If it is an error, then stop
-	if (level==MSG_LEVEL_ERROR) {
+	if (level==MSG_LEVEL_FATAL) {
 		exit(-1);
 	}
 }
+
+
+// Parse a string into a numeric payload type
+int mast_parse_payloadtype( char* ptstr )
+{
+
+	// If it is an integer, just return it
+	return 11;
+
+	// Error
+	return -1;
+}
+
+
+
+
+
+
+
+
+static int mast_running = TRUE;
+
+static void mast_termination_handler(int signum)
+{
+	mast_running = FALSE;
+	switch(signum) {
+		case SIGTERM:	fprintf(stderr, "Got termination signal.\n"); break;
+		case SIGINT:	fprintf(stderr, "Got interupt signal.\n"); break;
+	}
+}
+
+int mast_still_running()
+{
+	return mast_running;
+}
+
+void mast_setup_signals()
+{
+	// Setup special handling of signals
+	signal(SIGTERM, mast_termination_handler);
+	signal(SIGINT, mast_termination_handler);
+	//signal(SIGHUP, mast_termination_handler);
+
+	// Set this 
+	mast_running = TRUE;
+
+}
+
 
