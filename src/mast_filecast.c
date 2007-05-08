@@ -128,6 +128,7 @@ static int usage() {
 	printf( "    -t <ttl>      Time to live\n");
 	printf( "    -p <payload>  The payload type to send\n");
 	printf( "    -z <size>     Set the per-packet payload size\n");
+	printf( "    -d <dcsp>     DCSP Quality of Service value\n");
 	printf( "    -l            Loop the audio file\n");
 	
 	exit(1);
@@ -141,7 +142,7 @@ static void parse_cmd_line(int argc, char **argv, RtpSession* session)
 
 
 	// Parse the options/switches
-	while ((ch = getopt(argc, argv, "s:t:p:z:lh?")) != -1)
+	while ((ch = getopt(argc, argv, "s:t:p:z:d:lh?")) != -1)
 	switch (ch) {
 		case 's': {
 			// ssrc
@@ -176,6 +177,12 @@ static void parse_cmd_line(int argc, char **argv, RtpSession* session)
 
 		case 'z':
 			payload_size = atoi(optarg);
+		break;
+		
+		case 'd':
+			if (rtp_session_set_dscp( session, atoi(optarg) )) {
+				MAST_FATAL("Failed to set DSCP value");
+			}
 		break;
 		
 		case 'l':
