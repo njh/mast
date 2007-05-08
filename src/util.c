@@ -28,6 +28,9 @@
 #include <stdio.h>
 #include <stdarg.h>
 
+#include <ortp/ortp.h>
+
+
 #include "config.h"
 #include "mast.h"
 
@@ -72,6 +75,30 @@ char* mast_gethostname()
 }
 
 
+void mast_set_source_sdes( RtpSession *session )
+{
+	char cname[ STR_BUF_SIZE ];
+	char tool[ STR_BUF_SIZE ];
+	char *hostname=NULL;
+
+	hostname = mast_gethostname();
+	snprintf( cname, STR_BUF_SIZE, "%s@%s", PACKAGE_NAME, hostname );
+	snprintf( tool, STR_BUF_SIZE, "%s %s", PACKAGE_NAME, PACKAGE_VERSION );
+	free( hostname );
+	
+	rtp_session_set_source_description(
+		session,			// RtpSession*
+		cname,				// CNAME
+		NULL,				// name
+		NULL,				// email
+		NULL,				// phone
+		NULL,				// loc
+		tool,				// tool
+		NULL				// note
+	);
+
+}
+
 
 // Handle an error and store the error message
 void mast_message_handler( int level, const char* file, int line, char *fmt, ... )
@@ -104,22 +131,6 @@ void mast_message_handler( int level, const char* file, int line, char *fmt, ...
 		exit(-1);
 	}
 }
-
-
-// Parse a string into a numeric payload type
-int mast_parse_payloadtype( char* ptstr )
-{
-
-	// If it is an integer, just return it
-	return 11;
-
-	// Error
-	return -1;
-}
-
-
-
-
 
 
 

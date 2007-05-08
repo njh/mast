@@ -22,39 +22,40 @@
  */
 
 
-#include <ortp/payloadtypes.h>
+#include <ortp/payloadtype.h>
 
 
-static char null_bytes = {0x00, 0x00, 0x00, 0x00};
+static char null_bytes[] = {0x00, 0x00, 0x00, 0x00};
 
 
 PayloadType payload_type_l16_mono=
 {
-	TYPE( PAYLOAD_AUDIO_PACKETIZED ),
-	CLOCK_RATE(44100),
-	BITS_PER_SAMPLE( 0 ),
-	ZERO_PATTERN( &null_bytes ),
-	PATTERN_LENGTH( 2 ),
-	NORMAL_BITRATE( ? ),
-	MIME_TYPE ("L16")
+	PAYLOAD_AUDIO_CONTINUOUS, // type
+	44100,		// clock rate
+	16,			// bits per frame
+	null_bytes,	// zero pattern
+	2,			// pattern_length
+	705600,		// normal_bitrate (44100 x 16bits per frame x 1 channel)
+	"L16",		// MIME Type
 };
+
 
 PayloadType payload_type_l16_stereo=
 {
-	TYPE( PAYLOAD_AUDIO_PACKETIZED ),
-	CLOCK_RATE(44100),
-	BITS_PER_SAMPLE( 0 ),
-	ZERO_PATTERN( &null_bytes ),
-	PATTERN_LENGTH( 4 ),
-	NORMAL_BITRATE( ? ),
-	MIME_TYPE ("L16")
+	PAYLOAD_AUDIO_CONTINUOUS, // type
+	44100,		// clock rate
+	32,			// bits per frame
+	null_bytes,	// zero pattern
+	4,			// pattern_length
+	1411200,	// normal_bitrate (44100 x 16bits per frame x 2 channels)
+	"L16",		// MIME Type
 };
 
 
 
-void mast_set_extra_payloads() {
+void mast_register_extra_payloads() {
 	
-	rtp_profile_set_payload(av_profile,11,&payload_type_l16_mono);
-	rtp_profile_set_payload(av_profile,10,&payload_type_l16_stereo);
+	rtp_profile_set_payload(&av_profile, 11, &payload_type_l16_mono);
+	rtp_profile_set_payload(&av_profile, 10, &payload_type_l16_stereo);
 
 }

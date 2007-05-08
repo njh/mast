@@ -29,7 +29,8 @@
 // Defaults
 #define DEFAULT_RTP_SSRC			(0)
 #define DEFAULT_MULTICAST_TTL		(5)
-#define DEFAULT_MAX_PAYLOAD_SIZE	(1450)
+#define DEFAULT_PAYLOAD_SIZE		(1450)
+#define DEFAULT_PAYLOAD_TYPE		"L16"
 #define DEFAULT_RTP_PORT			(5004)
 
 // Standard string buffer size
@@ -38,6 +39,27 @@
 // Payload type for MPEG Audio
 #define RTP_PAYLOAD_TYPE_MPA		(14)
 
+
+
+
+
+typedef struct
+{
+	int number;
+	char subtype[32];
+	int clockrate;
+	int channels;
+} mast_payload_t;
+
+
+
+#ifndef TRUE
+#define TRUE	(1)
+#endif
+
+#ifndef FALSE
+#define FALSE	(0)
+#endif
 
 
 // Use by gethostname()
@@ -52,7 +74,6 @@
 #ifndef DOMAIN_NAME_MAX
 #define DOMAIN_NAME_MAX	(1024)
 #endif
-
 
 
 // Message levels
@@ -77,10 +98,19 @@
 
 // In util.c
 char* mast_gethostname();
+void mast_set_source_sdes( RtpSession *session );
 void mast_message_handler( int level, const char* file, int line, char *fmt, ... );
-int mast_parse_payloadtype( char* ptstr );
 int mast_still_running();
 void mast_setup_signals();
+
+// In payloadtype.c
+mast_payload_t* mast_make_payloadtype( const char* chosen, int samplerate, int channels );
+char* mast_mime_string( mast_payload_t* pt );
+int mast_search_payload_num( mast_payload_t* pt );
+
+
+// In avprofile_extras.c
+void mast_register_extra_payloads();
 
 
 #endif

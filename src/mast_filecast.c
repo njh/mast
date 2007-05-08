@@ -44,6 +44,10 @@
 /* Global Variables */
 int running = TRUE;
 int loop_file = FALSE;
+int payload_size = DEFAULT_PAYLOAD_SIZE;
+char* remote_address = NULL;
+int remote_port = DEFAULT_RTP_PORT;
+char* chosen_payload_type = DEFAULT_PAYLOAD_TYPE;
 char* filename = NULL;
 
 
@@ -123,6 +127,7 @@ static int usage() {
 	printf( "    -s <ssrc>     Source identifier (if unspecified it is random)\n");
 	printf( "    -t <ttl>      Time to live\n");
 	printf( "    -p <payload>  The payload type to send\n");
+	printf( "    -z <size>     Set the per-packet payload size\n");
 	printf( "    -l            Loop the audio file\n");
 	
 	exit(1);
@@ -132,13 +137,11 @@ static int usage() {
 
 static void parse_cmd_line(int argc, char **argv, RtpSession* session)
 {
-	char *address = NULL;
-	int port = 0;
 	int ch;
 
 
 	// Parse the options/switches
-	while ((ch = getopt(argc, argv, "s:t:p:lh?")) != -1)
+	while ((ch = getopt(argc, argv, "s:t:p:z:lh?")) != -1)
 	switch (ch) {
 		case 's': {
 			// ssrc
@@ -167,13 +170,13 @@ static void parse_cmd_line(int argc, char **argv, RtpSession* session)
 			}
 		break;
 		
-		case 'p': {
-			int pt = mast_parse_payloadtype( optarg );
-			if (pt==-1 || rtp_session_set_send_payload_type( session, pt )) {
-				MAST_FATAL("Failed to set payload type");
-			}
-			break;
-		}
+		case 'p':
+			chosen_payload_type = optarg;
+		break;
+
+		case 'z':
+			payload_size = atoi(optarg);
+		break;
 		
 		case 'l':
 			loop_file = TRUE;
@@ -188,23 +191,16 @@ static void parse_cmd_line(int argc, char **argv, RtpSession* session)
 
 	// Parse the ip address and port
 	if (argc > optind) {
-		address = argv[optind];
+		remote_address = argv[optind];
 		optind++;
 		
-		if (argc > optind) {
-			port = atoi(argv[optind]);
-		} else {
-			// Look for port in 
-			char* portstr = strchr(address, '/');
-			if (portstr && strlen(portstr)>1) {
-				*portstr = 0;
-				portstr++;
-				port = atoi(portstr);
-			}
+		// Look for port in the address
+		char* portstr = strchr(remote_address, '/');
+		if (portstr && strlen(portstr)>1) {
+			*portstr = 0;
+			portstr++;
+			remote_port = atoi(portstr);
 		}
-		
-		// Use default port if none given
-		if (!port) port = DEFAULT_RTP_PORT;
 	
 	} else {
 		MAST_ERROR("missing address/port to send to");
@@ -212,7 +208,12 @@ static void parse_cmd_line(int argc, char **argv, RtpSession* session)
 	}
 	
 	// Make sure the port number is even
-	if (port%2 == 1) port--;
+	if (remote_port%2 == 1) remote_port--;
+	
+	// Set the remote address/port
+	if (rtp_session_set_remote_addr( session, remote_address, remote_port )) {
+		MAST_FATAL("Failed to set remote address/port (%s/%d)", remote_address, remote_port);
+	}
 	
 
 	// Get the input file
@@ -224,11 +225,6 @@ static void parse_cmd_line(int argc, char **argv, RtpSession* session)
 		usage();
 	}
 	
-	// Set the remote address/port
-	if (rtp_session_set_remote_addr( session, address, port )) {
-		MAST_FATAL("Failed to set remote address/port");
-	}
-	
 }
 
 
@@ -237,17 +233,21 @@ int main(int argc, char **argv)
 {
 	RtpSession* session = NULL;
 	SNDFILE* file = NULL;
+	char* mime_type = NULL;
 	SF_INFO sfinfo;
+	mast_payload_t *pt = NULL;
+	PayloadType* opt = NULL;
+	int bytes_per_frame = 0;
+	sf_count_t frames_per_packet = 0;
+	short *audio_buffer = NULL;
+	int user_ts = 0;
 
 	
 	// Initialise the oRTP library
 	ortp_init();
 	ortp_scheduler_init();
 	ortp_set_log_level_mask(ORTP_MESSAGE|ORTP_WARNING|ORTP_ERROR);
-
-	// Allocate memory for the audio read buffer
-	doit();
-
+	mast_register_extra_payloads();
 
 	// Create RTP session
 	session = rtp_session_new(RTP_SESSION_SENDONLY);
@@ -266,33 +266,91 @@ int main(int argc, char **argv)
 		MAST_FATAL("Failed to open input file:\n%s", sf_strerror(NULL));
 	}
 	
+	
+	// Work out the payload type to use
+	pt = mast_make_payloadtype( chosen_payload_type, sfinfo.samplerate, sfinfo.channels );
+	if (rtp_session_set_send_payload_type( session, pt->number )) {
+		MAST_FATAL("Failed to set payload type");
+	}
 
-	// Display some information
-	//printf( "Local address"
-	//printf( "Remote address"
+	// Calulate the number of samples per packet
+	opt = rtp_profile_get_payload( &av_profile, pt->number );
+	bytes_per_frame = (opt->normal_bitrate / opt->clock_rate) / 8;
+	frames_per_packet = payload_size / bytes_per_frame;
+	
+
+	// And load a codec for the payload
+	
+
+	// Display some information about the input file
 	print_file_info( file, &sfinfo );
+	
+	// Display some information about output stream
+	mime_type = mast_mime_string(pt);
+	printf( "Remote address: %s/%d\n", remote_address,  remote_port );
+	printf( "Payload type: %s (pt=%d)\n", mime_type, pt->number );
+	printf( "Bytes per packet: %d\n", payload_size );
+	printf( "Bytes per frame: %d\n", bytes_per_frame );
+	printf( "Frames per packet: %d\n", (int)frames_per_packet );
+	printf( "---------------------------------------------------------\n");
+	free( mime_type );
+	
 
+	// Allocate memory for audio and packet buffers
+	audio_buffer = (short*)malloc( bytes_per_frame * frames_per_packet );
+	if (audio_buffer==NULL) {
+		MAST_FATAL("Failed to allocate memory for audio buffer");
+	}
+	
 
 	// Configure the RTP session
 	rtp_session_set_scheduling_mode(session, TRUE);
 	rtp_session_set_blocking_mode(session, TRUE);
+	rtp_session_set_multicast_loopback(session, TRUE);
+	mast_set_source_sdes( session );
 
-
-	// Allocate memory for the RTP packet structure
 
 	// Setup signal handlers
 	mast_setup_signals();
 
 
 	// The main loop
-	while( ((i=fread(buffer,1,160,infile))>0) && mast_still_running() )
+	while( mast_still_running() )
 	{
-		encode_audio();
+		sf_count_t frames_read = sf_readf_short( file, audio_buffer, frames_per_packet );
+		
+		// Was there an error?
+		if (frames_read < 0) {
+			MAST_ERROR("Failed to read from file: %s", sf_strerror( file ) );
+			break;
+		}
+		
+		
+		//encode_audio();
 	
-		rtp_session_send_with_ts(session, buffer, i, user_ts);
-		user_ts+=160;
+		// Send out an RTP packet
+		rtp_session_send_with_ts(session, (uint8_t*)audio_buffer, frames_read*bytes_per_frame, user_ts);
+		user_ts+=frames_read;
+
+
+		// Reached end of file?
+		if (frames_read < frames_per_packet) {
+			MAST_DEBUG("Reached end of file (frames_read=%d)", (int)frames_read);
+			if (loop_file) {
+				// Seek back to the beginning
+				if (sf_seek( file, 0, SEEK_SET )) {
+					MAST_ERROR("Failed to seek to start of file: %s", sf_strerror( file ) );
+					break;
+				}
+			} else {
+				// End of file, exit main loop
+				break;
+			}
+		}
+		
 	}
-	 
+
+
 	 
 	// Close Audio file
 	if (sf_close( file )) {

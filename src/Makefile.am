@@ -14,6 +14,8 @@ mast_filecast_CFLAGS = @SNDFILE_CFLAGS@
 mast_filecast_LDADD = @SNDFILE_LIBS@
 mast_filecast_SOURCES = \
 	mast_filecast.c \
+	avprofile_extras.c \
+	payloadtype.c \
 	util.c
 
 
