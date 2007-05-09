@@ -97,7 +97,7 @@ typedef struct
 #define MAST_FATAL(s ...)  mast_message_handler( MSG_LEVEL_FATAL, __FILE__, __LINE__, s )
 
 // In util.c
-char* mabbid mast_set_source_sdes( RtpSession *session );
+void mast_set_source_sdes( RtpSession *session );
 void mast_message_handler( int level, const char* file, int line, char *fmt, ... );
 int mast_still_running();
 void mast_setup_signals();
