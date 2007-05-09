@@ -46,6 +46,11 @@ mast_listen_SOURCES = \
 mast_filecast_CFLAGS = @SNDFILE_CFLAGS@
 mast_filecast_LDADD = @SNDFILE_LIBS@
 mast_filecast_SOURCES = \
+	codecs.h \
+	codecs.c \
+	codec_l16.c \
+	codec_pcma.c \
+	codec_pcmu.c \
 	mast_filecast.c \
 	avprofile_extras.c \
 	payloadtype.c \

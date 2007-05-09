@@ -23,25 +23,11 @@
 #include <string.h>
 #include <sys/types.h>
 
-
 #include "codecs.h"
+#include "mast.h"
 
 
-static int Initialised = 0;           /* Initialising counter */
-
-/*
-static const char   Signature[5]  = "alaw"; // Standard Codec Signature
-static const char	*Name = "A-Law 2:1"; 
-static const char   *Version  = "0.1"; 
-static const char   *Copyright  = "2002 OpenQuicktime Team"; 
-static const char   *ModuleAuthor  = "Nicholas Humfrey"; 
-static const char   *CodecAuthor  = "Erik de Castro Lopo"; 
-*/
-
-
-
-static	
-int16_t	alaw_decode [128] =
+static int16_t	pcma_decode [128] =
 {	 -5504,  -5248,  -6016,  -5760,  -4480,  -4224,  -4992,  -4736, 
 	 -7552,  -7296,  -8064,  -7808,  -6528,  -6272,  -7040,  -6784, 
 	 -2752,  -2624,  -3008,  -2880,  -2240,  -2112,  -2496,  -2368, 
@@ -58,11 +44,10 @@ int16_t	alaw_decode [128] =
 	 -1888,  -1824,  -2016,  -1952,  -1632,  -1568,  -1760,  -1696, 
 	  -688,   -656,   -752,   -720,   -560,   -528,   -624,   -592, 
 	  -944,   -912,  -1008,   -976,   -816,   -784,   -880,   -848
-} ; /* alaw_decode */
+} ; /* pcma_decode */
 
 
-static	
-u_int8_t	alaw_encode [2049] =
+static u_int8_t	pcma_encode [2049] =
 {	0xD5, 0xD4, 0xD7, 0xD6, 0xD1, 0xD0, 0xD3, 0xD2, 0xDD, 0xDC, 0xDF, 0xDE, 
 	0xD9, 0xD8, 0xDB, 0xDA, 0xC5, 0xC4, 0xC7, 0xC6, 0xC1, 0xC0, 0xC3, 0xC2, 
 	0xCD, 0xCC, 0xCF, 0xCE, 0xC9, 0xC8, 0xCB, 0xCA, 0xF5, 0xF5, 0xF4, 0xF4, 
@@ -234,66 +219,51 @@ u_int8_t	alaw_encode [2049] =
 	0xAA, 0xAA, 0xAA, 0xAA, 0xAA, 0xAA, 0xAA, 0xAA, 0xAA, 0xAA, 0xAA, 0xAA, 
 	0xAA, 0xAA, 0xAA, 0xAA, 0xAA, 0xAA, 0xAA, 0xAA, 0xAA, 0xAA, 0xAA, 0xAA, 
 	0xAA, 0xAA, 0xAA, 0xAA, 0xAA, 0xAA, 0xAA, 0xAA, 0x2A
-} ; /* alaw_encode */
+} ; /* pcma_encode */
 
 
 static void	
-alaw2s_array (u_int8_t *buffer, u_int32_t count, int16_t *ptr, u_int32_t index)
+pcma2s_array (u_int8_t *buffer, u_int32_t count, int16_t *ptr, u_int32_t index)
 {	int 	k ;
 	for (k = 0 ; k < count ; k++)
 	{	if (buffer [k] & 0x80)
-			ptr [index] = -1 * alaw_decode [((int) buffer [k]) & 0x7F] ;
+			ptr [index] = -1 * pcma_decode [((int) buffer [k]) & 0x7F] ;
 		else
-			ptr [index] = alaw_decode [((int) buffer [k]) & 0x7F] ;
+			ptr [index] = pcma_decode [((int) buffer [k]) & 0x7F] ;
 		index ++ ;
 		} ;
-} /* alaw2s_array */
+} /* pcma2s_array */
 
 
 static void    
-s2alaw_array (int16_t *ptr, u_int32_t index, u_int8_t *buffer, u_int32_t count)
+s2pcma_array (int16_t *ptr, u_int32_t index, u_int8_t *buffer, u_int32_t count)
 {	unsigned int	k ;
 
 	for (k = 0 ; k < count ; k++)
 	{	if (ptr [index] >= 0) 
-			buffer [k] = alaw_encode [ptr [index] / 16] ;
+			buffer [k] = pcma_encode [ptr [index] / 16] ;
 		else
-			buffer [k] = 0x7F & alaw_encode [ptr [index] / -16] ;
+			buffer [k] = 0x7F & pcma_encode [ptr [index] / -16] ;
 		index ++ ;
 		} ;
-} /* s2alaw_array */
+} /* s2pcma_array */
 
 
 
-
-int
-init_alaw()
-{
-	return ++Initialised;
-}
-
-int
-delete_alaw()
-{
-	return --Initialised;
-}
-
-
-
-u_int32_t
-decode_alaw(
-	       u_int32_t inputsize,		/* input size in bytes */
-	       u_int8_t  *input,
-	       u_int32_t outputsize, 	/* output size in samples */
-	       int16_t  *output)
+static u_int32_t decode_pcma(
+		mast_codec_t* codec,
+		u_int32_t inputsize,		/* input size in bytes */
+		u_int8_t  *input,
+		u_int32_t outputsize, 	/* output size in samples */
+		int16_t  *output)
 {
 
 	if (outputsize < inputsize) {
-		fprintf(stderr, "decode_alaw: output buffer isn't big enough.\n");
+		fprintf(stderr, "decode_pcma: output buffer isn't big enough.\n");
 		return 0;
 	}
 
-	alaw2s_array(input, inputsize, output, 0);
+	pcma2s_array(input, inputsize, output, 0);
 
 	// outputsize == inputsize * 2
 	return inputsize;
@@ -301,20 +271,52 @@ decode_alaw(
 
 
 
-u_int32_t
-encode_alaw(
-	       u_int32_t inputsize, 	/* input size in samples */
-	       int16_t *input,
-	       u_int32_t outputsize,	/* output size in bytes */
-	       u_int8_t *output)
+static u_int32_t encode_pcma(
+		mast_codec_t* codec,
+		u_int32_t inputsize, 	/* input size in samples */
+		int16_t *input,
+		u_int32_t outputsize,	/* output size in bytes */
+		u_int8_t *output)
 {
 
 	if (outputsize < inputsize) {
-		fprintf(stderr, "encode_alaw: output buffer isn't big enough.\n");
+		fprintf(stderr, "encode_pcma: output buffer isn't big enough.\n");
 		return 0;
 	}
 
-	s2alaw_array(input, 0, output, inputsize);
+	s2pcma_array(input, 0, output, inputsize);
 	
 	return inputsize;
 }
+
+
+
+static int deinit_pcma( mast_codec_t* codec )
+{
+	// Don't need to do anything else here
+	free( codec );
+	
+	// Success
+	return 0;
+}
+	
+
+
+// Initialise the PCMA codec
+mast_codec_t* mast_init_pcma() {
+	mast_codec_t* codec = malloc( sizeof(mast_codec_t) );
+	if (codec==NULL) {
+		MAST_ERROR( "Failed to allocate memory for mast_codec_t data structure" );
+		return NULL;
+	}
+	
+	// Set the callbacks
+	memset( codec, 0, sizeof(mast_codec_t) );
+	codec->encode = encode_pcma;
+	codec->decode = decode_pcma;
+	codec->deinit = deinit_pcma;
+	codec->ptr = NULL;
+	
+	return codec;
+}
+

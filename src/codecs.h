@@ -23,73 +23,27 @@
 #define	_CODECS_H_
 
 
-typedef stuct {
+typedef struct mast_codec_s {
 
-	/* Callbacks */
-	u_int32_t (*encode)(u_int32_t num_samples, int16_t *input, u_int32_t out_size, u_int8_t *output);
-	u_int32_t (*decode)(u_int32_t inputsize, u_int8_t *input, u_int32_t outputsize, int16_t *output);
-	int (*deinit)(struct audio_output_struct *);
+	// Callbacks
+	u_int32_t (*encode)(struct mast_codec_s *, u_int32_t num_samples, int16_t *input, u_int32_t out_size, u_int8_t *output);
+	u_int32_t (*decode)(struct mast_codec_s *, u_int32_t inputsize, u_int8_t *input, u_int32_t outputsize, int16_t *output);
+	int (*deinit)(struct mast_codec_s *);
 
-}
+	// Pointer for internal use by codecs
+	void* ptr;
 
-
-/* codec_l16.c */
-
-int init_l16();
-
-int delete_l16();
-
-u_int32_t decode_l16(
-	       u_int32_t inputsize, 
-	       u_int8_t  *input,
-	       u_int32_t outputsize, 
-	       int16_t  *output);
-
-u_int32_t encode_l16(
-	       u_int32_t num_samples,
-	       int16_t *input,
-	       u_int32_t out_size,
-	       u_int8_t *output);
+} mast_codec_t;
 
 
-/* codec_alaw.c */
-
-int init_alaw();
-
-int delete_alaw();
-
-u_int32_t decode_alaw(
-	       u_int32_t inputsize, 
-	       u_int8_t  *input,
-	       u_int32_t outputsize, 
-	       int16_t  *output);
-
-u_int32_t encode_alaw(
-	       u_int32_t num_samples,
-	       int16_t *input,
-	       u_int32_t out_size,
-	       u_int8_t *output);
+// codecs.c
+mast_codec_t* mast_init_codec( char* mime_subtype );
 
 
-
-
-/* codec_ulaw.c */
-
-int init_ulaw();
-
-int delete_ulaw();
-
-u_int32_t decode_ulaw(
-	       u_int32_t inputsize, 
-	       u_int8_t  *input,
-	       u_int32_t outputsize, 
-	       int16_t  *output);
-
-u_int32_t encode_ulaw(
-	       u_int32_t num_samples,
-	       int16_t *input,
-	       u_int32_t out_size,
-	       u_int8_t *output);
+// Specific codec Initialisers
+mast_codec_t* mast_init_l16();		// codec_l16.c
+mast_codec_t* mast_init_pcma();		// codec_alaw.c
+mast_codec_t* mast_init_pcmu();		// codec_ulaw.c
 
 
 #endif

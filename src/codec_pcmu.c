@@ -23,8 +23,8 @@
 #include <string.h>
 #include <sys/types.h>
 
-
 #include "codecs.h"
+#include "mast.h"
 
 
 // ==================================== private for ulaw 
@@ -38,15 +38,11 @@ typedef struct
 	int16_t *ulawtoint16_ptr;
 	unsigned char *int16toulaw_table;
 	unsigned char *int16toulaw_ptr;
-} Param;
-
-
-Param *p = NULL;
+} mast_pcmu_t;
 
 
 
-static int
-ulaw_init_ulawtoint16()
+static int ulaw_init_ulawtoint16( mast_pcmu_t* p )
 {
 	int i;
 
@@ -57,6 +53,8 @@ ulaw_init_ulawtoint16()
 		unsigned char ulawbyte;
 
 		p->ulawtoint16_table = malloc(sizeof(int16_t) * 256);
+		if (!p->ulawtoint16_table) return 1;
+		
 		p->ulawtoint16_ptr = p->ulawtoint16_table;
 		for(i = 0; i < 256; i++)
 		{
@@ -70,11 +68,11 @@ ulaw_init_ulawtoint16()
 			p->ulawtoint16_ptr[i] = sample;
 		}
 	}
+	
 	return 0;
 }
 
-static int
-ulaw_init_int16toulaw()
+static int ulaw_init_int16toulaw( mast_pcmu_t* p )
 {
 
 	if(!p->int16toulaw_table)
@@ -101,6 +99,8 @@ ulaw_init_int16toulaw()
                                7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7};
 
  		p->int16toulaw_table = malloc(65536);
+		if (!p->int16toulaw_table) return 1;
+
 		p->int16toulaw_ptr = p->int16toulaw_table + 32768;
 
 		for(i = -32768; i < 32768; i++)
@@ -126,59 +126,25 @@ ulaw_init_int16toulaw()
 	return 0;
 }
 
-static int16_t ulaw_bytetoint16(Param *p, u_int8_t input)
+static int16_t ulaw_bytetoint16(mast_pcmu_t* p, u_int8_t input)
 {
 	return p->ulawtoint16_ptr[input];
 }
 
-static u_int8_t ulaw_int16tobyte(Param *p, int16_t input)
+static u_int8_t ulaw_int16tobyte(mast_pcmu_t* p, int16_t input)
 {
 	return p->int16toulaw_ptr[input];
 }
 
 
-int
-init_ulaw()
+static u_int32_t decode_pcmu(
+		mast_codec_t* codec,
+		u_int32_t inputsize,	/* input size in bytes */
+		u_int8_t  *input,
+		u_int32_t outputsize, 	/* output size in samples */
+		int16_t  *output)
 {
-	p = malloc(sizeof(Param));
-	if (!p) {
-		fprintf(stderr, "Error: malloc failed when creating codec_private in init_sowt\n");
-		return 0;
-	}
-	
-
-	p->ulawtoint16_table=0;
-	p->ulawtoint16_ptr=0;
-	p->int16toulaw_table=0;
-	p->int16toulaw_ptr=0;
-	
-	// Initalise tables
-	ulaw_init_ulawtoint16( );
-	ulaw_init_int16toulaw( );
-	
-	return Initialised;
-}
-
-int
-delete_ulaw()
-{
-	if (p) {
-		if(p->ulawtoint16_table)	free(p->ulawtoint16_table); 
-		if(p->int16toulaw_table)	free(p->int16toulaw_table); 
-		free(p);
-		p = NULL;
-	}
-
-}
-
-
-u_int32_t
-decode_ulaw(
-	       u_int32_t inputsize,		/* input size in bytes */
-	       u_int8_t  *input,
-	       u_int32_t outputsize, 	/* output size in samples */
-	       int16_t  *output)
-{
+	mast_pcmu_t* p = (mast_pcmu_t*)codec->ptr;
 	int i;
 	
 	if (outputsize < inputsize) {
@@ -196,13 +162,14 @@ decode_ulaw(
 
 
 
-u_int32_t
-encode_ulaw(
-	       u_int32_t inputsize, 	/* input size in samples */
-	       int16_t *input,
-	       u_int32_t outputsize,	/* output size in bytes */
-	       u_int8_t *output)
+static u_int32_t encode_pcmu(
+		mast_codec_t* codec,
+		u_int32_t inputsize, 	/* input size in samples */
+		int16_t *input,
+		u_int32_t outputsize,	/* output size in bytes */
+		u_int8_t *output)
 {
+	mast_pcmu_t* p = (mast_pcmu_t*)codec->ptr;
 	register int i;
 	
 	if (outputsize < inputsize) {
@@ -216,4 +183,74 @@ encode_ulaw(
 	
 	return inputsize;
 }
+
+
+
+
+static int deinit_pcmu( mast_codec_t* codec )
+{
+	mast_pcmu_t* p = (mast_pcmu_t*)codec->ptr;
+	
+	if (p) {
+		if(p->ulawtoint16_table)	free(p->ulawtoint16_table); 
+		if(p->int16toulaw_table)	free(p->int16toulaw_table); 
+		free(p);
+		codec->ptr = NULL;
+	}
+
+	free( codec );
+	
+	// Success
+	return 0;
+}
+	
+
+
+// Initialise the PCMU codec
+mast_codec_t* mast_init_pcmu() {
+	mast_pcmu_t* pcmu = NULL;
+	mast_codec_t* codec = NULL;
+	
+	// Allocate memory for generic codec structure
+	codec = malloc( sizeof(mast_codec_t) );
+	if (codec==NULL) {
+		MAST_ERROR( "Failed to allocate memory for mast_codec_t data structure" );
+		return NULL;
+	}
+	
+
+	// Set the callbacks
+	memset( codec, 0, sizeof(mast_codec_t) );
+	codec->encode = encode_pcmu;
+	codec->decode = decode_pcmu;
+	codec->deinit = deinit_pcmu;
+
+
+
+	// Allocate memory for codec's private data
+	pcmu = malloc( sizeof(mast_pcmu_t) );
+	if (pcmu==NULL) {
+		MAST_ERROR( "Failed to allocate memory for mast_pcmu_t data structure" );
+		free( codec );
+		return NULL;
+	}
+	codec->ptr = pcmu;
+	memset( pcmu, 0, sizeof(mast_pcmu_t) );
+
+	// Initialise the tables
+	if (ulaw_init_ulawtoint16( pcmu )) {
+		MAST_ERROR( "Failed to initialise ulaw decode table" );
+		deinit_pcmu( codec );
+		return NULL;
+	}
+	if (ulaw_init_int16toulaw( pcmu )) {
+		MAST_ERROR( "Failed to initialise ulaw encode table" );
+		deinit_pcmu( codec );
+		return NULL;
+	}
+	
+	
+	return codec;
+}
+
 

@@ -32,6 +32,7 @@
 #include <ortp/ortp.h>
 
 #include "config.h"
+#include "codecs.h"
 #include "mast.h"
 
 
@@ -40,7 +41,7 @@
 
 /* Global Variables */
 int loop_file = FALSE;
-int payload_size = DEFAULT_PAYLOAD_SIZE;
+int payload_max_size = DEFAULT_PAYLOAD_SIZE;
 char* remote_address = NULL;
 int remote_port = DEFAULT_RTP_PORT;
 char* chosen_payload_type = DEFAULT_PAYLOAD_TYPE;
@@ -172,7 +173,7 @@ static void parse_cmd_line(int argc, char **argv, RtpSession* session)
 		break;
 
 		case 'z':
-			payload_size = atoi(optarg);
+			payload_max_size = atoi(optarg);
 		break;
 		
 		case 'd':
@@ -239,10 +240,12 @@ int main(int argc, char **argv)
 	char* mime_type = NULL;
 	SF_INFO sfinfo;
 	mast_payload_t *pt = NULL;
+	mast_codec_t *codec = NULL;
 	PayloadType* opt = NULL;
+	int frames_per_packet = 0;
 	int bytes_per_frame = 0;
-	sf_count_t frames_per_packet = 0;
 	int16_t *audio_buffer = NULL;
+	u_int8_t *payload_buffer = NULL;
 	int user_ts = 0;
 
 	
@@ -290,21 +293,39 @@ int main(int argc, char **argv)
 	if (opt==NULL) {
 		MAST_FATAL("Failed to get payload type information from oRTP for pt=%d", pt->number);
 	}
-	bytes_per_frame = (opt->normal_bitrate / opt->clock_rate) / 8;
-	frames_per_packet = payload_size / bytes_per_frame;
+	
+	
+	// Load the codec
+	codec = mast_init_codec( pt->subtype );
+	if (codec==NULL) {
+		MAST_FATAL("Failed to get initialise codec" );
+	}
+
+	
+	if (opt->type == PAYLOAD_AUDIO_CONTINUOUS) {
+		bytes_per_frame = opt->bits_per_sample / 8;
+		frames_per_packet = payload_max_size / bytes_per_frame;
+	} else {
+		MAST_FATAL("Only PAYLOAD_AUDIO_CONTINUOUS is currently supported");
+	}
 	
 
 	// And display what we decided
-	printf( "Bytes per packet: %d\n", payload_size );
 	printf( "Bytes per frame: %d\n", bytes_per_frame );
-	printf( "Frames per packet: %d\n", (int)frames_per_packet );
+	printf( "Max payload size: %d bytes\n", payload_max_size );
+	printf( "Frames per packet: %d\n", frames_per_packet );
 	printf( "---------------------------------------------------------\n");
 	
 
 	// Allocate memory for audio and packet buffers
-	audio_buffer = (short*)malloc( bytes_per_frame * frames_per_packet );
+	audio_buffer = (int16_t*)malloc( frames_per_packet * sizeof(int16_t) * pt->channels );
 	if (audio_buffer==NULL) {
 		MAST_FATAL("Failed to allocate memory for audio buffer");
+	}
+
+	payload_buffer = (u_int8_t*)malloc( payload_max_size );
+	if (payload_buffer==NULL) {
+		MAST_FATAL("Failed to allocate memory for payload buffer");
 	}
 	
 
@@ -323,6 +344,7 @@ int main(int argc, char **argv)
 	while( mast_still_running() )
 	{
 		sf_count_t frames_read = sf_readf_short( file, audio_buffer, frames_per_packet );
+		int payload_bytes = 0;
 		
 		// Was there an error?
 		if (frames_read < 0) {
@@ -330,11 +352,19 @@ int main(int argc, char **argv)
 			break;
 		}
 		
+		// Encode audio
+		payload_bytes = codec->encode(codec,
+					frames_read*pt->channels, audio_buffer, 
+					payload_max_size, payload_buffer );
+		if (payload_bytes == 0)
+		{
+			MAST_ERROR("Codec encode failed" );
+			break;
+		}
 		
-		//encode_audio();
 	
 		// Send out an RTP packet
-		rtp_session_send_with_ts(session, (uint8_t*)audio_buffer, frames_read*bytes_per_frame, user_ts);
+		rtp_session_send_with_ts(session, payload_buffer, payload_bytes, user_ts);
 		user_ts+=frames_read;
 
 

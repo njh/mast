@@ -38,23 +38,23 @@
 */
 static mast_payload_t static_payloadtypes[] =
 {
-	{ 0, "PCMU", 8000, 1 },
-	{ 3, "GSM", 8000, 1 },
+	{ 0, "PCMU", 8000, 1 },			// One RAT 'unit' = 160 bytes
+	{ 3, "GSM", 8000, 1 },			// One RAT 'unit' = 33 bytes
 	{ 4, "G723", 8000, 1 },
-	{ 5, "DVI4", 8000, 1 },
-	{ 6, "DVI4", 16000, 1 },
-	{ 7, "LPC", 8000, 1 },
-	{ 8, "PCMA", 8000, 1 },
+	{ 5, "DVI4", 8000, 1 },			// One RAT 'unit' = 84 bytes
+	{ 6, "DVI4", 16000, 1 },		// One RAT 'unit' = 84 bytes
+	{ 7, "LPC", 8000, 1 },			// One RAT 'unit' = 14 bytes
+	{ 8, "PCMA", 8000, 1 },			// One RAT 'unit' = 160 bytes
 	{ 9, "G722", 8000, 1 },
-	{ 10, "L16", 44100, 2 },
-	{ 11, "L16", 44100, 1 },
+	{ 10, "L16", 44100, 2 },		// One RAT 'unit' = 640 bytes
+	{ 11, "L16", 44100, 1 },		// One RAT 'unit' = 320 bytes
 	{ 12, "QCELP", 8000, 1 },
 	{ 13, "CN", 8000, 1 },
 	/* MPA goes here */
 	{ 15, "G728", 8000, 1 },
-	{ 16, "DVI4", 11025, 1 },
-	{ 17, "DVI4", 22050, 1 },
-	{ 17, "G729", 8000, 1 },
+	{ 16, "DVI4", 11025, 1 },		// One RAT 'unit' = 84 bytes
+	{ 17, "DVI4", 22050, 1 },		// One RAT 'unit' = 84 bytes
+	{ 18, "G729", 8000, 1 },
 	{ 0, "", 0, 0 },
 };
 	
