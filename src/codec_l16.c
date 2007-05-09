@@ -3,22 +3,19 @@
  *
  *  By Nicholas J. Humfrey <njh@ecs.soton.ac.uk>
  *
- *  Copyright (C) 2003-2005 University of Southampton
+ *  Copyright (C) 2003-2007 University of Southampton
  *
- *  This library is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU Lesser General Public
- *  License as published by the Free Software Foundation; either
- *  version 2.1 of the License, or (at your option) any later version.
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
  *
- *  This library is distributed in the hope that it will be useful,
+ *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  Lesser General Public License for more details.
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
  *
- *  You should have received a copy of the GNU Lesser General Public
- *  License along with this library; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
- *  
+ *  $Id:$
  */
 
 #include <stdio.h>
@@ -30,32 +27,6 @@
 #include <netinet/in.h>
 
 #include "codecs.h"
-
-
-static int Initialised = 0;           /* Initialising counter */
-
-/*
-static const char   Signature[5]  = "alaw"; // Standard Codec Signature
-static const char	*Name = "A-Law 2:1"; 
-static const char   *Version  = "0.1"; 
-static const char   *Copyright  = "2002 OpenQuicktime Team"; 
-static const char   *ModuleAuthor  = "Nicholas Humfrey"; 
-static const char   *CodecAuthor  = "Erik de Castro Lopo"; 
-*/
-
-
-
-int
-init_l16()
-{
-	return ++Initialised;
-}
-
-int
-delete_l16()
-{
-	return --Initialised;
-}
 
 
 

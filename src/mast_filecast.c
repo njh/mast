@@ -3,22 +3,19 @@
  *
  *  By Nicholas J. Humfrey <njh@ecs.soton.ac.uk>
  *
- *  Copyright (C) 2003-2005 University of Southampton
+ *  Copyright (C) 2003-2007 University of Southampton
  *
- *  This library is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU Lesser General Public
- *  License as published by the Free Software Foundation; either
- *  version 2.1 of the License, or (at your option) any later version.
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
  *
- *  This library is distributed in the hope that it will be useful,
+ *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  Lesser General Public License for more details.
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
  *
- *  You should have received a copy of the GNU Lesser General Public
- *  License along with this library; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
- *  
+ *  $Id:$
  */
 
 
@@ -245,7 +242,7 @@ int main(int argc, char **argv)
 	PayloadType* opt = NULL;
 	int bytes_per_frame = 0;
 	sf_count_t frames_per_packet = 0;
-	short *audio_buffer = NULL;
+	int16_t *audio_buffer = NULL;
 	int user_ts = 0;
 
 	
@@ -272,6 +269,8 @@ int main(int argc, char **argv)
 		MAST_FATAL("Failed to open input file:\n%s", sf_strerror(NULL));
 	}
 	
+	// Display some information about the input file
+	print_file_info( file, &sfinfo );
 	
 	// Work out the payload type to use
 	pt = mast_make_payloadtype( chosen_payload_type, sfinfo.samplerate, sfinfo.channels );
@@ -279,27 +278,27 @@ int main(int argc, char **argv)
 		MAST_FATAL("Failed to set payload type");
 	}
 
+	// Display some information about the chosen payload type
+	mime_type = mast_mime_string(pt);
+	printf( "Remote address: %s/%d\n", remote_address,  remote_port );
+	printf( "Payload type: %s (pt=%d)\n", mime_type, pt->number );
+	free( mime_type );
+
+
 	// Calulate the number of samples per packet
 	opt = rtp_profile_get_payload( &av_profile, pt->number );
+	if (opt==NULL) {
+		MAST_FATAL("Failed to get payload type information from oRTP for pt=%d", pt->number);
+	}
 	bytes_per_frame = (opt->normal_bitrate / opt->clock_rate) / 8;
 	frames_per_packet = payload_size / bytes_per_frame;
 	
 
-	// And load a codec for the payload
-	
-
-	// Display some information about the input file
-	print_file_info( file, &sfinfo );
-	
-	// Display some information about output stream
-	mime_type = mast_mime_string(pt);
-	printf( "Remote address: %s/%d\n", remote_address,  remote_port );
-	printf( "Payload type: %s (pt=%d)\n", mime_type, pt->number );
+	// And display what we decided
 	printf( "Bytes per packet: %d\n", payload_size );
 	printf( "Bytes per frame: %d\n", bytes_per_frame );
 	printf( "Frames per packet: %d\n", (int)frames_per_packet );
 	printf( "---------------------------------------------------------\n");
-	free( mime_type );
 	
 
 	// Allocate memory for audio and packet buffers

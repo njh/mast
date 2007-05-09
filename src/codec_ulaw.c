@@ -1,23 +1,21 @@
-/* codec_ulaw.c
- * Copyright (C) 2002 QT4Linux and OpenQuicktime Teams
+/*
+ *  MAST: Multicast Audio Streaming Toolkit
  *
- * This file is part of OpenQuicktime, a free QuickTime library.
+ *  By Nicholas J. Humfrey <njh@ecs.soton.ac.uk>
  *
- * OpenQuicktime is free software; you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as published by
- * the Free Software Foundation.
+ *  Copyright (C) 2003-2007 University of Southampton
  *
- * OpenQuicktime is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Lesser General Public License for more details.
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
  *
- * You should have received a copy of the GNU Lesser General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
  *
- * Modified by Nicholas Humfrey for use with MAST
- *
+ *  $Id:$
  */
 
 #include <stdio.h>
@@ -28,16 +26,6 @@
 
 #include "codecs.h"
 
-static int Initialised = 0;           /* Initialising counter */
-
-/*
-static const char   Signature[5]  = "ulaw"; // Standard Codec Signature
-static const char	*Name = "(mu)-Law 2:1"; 
-static const char   *Version  = "0.1"; 
-static const char   *Copyright  = "2002 OpenQuicktime Team"; 
-static const char   *ModuleAuthor  = "Nicholas Humfrey"; 
-static const char   *CodecAuthor  = "Adam Williams"; 
-*/
 
 // ==================================== private for ulaw 
 
@@ -152,8 +140,6 @@ static u_int8_t ulaw_int16tobyte(Param *p, int16_t input)
 int
 init_ulaw()
 {
-	++Initialised;
-
 	p = malloc(sizeof(Param));
 	if (!p) {
 		fprintf(stderr, "Error: malloc failed when creating codec_private in init_sowt\n");
@@ -182,8 +168,7 @@ delete_ulaw()
 		free(p);
 		p = NULL;
 	}
-		
-	return --Initialised;
+
 }
 
 
