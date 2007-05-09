@@ -3,7 +3,7 @@
  *
  *  By Nicholas J. Humfrey <njh@ecs.soton.ac.uk>
  *
- *  Copyright (C) 2003-2005 University of Southampton
+ *  Copyright (C) 2003-2007 University of Southampton
  *
  *  This library is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU Lesser General Public
