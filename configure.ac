@@ -7,7 +7,7 @@ dnl ############# Initialisation
 
 AC_INIT([MAST], [0.2a], [njh@ecs.soton.ac.uk])
 
-AC_CONFIG_SRCDIR(src/mastcast.c)
+AC_CONFIG_SRCDIR(src/mast.h)
 AC_CONFIG_AUX_DIR(build) 
 AC_CANONICAL_SYSTEM
 
