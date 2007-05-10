@@ -29,9 +29,12 @@
 // Defaults
 #define DEFAULT_RTP_SSRC			(0)
 #define DEFAULT_MULTICAST_TTL		(5)
-#define DEFAULT_PAYLOAD_SIZE		(1450)
+#define DEFAULT_PAYLOAD_LIMIT		(1450)
 #define DEFAULT_PAYLOAD_TYPE		"L16"
 #define DEFAULT_RTP_PORT			(5004)
+
+// RAT only accepts packets if they contain multiples of 160 samples
+#define FRAMES_PER_UNIT				(160)
 
 // Standard string buffer size
 #define STR_BUF_SIZE				(255)

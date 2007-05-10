@@ -38,7 +38,7 @@
 
 
 /* Global Variables */
-int payload_size = DEFAULT_PAYLOAD_SIZE;
+int payload_size_limit = DEFAULT_PAYLOAD_LIMIT;
 char* remote_address = NULL;
 int remote_port = DEFAULT_RTP_PORT;
 char* chosen_payload_type = DEFAULT_PAYLOAD_TYPE;
@@ -103,7 +103,7 @@ static void parse_cmd_line(int argc, char **argv, RtpSession* session)
 		break;
 
 		case 'z':
-			payload_size = atoi(optarg);
+			payload_size_limit = atoi(optarg);
 		break;
 		
 		case 'd':
@@ -188,7 +188,7 @@ int main(int argc, char **argv)
 	// Calulate the number of samples per packet
 	opt = rtp_profile_get_payload( &av_profile, pt->number );
 	bytes_per_frame = (opt->normal_bitrate / opt->clock_rate) / 8;
-	frames_per_packet = payload_size / bytes_per_frame;
+	frames_per_packet = payload_size_limit / bytes_per_frame;
 	
 
 	// And load a codec for the payload
@@ -199,7 +199,7 @@ int main(int argc, char **argv)
 	mime_type = mast_mime_string(pt);
 	printf( "Remote address: %s/%d\n", remote_address,  remote_port );
 	printf( "Payload type: %s (pt=%d)\n", mime_type, pt->number );
-	printf( "Bytes per packet: %d\n", payload_size );
+	printf( "Bytes per packet: %d\n", payload_size_limit );
 	//printf( "Bytes per frame: %d\n", bytes_per_frame );
 	//printf( "Frames per packet: %d\n", (int)frames_per_packet );
 	printf( "---------------------------------------------------------\n");

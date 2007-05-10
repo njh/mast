@@ -44,7 +44,7 @@ char* g_addr = NULL;
 int g_port = DEFAULT_RTP_PORT;
 int g_ssrc = DEFAULT_RTP_SSRC;
 int g_ttl = DEFAULT_MULTICAST_TTL;
-int g_mtu = DEFAULT_PAYLOAD_SIZE;
+int g_mtu = DEFAULT_PAYLOAD_LIMIT;
 int g_loop = 0;
 int g_running = TRUE;
 

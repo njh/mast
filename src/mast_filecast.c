@@ -41,7 +41,7 @@
 
 /* Global Variables */
 int loop_file = FALSE;
-int payload_max_size = DEFAULT_PAYLOAD_SIZE;
+int payload_size_limit = DEFAULT_PAYLOAD_LIMIT;
 char* remote_address = NULL;
 int remote_port = DEFAULT_RTP_PORT;
 char* chosen_payload_type = DEFAULT_PAYLOAD_TYPE;
@@ -173,7 +173,7 @@ static void parse_cmd_line(int argc, char **argv, RtpSession* session)
 		break;
 
 		case 'z':
-			payload_max_size = atoi(optarg);
+			payload_size_limit = atoi(optarg);
 		break;
 		
 		case 'd':
@@ -243,7 +243,6 @@ int main(int argc, char **argv)
 	mast_codec_t *codec = NULL;
 	PayloadType* opt = NULL;
 	int frames_per_packet = 0;
-	int bytes_per_frame = 0;
 	int16_t *audio_buffer = NULL;
 	u_int8_t *payload_buffer = NULL;
 	int user_ts = 0;
@@ -284,6 +283,7 @@ int main(int argc, char **argv)
 	// Display some information about the chosen payload type
 	mime_type = mast_mime_string(pt);
 	printf( "Remote address: %s/%d\n", remote_address,  remote_port );
+	printf( "Sending SSRC: %x\n", session->snd.ssrc );
 	printf( "Payload type: %s (pt=%d)\n", mime_type, pt->number );
 	free( mime_type );
 
@@ -301,20 +301,23 @@ int main(int argc, char **argv)
 		MAST_FATAL("Failed to get initialise codec" );
 	}
 
-	
+	// Calculate how much audio goes in each packet
 	if (opt->type == PAYLOAD_AUDIO_CONTINUOUS) {
+		int bytes_per_frame, bytes_per_unit;
 		bytes_per_frame = opt->bits_per_sample / 8;
-		frames_per_packet = payload_max_size / bytes_per_frame;
+		printf( "Bytes per frame: %d\n", bytes_per_frame );
+		if (bytes_per_frame<=0) MAST_FATAL( "Invalid number of bytes per frame" );
+		bytes_per_unit = bytes_per_frame * FRAMES_PER_UNIT;
+		frames_per_packet = (payload_size_limit / bytes_per_unit) * FRAMES_PER_UNIT;
+		printf( "Frames per packet: %d\n", frames_per_packet );
+		printf( "Packet size: %d bytes\n", (frames_per_packet * bytes_per_frame) );
+		printf( "Packet duration: %d ms\n", (frames_per_packet*1000 / pt->clockrate));
+		printf( "---------------------------------------------------------\n");
+		if (frames_per_packet<=0) MAST_FATAL( "Invalid number of frames per packet" );
+		
 	} else {
 		MAST_FATAL("Only PAYLOAD_AUDIO_CONTINUOUS is currently supported");
 	}
-	
-
-	// And display what we decided
-	printf( "Bytes per frame: %d\n", bytes_per_frame );
-	printf( "Max payload size: %d bytes\n", payload_max_size );
-	printf( "Frames per packet: %d\n", frames_per_packet );
-	printf( "---------------------------------------------------------\n");
 	
 
 	// Allocate memory for audio and packet buffers
@@ -323,7 +326,7 @@ int main(int argc, char **argv)
 		MAST_FATAL("Failed to allocate memory for audio buffer");
 	}
 
-	payload_buffer = (u_int8_t*)malloc( payload_max_size );
+	payload_buffer = (u_int8_t*)malloc( payload_size_limit );
 	if (payload_buffer==NULL) {
 		MAST_FATAL("Failed to allocate memory for payload buffer");
 	}
@@ -355,7 +358,7 @@ int main(int argc, char **argv)
 		// Encode audio
 		payload_bytes = codec->encode(codec,
 					frames_read*pt->channels, audio_buffer, 
-					payload_max_size, payload_buffer );
+					payload_size_limit, payload_buffer );
 		if (payload_bytes == 0)
 		{
 			MAST_ERROR("Codec encode failed" );
