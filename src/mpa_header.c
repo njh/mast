@@ -148,7 +148,7 @@ void mpa_header_print( mpa_header_t *mh )
 
 // Parse mpeg audio header
 // returns 1 if valid, or 0 if invalid
-int mpa_header_parse( const unsigned char* buff, mpa_header_t *mh)
+int mpa_header_parse( const u_int8_t* buff, mpa_header_t *mh)
 {
 	u_int32_t head =
 	    ((u_int32_t)buff[0] << 24) | 

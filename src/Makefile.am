@@ -14,13 +14,18 @@ mast_rawcast_SOURCES = \
 	mast_rawcast.c \
 	mpa_header.c \
 	mpa_header.h \
+	avprofile_extras.c \
+	payloadtype.c \
 	mast.h \
 	util.c
 
 
 mast_rawrecord_SOURCES = \
 	mpa_header.c \
+	mpa_header.h \
 	mast_rawrecord.c \
+	avprofile_extras.c \
+	payloadtype.c \
 	mast.h \
 	util.c
 
@@ -39,6 +44,8 @@ mast_listen_CFLAGS = @JACK_CFLAGS@
 mast_listen_LDADD = @JACK_LIBS@
 mast_listen_SOURCES = \
 	mast_listen.c \
+	avprofile_extras.c \
+	payloadtype.c \
 	mast.h \
 	util.c
 
@@ -62,5 +69,7 @@ mast_record_CFLAGS = @SNDFILE_CFLAGS@
 mast_record_LDADD = @SNDFILE_LIBS@
 mast_record_SOURCES = \
 	mast_record.c \
+	avprofile_extras.c \
+	payloadtype.c \
 	mast.h \
 	util.c

@@ -27,6 +27,7 @@
 #include <time.h>
 #include <errno.h>
 #include <string.h>
+#include <getopt.h>
 
 #include <sndfile.h>
 #include <ortp/ortp.h>
@@ -40,12 +41,10 @@
 
 
 /* Global Variables */
-int loop_file = FALSE;
-int payload_size_limit = DEFAULT_PAYLOAD_LIMIT;
-char* remote_address = NULL;
-int remote_port = DEFAULT_RTP_PORT;
-char* chosen_payload_type = DEFAULT_PAYLOAD_TYPE;
-char* filename = NULL;
+int g_loop_file = FALSE;
+int g_payload_size_limit = DEFAULT_PAYLOAD_LIMIT;
+char* g_chosen_payload_type = DEFAULT_PAYLOAD_TYPE;
+char* g_filename = NULL;
 
 
 
@@ -104,7 +103,7 @@ static void print_file_info( SNDFILE *inputfile, SF_INFO *sfinfo )
 
 	printf( "---------------------------------------------------------\n");
 	printf( "%s (http://www.mega-nerd.com/libsndfile/)\n", sndlibver);
-	printf( "Input File: %s\n", filename );
+	printf( "Input File: %s\n", g_filename );
 	printf( "Input Format: %s, %s\n", format_info.name, subformat_info.name );
 	printf( "Input Sample Rate: %d Hz\n", sfinfo->samplerate );
 	if (sfinfo->channels == 1) printf( "Input Channels: Mono\n" );
@@ -135,6 +134,8 @@ static int usage() {
 
 static void parse_cmd_line(int argc, char **argv, RtpSession* session)
 {
+	char* remote_address = NULL;
+	int remote_port = DEFAULT_RTP_PORT;
 	int ch;
 
 
@@ -169,11 +170,11 @@ static void parse_cmd_line(int argc, char **argv, RtpSession* session)
 		break;
 		
 		case 'p':
-			chosen_payload_type = optarg;
+			g_chosen_payload_type = optarg;
 		break;
 
 		case 'z':
-			payload_size_limit = atoi(optarg);
+			g_payload_size_limit = atoi(optarg);
 		break;
 		
 		case 'd':
@@ -183,7 +184,7 @@ static void parse_cmd_line(int argc, char **argv, RtpSession* session)
 		break;
 		
 		case 'l':
-			loop_file = TRUE;
+			g_loop_file = TRUE;
 		break;
 		
 		case '?':
@@ -217,18 +218,20 @@ static void parse_cmd_line(int argc, char **argv, RtpSession* session)
 	// Set the remote address/port
 	if (rtp_session_set_remote_addr( session, remote_address, remote_port )) {
 		MAST_FATAL("Failed to set remote address/port (%s/%d)", remote_address, remote_port);
+	} else {
+		printf( "Remote address: %s/%d\n", remote_address,  remote_port );
 	}
 	
 
 	// Get the input file
 	if (argc > optind) {
-		filename = argv[optind];
+		g_filename = argv[optind];
 		optind++;
 	} else {
 		MAST_ERROR("missing audio input filename");
 		usage();
 	}
-	
+
 }
 
 
@@ -236,7 +239,7 @@ static void parse_cmd_line(int argc, char **argv, RtpSession* session)
 int main(int argc, char **argv)
 {
 	RtpSession* session = NULL;
-	SNDFILE* file = NULL;
+	SNDFILE* input = NULL;
 	char* mime_type = NULL;
 	SF_INFO sfinfo;
 	mast_payload_t *pt = NULL;
@@ -248,41 +251,33 @@ int main(int argc, char **argv)
 	int user_ts = 0;
 
 	
-	// Initialise the oRTP library
-	ortp_init();
-	ortp_scheduler_init();
-	ortp_set_log_level_mask(ORTP_MESSAGE|ORTP_WARNING|ORTP_ERROR);
-	mast_register_extra_payloads();
+	// Create an RTP session
+	session = mast_init_ortp( RTP_SESSION_SENDONLY );
 
-	// Create RTP session
-	session = rtp_session_new(RTP_SESSION_SENDONLY);
-	if (session==NULL) {
-		MAST_FATAL( "Failed to create oRTP session.\n" );	
-	}
 
-	// Parse the command line
+	// Parse the command line arguments 
+	// and configure the session
 	parse_cmd_line( argc, argv, session );
 
 	
 	// Open the input file by filename
 	memset( &sfinfo, 0, sizeof(sfinfo) );
-	file = sf_open(filename, SFM_READ, &sfinfo);
-	if (file == NULL) {
+	input = sf_open(g_filename, SFM_READ, &sfinfo);
+	if (input == NULL) {
 		MAST_FATAL("Failed to open input file:\n%s", sf_strerror(NULL));
 	}
 	
 	// Display some information about the input file
-	print_file_info( file, &sfinfo );
+	print_file_info( input, &sfinfo );
 	
 	// Work out the payload type to use
-	pt = mast_make_payloadtype( chosen_payload_type, sfinfo.samplerate, sfinfo.channels );
+	pt = mast_make_payloadtype( g_chosen_payload_type, sfinfo.samplerate, sfinfo.channels );
 	if (rtp_session_set_send_payload_type( session, pt->number )) {
 		MAST_FATAL("Failed to set payload type");
 	}
 
 	// Display some information about the chosen payload type
 	mime_type = mast_mime_string(pt);
-	printf( "Remote address: %s/%d\n", remote_address,  remote_port );
 	printf( "Sending SSRC: %x\n", session->snd.ssrc );
 	printf( "Payload type: %s (pt=%d)\n", mime_type, pt->number );
 	free( mime_type );
@@ -301,6 +296,7 @@ int main(int argc, char **argv)
 		MAST_FATAL("Failed to get initialise codec" );
 	}
 
+
 	// Calculate how much audio goes in each packet
 	if (opt->type == PAYLOAD_AUDIO_CONTINUOUS) {
 		int bytes_per_frame, bytes_per_unit;
@@ -308,7 +304,7 @@ int main(int argc, char **argv)
 		printf( "Bytes per frame: %d\n", bytes_per_frame );
 		if (bytes_per_frame<=0) MAST_FATAL( "Invalid number of bytes per frame" );
 		bytes_per_unit = bytes_per_frame * FRAMES_PER_UNIT;
-		frames_per_packet = (payload_size_limit / bytes_per_unit) * FRAMES_PER_UNIT;
+		frames_per_packet = (g_payload_size_limit / bytes_per_unit) * FRAMES_PER_UNIT;
 		printf( "Frames per packet: %d\n", frames_per_packet );
 		printf( "Packet size: %d bytes\n", (frames_per_packet * bytes_per_frame) );
 		printf( "Packet duration: %d ms\n", (frames_per_packet*1000 / pt->clockrate));
@@ -318,7 +314,6 @@ int main(int argc, char **argv)
 	} else {
 		MAST_FATAL("Only PAYLOAD_AUDIO_CONTINUOUS is currently supported");
 	}
-	
 
 	// Allocate memory for audio and packet buffers
 	audio_buffer = (int16_t*)malloc( frames_per_packet * sizeof(int16_t) * pt->channels );
@@ -326,17 +321,11 @@ int main(int argc, char **argv)
 		MAST_FATAL("Failed to allocate memory for audio buffer");
 	}
 
-	payload_buffer = (u_int8_t*)malloc( payload_size_limit );
+	payload_buffer = (u_int8_t*)malloc( g_payload_size_limit );
 	if (payload_buffer==NULL) {
 		MAST_FATAL("Failed to allocate memory for payload buffer");
 	}
 	
-
-	// Configure the RTP session
-	rtp_session_set_scheduling_mode(session, TRUE);
-	rtp_session_set_blocking_mode(session, TRUE);
-	rtp_session_set_multicast_loopback(session, TRUE);
-	mast_set_source_sdes( session );
 
 
 	// Setup signal handlers
@@ -346,19 +335,19 @@ int main(int argc, char **argv)
 	// The main loop
 	while( mast_still_running() )
 	{
-		sf_count_t frames_read = sf_readf_short( file, audio_buffer, frames_per_packet );
+		sf_count_t frames_read = sf_readf_short( input, audio_buffer, frames_per_packet );
 		int payload_bytes = 0;
 		
 		// Was there an error?
 		if (frames_read < 0) {
-			MAST_ERROR("Failed to read from file: %s", sf_strerror( file ) );
+			MAST_ERROR("Failed to read from file: %s", sf_strerror( input ) );
 			break;
 		}
 		
 		// Encode audio
 		payload_bytes = codec->encode(codec,
 					frames_read*pt->channels, audio_buffer, 
-					payload_size_limit, payload_buffer );
+					g_payload_size_limit, payload_buffer );
 		if (payload_bytes == 0)
 		{
 			MAST_ERROR("Codec encode failed" );
@@ -374,10 +363,10 @@ int main(int argc, char **argv)
 		// Reached end of file?
 		if (frames_read < frames_per_packet) {
 			MAST_DEBUG("Reached end of file (frames_read=%d)", (int)frames_read);
-			if (loop_file) {
+			if (g_loop_file) {
 				// Seek back to the beginning
-				if (sf_seek( file, 0, SEEK_SET )) {
-					MAST_ERROR("Failed to seek to start of file: %s", sf_strerror( file ) );
+				if (sf_seek( input, 0, SEEK_SET )) {
+					MAST_ERROR("Failed to seek to start of file: %s", sf_strerror( input ) );
 					break;
 				}
 			} else {
@@ -388,16 +377,23 @@ int main(int argc, char **argv)
 		
 	}
 
-
+	// Free up the buffers audio/read buffers
+	if (payload_buffer) {
+		free(payload_buffer);
+		payload_buffer=NULL;
+	}
+	if (audio_buffer) {
+		free(audio_buffer);
+		audio_buffer=NULL;
+	}
 	 
-	// Close Audio file
-	if (sf_close( file )) {
-		MAST_ERROR("Failed to close input file:\n%s", sf_strerror(file));
+	// Close input file
+	if (sf_close( input )) {
+		MAST_ERROR("Failed to close input file:\n%s", sf_strerror(input));
 	}
 	
 	// Close RTP session
-	rtp_session_destroy(session);
-	ortp_exit();
+	mast_deinit_ortp( session );
 	
 	 
 	// Success !

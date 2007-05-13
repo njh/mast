@@ -19,6 +19,8 @@ Change sources if one drops out
 
 Abort after timeout if no valid packets have been received
 
+Support streaming of multiple files in mast_filecast and mast_rawcast
+
 Choice of scheme for packet loss recovery (does oRTP do this?)
  - None
  - Silence

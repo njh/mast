@@ -50,7 +50,8 @@ PayloadType payload_type_l16_stereo=
 
 
 
-void mast_register_extra_payloads() {
+void mast_register_extra_payloads()
+{
 	
 	rtp_profile_set_payload(&av_profile, 11, &payload_type_l16_mono);
 	rtp_profile_set_payload(&av_profile, 10, &payload_type_l16_stereo);

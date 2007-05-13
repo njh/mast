@@ -33,6 +33,43 @@
 
 
 
+RtpSession *mast_init_ortp( int mode )
+{
+	RtpSession * session = NULL;
+	
+	// Initialise the oRTP library
+	ortp_init();
+	ortp_scheduler_init();
+	ortp_set_log_level_mask(ORTP_WARNING|ORTP_ERROR|ORTP_FATAL);
+	
+	// Add extra payloads to the AV profile
+	mast_register_extra_payloads();
+
+	// Create RTP session
+	session = rtp_session_new( mode );
+	if (session==NULL) {
+		MAST_FATAL( "Failed to create oRTP session.\n" );	
+	}
+
+	// Configure the RTP session
+	rtp_session_set_scheduling_mode(session, TRUE);
+	rtp_session_set_blocking_mode(session, TRUE);
+	rtp_session_set_multicast_loopback(session, TRUE);
+
+	// Set RTCP parameters
+	mast_set_source_sdes( session );
+
+	return session;
+}
+
+
+void mast_deinit_ortp( RtpSession *session )
+{
+
+	rtp_session_uninit( session );
+	ortp_exit();	
+
+}
 
 
 char* mast_gethostname()
