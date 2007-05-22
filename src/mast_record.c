@@ -21,162 +21,111 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <signal.h>
+#include <string.h>
 #include <unistd.h>
 #include <time.h>
 #include <errno.h>
 #include <string.h>
+#include <getopt.h>
 
-#include <sys/types.h>
-#include <sys/time.h>
-#include <sys/socket.h>
-
-#include <netinet/in.h>
-#include <arpa/inet.h>
-
+#include <sndfile.h>
+#include <ortp/ortp.h>
 
 #include "config.h"
+#include "codecs.h"
 #include "mast.h"
 
 
 
-#define PROGRAM_NAME "mastclient"
-#define DEFAULT_DEVICE "/dev/dsp"
+#define PROGRAM_NAME "mast_filecast"
+
+
+/* Global Variables */
+char* g_filename = NULL;
 
 
 
-
-static void
-usage()
-{
-
-	fprintf(stderr, "%s [options] <addr>/<port>\n", PROGRAM_NAME);
-	fprintf(stderr, "   -s <ssrc> specify ssrc - otherwise use first recieved\n");
-	fprintf(stderr, "   -p <payload type> only accept specific payload\n");
-//	fprintf(stderr, "   -t <ttl> (for RTCP reports - default 127)\n");
-	fprintf(stderr, "   -m <timeout> Timeout in seconds for waiting for packets (0 to disable)\n");
-	fprintf(stderr, "   -o send audio to stdout\n");
-	fprintf(stderr, "   -f <filename> save stream to file\n");
-	fprintf(stderr, "\nVersion: %s\n", VERSION);
-
+static int usage() {
+	
+	printf( "Multicast Audio Streaming Toolkit (version %s)\n", PACKAGE_VERSION);
+	printf( "%s [options] <address>[/<port>] <filename>\n", PROGRAM_NAME);
+//	printf( "    -s <ssrc>     Source identifier (otherwise use first recieved)\n");
+//	printf( "    -t <ttl>      Time to live\n");
+//	printf( "    -p <payload>  The payload type to send\n");
+	
 	exit(1);
+	
 }
 
 
-/*
 
-static void
-parse_cmd_line(int argc, char **argv, config_t* conf)
+static void parse_cmd_line(int argc, char **argv, RtpSession* session)
 {
+	char* local_address = NULL;
+	int local_port = DEFAULT_RTP_PORT;
 	int ch;
 
 
 	// Parse the options/switches
-	while ((ch = getopt(argc, argv, "hs:t:of:m:p:qd:")) != -1)
+	while ((ch = getopt(argc, argv, "s:t:p:z:d:lh?")) != -1)
 	switch (ch) {
-		case 's': {
-			// ssrc
-			char * ssrc_str = optarg;
-			
-			// Remove 0x from the start of the string
-			if (optarg[0] == '0' && (optarg[1] == 'x' || optarg[1] == 'X')) {
-				ssrc_str += 2;
-			}
-			
-			if (sscanf(ssrc_str, "%x", &conf->ssrc)<=0) {
-				fprintf(stderr, "Error: SSRC should be a hexadeicmal number.\n\n");
-				usage();
-			}
-			break;
-		}
-		case 'f':
-			conf->filename = optarg;
-		break;
-		case 'd':
-			conf->devname = optarg;
-		break;
-		case 'o':
-			conf->use_stdio = 1;
-		break;
+
+/* may still be useful for RTCP		
 		case 't':
-			conf->ttl = atoi(optarg);
+			if (rtp_session_set_multicast_ttl( session, atoi(optarg) )) {
+				MAST_FATAL("Failed to set multicast TTL");
+			}
 		break;
-		case 'm':
-			conf->timeout = atoi(optarg);
-		break;
-		case 'p':
-			conf->payload_type = atoi(optarg);
-		break;
-		case 'q':
-			// Be quiet
-			conf->verbose = 0;
-		break;
+*/
+
 		case '?':
 		case 'h':
 		default:
 			usage();
 	}
-	
-	
-#ifndef HAVE_OSS
-	if (conf->devname) {
-		fprintf(stderr, "Error: Soundcard/OSS support isn't available.\n\n");
-		usage();
-	}
-#else
-	if (!conf->use_stdio && !conf->filename) {
-		fprintf(stderr, "Using default OSS device: %s\n", DEFAULT_DEVICE);
-		conf->devname = DEFAULT_DEVICE;
-	}
-#endif
-
-	if (!conf->devname && !conf->use_stdio && !conf->filename) {
-		fprintf(stderr, "Error: OSS isn't available - please choose file or stdout.\n\n");
-		usage();
-	}
-	
-#ifndef HAVE_SNDFILE
-	if(conf->filename) {
-		fprintf(stderr, "Error: libsndfile isn't available.\n\n");
-		usage();
-	}
-#endif
 
 
-	
 	// Parse the ip address and port
 	if (argc > optind) {
-		conf->ip = argv[optind];
+		local_address = argv[optind];
 		optind++;
 		
-		if (argc > optind) {
-			conf->port = atoi(argv[optind]);
-		} else {
-			// Look for port in 
-			char* port = strchr(conf->ip, '/');
-			if (port && strlen(port)>1) {
-				*port = 0;
-				port++;
-				conf->port = atoi(port);
-			}
-		}
-		
-		if (!conf->port) {
-			fprintf(stderr, "Error: missing port parameter.\n\n");
-			usage();
+		// Look for port in the address
+		char* portstr = strchr(local_address, '/');
+		if (portstr && strlen(portstr)>1) {
+			*portstr = 0;
+			portstr++;
+			local_port = atoi(portstr);
 		}
 	
 	} else {
-		fprintf(stderr, "Error: missing IP/port.\n\n");
+		MAST_ERROR("missing address/port to send to");
 		usage();
 	}
 	
-	// Make sure the port number is even 
-	if (conf->port%2 == 1) conf->port--;
+	// Make sure the port number is even
+	if (local_port%2 == 1) local_port--;
 	
+	// Set the remote address/port
+	if (rtp_session_set_local_addr( session, local_address, local_port )) {
+		MAST_FATAL("Failed to set receive address/port (%s/%d)", local_address, local_port);
+	} else {
+		printf( "Receive address: %s/%d\n", local_address,  local_port );
+	}
 	
+
+	// Get the input file
+	if (argc > optind) {
+		g_filename = argv[optind];
+		optind++;
+	} else {
+		MAST_ERROR("missing audio output filename");
+		usage();
+	}
+
 }
 
-*/
+
 
 /*
 static void
@@ -296,40 +245,116 @@ client_main_loop(config_t* config, mcast_socket_t* rtp_socket)
 int
 main(int argc, char **argv)
 {
-	//mcast_socket_t *mcast_socket = NULL;
-
-	// Set sensible defaults
-	//config = mast_config_init( );
-	
-
-	// Parse the command line
-	//parse_cmd_line( argc, argv, config );
-	
-	usage();
-	
-	
-	// Create UDP Socket
-	//mcast_socket = mcast_socket_create( config->ip, config->port, config->ttl, 1 );
-	//if (!mcast_socket) return 1;
-	
+	RtpSession* session = NULL;
+//	RtpProfile* profile = &av_profile;
+	SNDFILE* output = NULL;
+	mblk_t* packet = NULL;
+	SF_INFO sfinfo;
+//	mast_codec_t *codec = NULL;
+	int16_t *audio_buffer = NULL;
+	char* suffix = NULL;
+      int      i,       k, count ;
+	int user_ts = 9999;
 
 	
-	// Display some information
-	//mast_config_print( config );
+	// Create an RTP session
+	session = mast_init_ortp( RTP_SESSION_RECVONLY );
 
-	// Catch Signals
-	//client_setup_signals();
+
+	// Parse the command line arguments 
+	// and configure the session
+	parse_cmd_line( argc, argv, session );
+	
+	// Zero the SF_INFO structure
+	bzero( &sfinfo, sizeof( sfinfo ) );
+	
+	// Get the filename suffix
+	suffix = strrchr(g_filename, '.') + 1;
+	if (suffix==NULL || strlen(suffix)==0) {
+		MAST_FATAL("output filename doesn't have a file type extention");
+	}
+
+	// Get the number of entries in the simple file format table
+	if (sf_command (NULL, SFC_GET_SIMPLE_FORMAT_COUNT, &count, sizeof (int))) {
+		MAST_FATAL("failed to get simple output format count");
+	}
+
+	// Look at each simple file format in the table
+	for (k = 0 ; k < count ; k++)
+	{
+		SF_FORMAT_INFO	format_info;
+		format_info.format = k;
+		if (sf_command (NULL, SFC_GET_SIMPLE_FORMAT, &format_info, sizeof (format_info))) {
+			MAST_FATAL("failed to get information about simple format %d", k);
+		}
+		if (strcasecmp( format_info.extension, suffix )==0) {
+			// Found match :)
+			printf("Output file format: %s\n", format_info.name );
+			sfinfo.format = format_info.format;
+			break;
+		}
+	}
+
+	// Check it found something
+	if (sfinfo.format == 0x00) {
+		MAST_FATAL( "No simple libsndfile format flags defined for file extention '%s'", suffix );
+	}
 	
 
-	// Run the main process loop
-	//client_main_loop( config, mcast_socket );
+
+	// Get the first packet, so that we know the format
+	for(i=0;i<10000;i++) {
+		packet = rtp_session_recvm_with_ts( session, user_ts );
+		if (packet == NULL) {
+			MAST_WARNING( "failed to read packet" );
+		} else {
+			mblk_t *body = packet->b_cont;
+			int payload_len = (body->b_wptr - body->b_rptr);
+			printf("pt=%d, ", rtp_session_get_recv_payload_type( session ) );
+			printf("ts=%d, ", rtp_session_get_current_recv_ts( session ) );
+			printf("payload_len=%d\n", payload_len );
+			user_ts+=160;
+		}
+		
+	}	
 
 
-	// Close UDP socket
-	//mcast_socket_close( mcast_socket );
+	// Open the output file
+	//output = sf_open( g_filename, SFM_WRITE, &sfinfo );
+	//if (output==NULL) MAST_FATAL( "failed to open output file: %s", sf_strerror(NULL) );
+
+
+	// Setup signal handlers
+	mast_setup_signals();
+
+
+	// The main loop
+	while( mast_still_running() )
+	{
+
+		// Read in a packet
+		
+		// Decode the audio
+		
+		// Write to disk
+
+		break;
+	}
 	
-	// Clean up configuration structure
-	//mast_config_delete( &config );
+
+	// Free up the buffers audio/read buffers
+	if (audio_buffer) {
+		free(audio_buffer);
+		audio_buffer=NULL;
+	}
+	 
+	// Close input file
+	if (sf_close( output )) {
+		MAST_ERROR("Failed to close output file:\n%s", sf_strerror(output));
+	}
+	
+	// Close RTP session
+	mast_deinit_ortp( session );
 	
 	
 	// Success
