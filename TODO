@@ -5,6 +5,8 @@ Finish convertion from pcm6cast to MAST.
 
 mast_meter - automatically connect mast_listen to jack_meter
 mast_transcast	Reflect and transcode RTP streams
+mast_clockcast - Multicast Talking Clock
+
 
 Built-in audio resampling (using Secret Rabbit Code)
 
