@@ -10,7 +10,7 @@ http://www.ecs.soton.ac.uk/~njh/mast/
 What is MAST ?
 --------------
 
-MAST is an audio streaming broadcaster and client using RTP over IPv4 and IPv6 Multicast.
+MAST is an audio streaming broadcaster and client using RTP over IPv4 and IPv6 Multicast/Unicast.
 
 Unlike VAT and RAT, which are designed primerily for audio conferencing, MAST
 is designed to be used for audio distribution and broadcast. It is currently limited 
@@ -25,7 +25,8 @@ MAST is licenced under the GNU General Public License, see the file COPYING for 
 Current Limitations
 -------------------
 
-- No sample rate convertion support
+- No mixer support (can only recieve single source)
+- No sample rate conversion support
 - No upmixing/downmixing support
 - No clock skew error correction
 - mast_rawcast currently only supports GSM and MPEG Audio
@@ -39,9 +40,9 @@ Tools in MAST
 mast_listen		Client / Listener -> Jack
 mast_cast		Live Audio Broadcaster <- Jack
 mast_filecast	Audio file broadcaster
-mast_rawcast	MPEG Audio file broadcaster
+mast_rawcast	Directly broadcast a previously encoded audio file
 mast_record		Record/archive audio stream to audio file
-mast_rawrecord	Record/archive raw audio streams
+mast_rawrecord	Record/archive streams directly to disc
 
 
 Supported Payloads

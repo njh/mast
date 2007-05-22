@@ -42,7 +42,7 @@ static u_int32_t encode_l16(
 	int16_t *output16 = (int16_t*)output;
 
 	if (outputsize < input_bytes) {
-		fprintf(stderr, "encode_l16: output buffer isn't big enough.\n");
+		MAST_ERROR("encode_l16: output buffer isn't big enough");
 		return 0;
 	}
 
@@ -66,7 +66,7 @@ static u_int32_t decode_l16(
 	int16_t *input16 = (int16_t*)input;
 
 	if (outputsize < inputsize) {
-		fprintf(stderr, "decode_l16: output buffer isn't big enough.\n");
+		MAST_ERROR("decode_l16: output buffer isn't big enough");
 		return 0;
 	}
 

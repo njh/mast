@@ -42,7 +42,10 @@
 // Payload type for MPEG Audio
 #define RTP_MPEG_AUDIO_PT			(14)
 
-
+// GSM codec specifics
+#define	GSM_FRAME_SAMPLES	(160)
+#define GSM_FRAME_BYTES		(33)
+#define GSM_FRAME_SIGNATURE	(0xD0)
 
 
 

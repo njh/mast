@@ -66,6 +66,24 @@ PKG_CHECK_MODULES(ORTP, ortp >= 0.13.1, ,
 	]
 )
 
+
+dnl Check for libgsm
+AC_CHECK_LIB( [gsm], [gsm_create],
+	[ AC_CHECK_HEADER( [gsm.h],
+		[ HAVE_GSM="Yes" ],
+		[ HAVE_GSM="No"
+		  AC_MSG_WARN([Found GSM library but NOT header files on your system]) ] )
+	],
+	[ HAVE_GSM="No" ],
+)
+
+if test x$HAVE_GSM = xYes; then
+	AC_DEFINE_UNQUOTED([HAVE_GSM], 1, [Define to indicate the GSM library availability])
+	CFLAGS="$CFLAGS"
+	LIBS="/sw/lib/libgsm.a"
+fi
+
+
 dnl Check for libsndfile (it is optional)
 PKG_CHECK_MODULES(SNDFILE, sndfile >= 1.0.0,
 	[ HAVE_SNDFILE="Yes" ],
@@ -139,6 +157,7 @@ echo "
 
   Install path .......... $prefix
   Debugging ............. $Debugging
+  GSM Codec Support ..... $HAVE_GSM
   Jack Support .......... $HAVE_JACK
   Libsndfile support .... $HAVE_SNDFILE
   

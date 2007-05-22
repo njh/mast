@@ -40,9 +40,6 @@
 #define PROGRAM_NAME		"mast_mpacast"
 #define READ_BUFFER_SIZE	(8196)
 
-#define	GSM_FRAME_SAMPLES	(160)
-#define GSM_FRAME_BYTES		(33)
-#define GSM_FRAME_SIGNATURE	(0xD0)
 
 /* Global Variables */
 int g_loop_file = FALSE;

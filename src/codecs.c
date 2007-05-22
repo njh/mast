@@ -43,9 +43,10 @@ static struct {
 	char* mime_subtype;
 	mast_codec_t* (*init)();
 } mast_codecs[] = {
+	{ "GSM",	mast_init_gsm },
+	{ "L16",	mast_init_l16 },
 	{ "PCMA",	mast_init_pcma },
 	{ "PCMU",	mast_init_pcmu },
-	{ "L16",	mast_init_l16 },
 	{ NULL, 	NULL }
 };
 

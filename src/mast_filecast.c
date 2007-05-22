@@ -299,19 +299,28 @@ int main(int argc, char **argv)
 	if (pt->type == PAYLOAD_AUDIO_CONTINUOUS) {
 		int bytes_per_frame, bytes_per_unit;
 		bytes_per_frame = pt->bits_per_sample / 8;
-		printf( "Bytes per frame: %d\n", bytes_per_frame );
+		printf( "Bytes per sample: %d\n", bytes_per_frame );
 		if (bytes_per_frame<=0) MAST_FATAL( "Invalid number of bytes per frame" );
 		bytes_per_unit = bytes_per_frame * FRAMES_PER_UNIT;
 		frames_per_packet = (g_payload_size_limit / bytes_per_unit) * FRAMES_PER_UNIT;
-		printf( "Frames per packet: %d\n", frames_per_packet );
 		printf( "Packet size: %d bytes\n", (frames_per_packet * bytes_per_frame) );
-		printf( "Packet duration: %d ms\n", (frames_per_packet*1000 / pt->clock_rate));
-		printf( "---------------------------------------------------------\n");
-		if (frames_per_packet<=0) MAST_FATAL( "Invalid number of frames per packet" );
-		
+	
+	} else if (strcmp(pt->mime_type, "GSM")==0) {
+	
+		// FIXME: clean this code up a bit
+		frames_per_packet = (g_payload_size_limit / GSM_FRAME_BYTES) * GSM_FRAME_SAMPLES;
+		printf( "Packet size: %d bytes\n", (frames_per_packet/GSM_FRAME_SAMPLES)*GSM_FRAME_BYTES );
+
 	} else {
 		MAST_FATAL("Only PAYLOAD_AUDIO_CONTINUOUS is currently supported");
 	}
+
+
+	printf( "Audio samples per packet: %d\n", frames_per_packet );
+	printf( "Packet duration: %d ms\n", (frames_per_packet*1000 / pt->clock_rate));
+	printf( "---------------------------------------------------------\n");
+	if (frames_per_packet<=0) MAST_FATAL( "Invalid number of samples per packet" );
+
 
 	// Allocate memory for audio buffer
 	audio_buffer = (int16_t*)malloc( frames_per_packet * sizeof(int16_t) * pt->channels );
@@ -343,17 +352,19 @@ int main(int argc, char **argv)
 		payload_bytes = codec->encode(codec,
 					frames_read*pt->channels, audio_buffer, 
 					g_payload_size_limit, payload_buffer );
-		if (payload_bytes == 0)
+		if (payload_bytes == -1)
 		{
 			MAST_ERROR("Codec encode failed" );
 			break;
 		}
 		
 	
-		// Send out an RTP packet
-		rtp_session_send_with_ts(session, payload_buffer, payload_bytes, user_ts);
-		user_ts+=frames_read;
-
+		if (payload_bytes) {
+			// Send out an RTP packet
+			rtp_session_send_with_ts(session, payload_buffer, payload_bytes, user_ts);
+			user_ts+=frames_read;
+		}
+		
 
 		// Reached end of file?
 		if (frames_read < frames_per_packet) {

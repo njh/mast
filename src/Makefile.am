@@ -47,6 +47,7 @@ mast_filecast_LDADD = @SNDFILE_LIBS@
 mast_filecast_SOURCES = \
 	codecs.h \
 	codecs.c \
+	codec_gsm.c \
 	codec_l16.c \
 	codec_pcma.c \
 	codec_pcmu.c \

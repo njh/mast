@@ -148,7 +148,7 @@ static u_int32_t decode_pcmu(
 	int i;
 	
 	if (outputsize < inputsize) {
-		fprintf(stderr, "decode_ulaw: output buffer isn't big enough.\n");
+		MAST_ERROR("decode_ulaw: output buffer isn't big enough");
 		return 0;
 	}
 	
@@ -173,7 +173,7 @@ static u_int32_t encode_pcmu(
 	register int i;
 	
 	if (outputsize < inputsize) {
-		fprintf(stderr, "encode_ulaw: output buffer isn't big enough.\n");
+		MAST_ERROR("encode_ulaw: output buffer isn't big enough");
 		return 0;
 	}
 

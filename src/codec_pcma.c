@@ -259,7 +259,7 @@ static u_int32_t decode_pcma(
 {
 
 	if (outputsize < inputsize) {
-		fprintf(stderr, "decode_pcma: output buffer isn't big enough.\n");
+		MAST_ERROR("decode_pcma: output buffer isn't big enough");
 		return 0;
 	}
 
@@ -280,7 +280,7 @@ static u_int32_t encode_pcma(
 {
 
 	if (outputsize < inputsize) {
-		fprintf(stderr, "encode_pcma: output buffer isn't big enough.\n");
+		MAST_ERROR("encode_pcma: output buffer isn't big enough");
 		return 0;
 	}
 
