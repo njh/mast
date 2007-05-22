@@ -33,17 +33,40 @@
 
 
 
+static void ssrc_changed_cb(RtpSession *session)
+{
+	MAST_INFO("The ssrc has changed");
+}
+
+static void pt_changed_cb(RtpSession *session)
+{
+	MAST_INFO("The ssrc has changed");
+}
+
+static void network_error_cb(RtpSession *session, const char* msg)
+{
+	MAST_INFO("Network error: %s", msg);
+}
+
+
 RtpSession *mast_init_ortp( int mode )
 {
 	RtpSession * session = NULL;
+	int log_level = ORTP_WARNING|ORTP_ERROR|ORTP_FATAL;
 	
 	// Initialise the oRTP library
 	ortp_init();
 	ortp_scheduler_init();
-	ortp_set_log_level_mask(ORTP_WARNING|ORTP_ERROR|ORTP_FATAL);
+
 	
-	// Add extra payloads to the AV profile
-	mast_register_extra_payloads();
+	// Set the logging message level
+#ifdef DEBUGGING
+	MAST_DEBUG( "Compiled with debugging enabled" );
+	log_level |= ORTP_DEBUG;
+	log_level |= ORTP_MESSAGE;
+#endif	
+	ortp_set_log_level_mask(log_level);
+
 
 	// Create RTP session
 	session = rtp_session_new( mode );
@@ -56,6 +79,13 @@ RtpSession *mast_init_ortp( int mode )
 	rtp_session_set_blocking_mode(session, TRUE);
 	rtp_session_set_multicast_loopback(session, TRUE);
 
+	// Callbacks
+	rtp_session_signal_connect(session,"ssrc_changed",(RtpCallback)ssrc_changed_cb, 0);
+	rtp_session_signal_connect(session,"payload_type_changed",(RtpCallback)pt_changed_cb, 0);
+	rtp_session_signal_connect(session,"payload_type_changed",(RtpCallback)network_error_cb, 0);
+//	rtp_session_signal_connect(session,"ssrc_changed",(RtpCallback)rtp_session_reset,0);
+
+
 	// Set RTCP parameters
 	mast_set_source_sdes( session );
 
@@ -65,6 +95,10 @@ RtpSession *mast_init_ortp( int mode )
 
 void mast_deinit_ortp( RtpSession *session )
 {
+
+#ifdef DEBUGGING
+	ortp_global_stats_display();
+#endif
 
 	rtp_session_uninit( session );
 	ortp_exit();	
@@ -232,4 +266,5 @@ int mast_parse_dscp( const char* value )
 	// Accept integers too
 	return atoi( value );
 }
+
 

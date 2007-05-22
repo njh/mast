@@ -38,10 +38,10 @@
 
 
 /* Global Variables */
-int payload_size_limit = DEFAULT_PAYLOAD_LIMIT;
-char* remote_address = NULL;
-int remote_port = DEFAULT_RTP_PORT;
-char* chosen_payload_type = DEFAULT_PAYLOAD_TYPE;
+int g_loop_file = FALSE;
+int g_payload_size_limit = DEFAULT_PAYLOAD_LIMIT;
+char* g_payload_type = DEFAULT_PAYLOAD_TYPE;
+char* g_filename = NULL;
 
 
 
@@ -65,6 +65,8 @@ static int usage() {
 
 static void parse_cmd_line(int argc, char **argv, RtpSession* session)
 {
+	char* remote_address = NULL;
+	int remote_port = DEFAULT_RTP_PORT;
 	int ch;
 
 
@@ -99,17 +101,21 @@ static void parse_cmd_line(int argc, char **argv, RtpSession* session)
 		break;
 		
 		case 'p':
-			chosen_payload_type = optarg;
+			g_payload_type = optarg;
 		break;
 
 		case 'z':
-			payload_size_limit = atoi(optarg);
+			g_payload_size_limit = atoi(optarg);
 		break;
 		
 		case 'd':
 			if (rtp_session_set_dscp( session, mast_parse_dscp(optarg) )) {
 				MAST_FATAL("Failed to set DSCP value");
 			}
+		break;
+		
+		case 'l':
+			g_loop_file = TRUE;
 		break;
 		
 		case '?':
@@ -143,8 +149,19 @@ static void parse_cmd_line(int argc, char **argv, RtpSession* session)
 	// Set the remote address/port
 	if (rtp_session_set_remote_addr( session, remote_address, remote_port )) {
 		MAST_FATAL("Failed to set remote address/port (%s/%d)", remote_address, remote_port);
+	} else {
+		printf( "Remote address: %s/%d\n", remote_address,  remote_port );
 	}
 	
+
+	// Get the input file
+	if (argc > optind) {
+		g_filename = argv[optind];
+		optind++;
+	} else {
+		MAST_ERROR("missing audio input filename");
+		usage();
+	}
 
 }
 
@@ -153,42 +170,20 @@ static void parse_cmd_line(int argc, char **argv, RtpSession* session)
 int main(int argc, char **argv)
 {
 	RtpSession* session = NULL;
-	char* mime_type = NULL;
-	mast_payload_t *pt = NULL;
-	PayloadType* opt = NULL;
+	RtpProfile* profile = &av_profile;
+	PayloadType* pt = NULL;
 	int bytes_per_frame = 0;
 	short *audio_buffer = NULL;
 	int frames_per_packet = 0;
-	//int user_ts = 0;
+	int pt_idx = -1;
 
 	
-	// Initialise the oRTP library
-	ortp_init();
-	ortp_scheduler_init();
-	ortp_set_log_level_mask(ORTP_MESSAGE|ORTP_WARNING|ORTP_ERROR);
-	mast_register_extra_payloads();
-
-	// Create RTP session
-	session = rtp_session_new(RTP_SESSION_SENDONLY);
-	if (session==NULL) {
-		MAST_FATAL( "Failed to create oRTP session.\n" );	
-	}
+	// Create an RTP session
+	session = mast_init_ortp( RTP_SESSION_SENDONLY );
 
 	// Parse the command line
 	parse_cmd_line( argc, argv, session );
 
-	
-
-	// Work out the payload type to use
-	//pt = mast_make_payloadtype( chosen_payload_type, sfinfo.samplerate, sfinfo.channels );
-	//if (rtp_session_set_send_payload_type( session, pt->number )) {
-	//	MAST_FATAL("Failed to set payload type");
-	//}
-
-	// Calulate the number of samples per packet
-	opt = rtp_profile_get_payload( &av_profile, pt->number );
-	bytes_per_frame = (opt->normal_bitrate / opt->clock_rate) / 8;
-	frames_per_packet = payload_size_limit / bytes_per_frame;
 	
 
 	// And load a codec for the payload
@@ -196,28 +191,22 @@ int main(int argc, char **argv)
 
 
 	// Display some information about output stream
-	mime_type = mast_mime_string(pt);
-	printf( "Remote address: %s/%d\n", remote_address,  remote_port );
-	printf( "Payload type: %s (pt=%d)\n", mime_type, pt->number );
-	printf( "Bytes per packet: %d\n", payload_size_limit );
+	//printf( "Remote address: %s/%d\n", remote_address,  remote_port );
+	//printf( "Payload type: %s (pt=%d)\n", mime_type, pt_idx );
+	//printf( "Bytes per packet: %d\n", g_payload_size_limit );
 	//printf( "Bytes per frame: %d\n", bytes_per_frame );
 	//printf( "Frames per packet: %d\n", (int)frames_per_packet );
 	printf( "---------------------------------------------------------\n");
-	free( mime_type );
 	
+	// Get the PayloadType structure
+	pt = rtp_profile_get_payload( profile, pt_idx );
+	if (pt == NULL) MAST_FATAL("Failed to get payload type information from oRTP");
 
 	// Allocate memory for audio and packet buffers
 	audio_buffer = (short*)malloc( bytes_per_frame * frames_per_packet );
-	if (audio_buffer==NULL) {
-		MAST_FATAL("Failed to allocate memory for audio buffer");
-	}
+	if (audio_buffer==NULL) MAST_FATAL("Failed to allocate memory for audio buffer");
 	
 
-	// Configure the RTP session
-	rtp_session_set_scheduling_mode(session, TRUE);
-	rtp_session_set_blocking_mode(session, TRUE);
-	rtp_session_set_multicast_loopback(session, TRUE);
-	mast_set_source_sdes( session );
 
 
 	// Setup signal handlers
@@ -242,8 +231,7 @@ int main(int argc, char **argv)
 
 	 
 	// Close RTP session
-	rtp_session_destroy(session);
-	ortp_exit();
+	mast_deinit_ortp( session );
 	
 	 
 	// Success !

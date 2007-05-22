@@ -46,16 +46,6 @@
 
 
 
-typedef struct
-{
-	int number;
-	char subtype[32];
-	int clockrate;
-	int channels;
-} mast_payload_t;
-
-
-
 #ifndef TRUE
 #define TRUE	(1)
 #endif
@@ -109,14 +99,6 @@ int mast_still_running();
 void mast_setup_signals();
 int mast_parse_dscp( const char* value );
 
-// In payloadtype.c
-mast_payload_t* mast_make_payloadtype( const char* chosen, int samplerate, int channels );
-char* mast_mime_string( mast_payload_t* pt );
-int mast_search_payload_num( mast_payload_t* pt );
-
-
-// In avprofile_extras.c
-void mast_register_extra_payloads();
 
 
 #endif

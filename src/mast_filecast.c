@@ -43,7 +43,7 @@
 /* Global Variables */
 int g_loop_file = FALSE;
 int g_payload_size_limit = DEFAULT_PAYLOAD_LIMIT;
-char* g_chosen_payload_type = DEFAULT_PAYLOAD_TYPE;
+char* g_payload_type = DEFAULT_PAYLOAD_TYPE;
 char* g_filename = NULL;
 
 
@@ -170,7 +170,7 @@ static void parse_cmd_line(int argc, char **argv, RtpSession* session)
 		break;
 		
 		case 'p':
-			g_chosen_payload_type = optarg;
+			g_payload_type = optarg;
 		break;
 
 		case 'z':
@@ -239,16 +239,16 @@ static void parse_cmd_line(int argc, char **argv, RtpSession* session)
 int main(int argc, char **argv)
 {
 	RtpSession* session = NULL;
+	RtpProfile* profile = &av_profile;
 	SNDFILE* input = NULL;
-	char* mime_type = NULL;
 	SF_INFO sfinfo;
-	mast_payload_t *pt = NULL;
 	mast_codec_t *codec = NULL;
-	PayloadType* opt = NULL;
+	PayloadType* pt = NULL;
 	int frames_per_packet = 0;
 	int16_t *audio_buffer = NULL;
 	u_int8_t *payload_buffer = NULL;
 	int user_ts = 0;
+	int pt_idx = -1;
 
 	
 	// Create an RTP session
@@ -263,51 +263,49 @@ int main(int argc, char **argv)
 	// Open the input file by filename
 	memset( &sfinfo, 0, sizeof(sfinfo) );
 	input = sf_open(g_filename, SFM_READ, &sfinfo);
-	if (input == NULL) {
-		MAST_FATAL("Failed to open input file:\n%s", sf_strerror(NULL));
-	}
+	if (input == NULL) MAST_FATAL("Failed to open input file:\n%s", sf_strerror(NULL));
+
 	
 	// Display some information about the input file
 	print_file_info( input, &sfinfo );
 	
-	// Work out the payload type to use
-	pt = mast_make_payloadtype( g_chosen_payload_type, sfinfo.samplerate, sfinfo.channels );
-	if (rtp_session_set_send_payload_type( session, pt->number )) {
-		MAST_FATAL("Failed to set payload type");
-	}
-
 	// Display some information about the chosen payload type
-	mime_type = mast_mime_string(pt);
 	printf( "Sending SSRC: %x\n", session->snd.ssrc );
-	printf( "Payload type: %s (pt=%d)\n", mime_type, pt->number );
-	free( mime_type );
+	printf( "Payload type: %s/%d/%d\n", g_payload_type, sfinfo.samplerate, sfinfo.channels );
 
 
-	// Calulate the number of samples per packet
-	opt = rtp_profile_get_payload( &av_profile, pt->number );
-	if (opt==NULL) {
-		MAST_FATAL("Failed to get payload type information from oRTP for pt=%d", pt->number);
+	// Work out the payload type index to use
+	pt_idx = rtp_profile_find_payload_number( profile, g_payload_type, sfinfo.samplerate, sfinfo.channels );
+	if ( pt_idx<0 ) MAST_FATAL("Failed to find static payload type index");
+	printf( "Payload type index: %d\n", pt_idx );
+
+
+	// Get the PayloadType structure
+	pt = rtp_profile_get_payload( profile, pt_idx );
+	if (pt == NULL) MAST_FATAL("Failed to get payload type information from oRTP");
+
+
+	// Set the payload type in the session
+	if (rtp_session_set_send_payload_type( session, pt_idx )) {
+		MAST_FATAL("Failed to set session payload type index");
 	}
-	
 	
 	// Load the codec
-	codec = mast_init_codec( pt->subtype );
-	if (codec==NULL) {
-		MAST_FATAL("Failed to get initialise codec" );
-	}
+	codec = mast_init_codec( g_payload_type );
+	if (codec == NULL) MAST_FATAL("Failed to get initialise codec" );
 
 
 	// Calculate how much audio goes in each packet
-	if (opt->type == PAYLOAD_AUDIO_CONTINUOUS) {
+	if (pt->type == PAYLOAD_AUDIO_CONTINUOUS) {
 		int bytes_per_frame, bytes_per_unit;
-		bytes_per_frame = opt->bits_per_sample / 8;
+		bytes_per_frame = pt->bits_per_sample / 8;
 		printf( "Bytes per frame: %d\n", bytes_per_frame );
 		if (bytes_per_frame<=0) MAST_FATAL( "Invalid number of bytes per frame" );
 		bytes_per_unit = bytes_per_frame * FRAMES_PER_UNIT;
 		frames_per_packet = (g_payload_size_limit / bytes_per_unit) * FRAMES_PER_UNIT;
 		printf( "Frames per packet: %d\n", frames_per_packet );
 		printf( "Packet size: %d bytes\n", (frames_per_packet * bytes_per_frame) );
-		printf( "Packet duration: %d ms\n", (frames_per_packet*1000 / pt->clockrate));
+		printf( "Packet duration: %d ms\n", (frames_per_packet*1000 / pt->clock_rate));
 		printf( "---------------------------------------------------------\n");
 		if (frames_per_packet<=0) MAST_FATAL( "Invalid number of frames per packet" );
 		
@@ -315,16 +313,13 @@ int main(int argc, char **argv)
 		MAST_FATAL("Only PAYLOAD_AUDIO_CONTINUOUS is currently supported");
 	}
 
-	// Allocate memory for audio and packet buffers
+	// Allocate memory for audio buffer
 	audio_buffer = (int16_t*)malloc( frames_per_packet * sizeof(int16_t) * pt->channels );
-	if (audio_buffer==NULL) {
-		MAST_FATAL("Failed to allocate memory for audio buffer");
-	}
+	if (audio_buffer == NULL) MAST_FATAL("Failed to allocate memory for audio buffer");
 
+	// Allocate memory for the packet buffer
 	payload_buffer = (u_int8_t*)malloc( g_payload_size_limit );
-	if (payload_buffer==NULL) {
-		MAST_FATAL("Failed to allocate memory for payload buffer");
-	}
+	if (payload_buffer == NULL) MAST_FATAL("Failed to allocate memory for payload buffer");
 	
 
 
@@ -335,7 +330,7 @@ int main(int argc, char **argv)
 	// The main loop
 	while( mast_still_running() )
 	{
-		sf_count_t frames_read = sf_readf_short( input, audio_buffer, frames_per_packet );
+		int frames_read = sf_readf_short( input, audio_buffer, frames_per_packet );
 		int payload_bytes = 0;
 		
 		// Was there an error?
@@ -362,7 +357,7 @@ int main(int argc, char **argv)
 
 		// Reached end of file?
 		if (frames_read < frames_per_packet) {
-			MAST_DEBUG("Reached end of file (frames_read=%d)", (int)frames_read);
+			MAST_DEBUG("Reached end of file (frames_read=%d)", frames_read);
 			if (g_loop_file) {
 				// Seek back to the beginning
 				if (sf_seek( input, 0, SEEK_SET )) {
