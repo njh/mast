@@ -21,8 +21,15 @@ It supports many of the audio payload types in the Audio-visual Profile (RTP/AVP
 MAST is licenced under the GNU General Public License, see the file COPYING for details.
 
 
-Limitations
------------
+
+Current Limitations
+-------------------
+
+- No sample rate convertion support
+- No upmixing/downmixing support
+- No clock skew error correction
+- mast_rawcast currently only supports GSM and MPEG Audio
+
 
 
 
