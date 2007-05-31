@@ -37,7 +37,7 @@
 #include "mpa_header.h"
 
 
-#define PROGRAM_NAME		"mast_mpacast"
+#define MAST_TOOL_NAME		"mast_mpacast"
 #define READ_BUFFER_SIZE	(8196)
 
 
@@ -67,7 +67,7 @@ PayloadType	payload_type_mpeg_audio={
 static int usage() {
 	
 	printf( "Multicast Audio Streaming Toolkit (version %s)\n", PACKAGE_VERSION);
-	printf( "%s [options] <address>[/<port>] <filename>\n", PROGRAM_NAME);
+	printf( "%s [options] <address>[/<port>] <filename>\n", MAST_TOOL_NAME);
 	printf( "    -s <ssrc>     Source identifier (if unspecified it is random)\n");
 	printf( "    -t <ttl>      Time to live\n");
 	printf( "    -p <payload>  The payload type to send\n");
@@ -421,7 +421,7 @@ int main(int argc, char **argv)
 	
 	
 	// Create an RTP session
-	session = mast_init_ortp( RTP_SESSION_SENDONLY );
+	session = mast_init_ortp( MAST_TOOL_NAME, RTP_SESSION_SENDONLY );
 
 
 	// Set the MPEG Audio payload type to 14 in the AV profile

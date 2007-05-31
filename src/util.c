@@ -32,7 +32,13 @@
 #include "mast.h"
 
 
+/* Globals */
+static int mast_running = TRUE;
+static char* mast_tool_name = NULL;
 
+
+
+/* oRTP callbacks */
 static void ssrc_changed_cb(RtpSession *session)
 {
 	MAST_INFO("The ssrc has changed");
@@ -49,10 +55,14 @@ static void network_error_cb(RtpSession *session, const char* msg)
 }
 
 
-RtpSession *mast_init_ortp( int mode )
+/* Initialise the oRTP library */
+RtpSession *mast_init_ortp( char* tool_name, int mode )
 {
 	RtpSession * session = NULL;
 	int log_level = ORTP_WARNING|ORTP_ERROR|ORTP_FATAL;
+	
+	// Store the tool name
+	mast_tool_name = tool_name;
 	
 	// Initialise the oRTP library
 	ortp_init();
@@ -93,6 +103,7 @@ RtpSession *mast_init_ortp( int mode )
 }
 
 
+/* De-initialise the oRTP library */
 void mast_deinit_ortp( RtpSession *session )
 {
 
@@ -106,6 +117,7 @@ void mast_deinit_ortp( RtpSession *session )
 }
 
 
+/* Get string of the FQDN for this host */
 char* mast_gethostname()
 {
 	char hostname[ HOST_NAME_MAX ];
@@ -143,6 +155,16 @@ char* mast_gethostname()
 }
 
 
+/* Get the name of the current tool */
+char* mast_get_tool_name()
+{
+	if (mast_tool_name) return mast_tool_name;
+	else return "Unknown Tool";
+}
+
+
+
+/* Set the RTCP session description  */
 void mast_set_source_sdes( RtpSession *session )
 {
 	char cname[ STR_BUF_SIZE ];
@@ -151,7 +173,7 @@ void mast_set_source_sdes( RtpSession *session )
 
 	hostname = mast_gethostname();
 	snprintf( cname, STR_BUF_SIZE, "%s@%s", PACKAGE_NAME, hostname );
-	snprintf( tool, STR_BUF_SIZE, "%s %s", PACKAGE_NAME, PACKAGE_VERSION );
+	snprintf( tool, STR_BUF_SIZE, "%s (%s/%s)", mast_get_tool_name(), PACKAGE_NAME, PACKAGE_VERSION );
 	free( hostname );
 	
 	rtp_session_set_source_description(
@@ -168,7 +190,7 @@ void mast_set_source_sdes( RtpSession *session )
 }
 
 
-// Handle an error and store the error message
+/* Handle an error and store the error message */
 void mast_message_handler( int level, const char* file, int line, char *fmt, ... )
 {
 	va_list args;
@@ -202,9 +224,7 @@ void mast_message_handler( int level, const char* file, int line, char *fmt, ...
 
 
 
-
-static int mast_running = TRUE;
-
+/* Signal callback handler */
 static void mast_termination_handler(int signum)
 {
 	mast_running = FALSE;
@@ -214,11 +234,13 @@ static void mast_termination_handler(int signum)
 	}
 }
 
+/* Returns true if the programme should keep running */
 int mast_still_running()
 {
 	return mast_running;
 }
 
+/* Setup signal handlers */
 void mast_setup_signals()
 {
 	// Setup special handling of signals
@@ -233,7 +255,7 @@ void mast_setup_signals()
 
 
 
-// Parse a DSCP class name into an integer
+/* Parse a DSCP class name into an integer value */
 int mast_parse_dscp( const char* value )
 {
 

@@ -93,7 +93,8 @@
 #define MAST_FATAL(s ...)  mast_message_handler( MSG_LEVEL_FATAL, __FILE__, __LINE__, s )
 
 // In util.c
-RtpSession *mast_init_ortp( int mode );
+RtpSession *mast_init_ortp( char* tool_name, int mode );
+char* mast_get_tool_name();
 void mast_deinit_ortp( RtpSession *session );
 char* mast_gethostname();
 void mast_set_source_sdes( RtpSession *session );

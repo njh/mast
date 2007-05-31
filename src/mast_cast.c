@@ -34,7 +34,7 @@
 #include "mast.h"
 
 
-#define PROGRAM_NAME "mast_cast"
+#define MAST_TOOL_NAME "mast_cast"
 
 
 /* Global Variables */
@@ -51,7 +51,7 @@ char* g_filename = NULL;
 static int usage() {
 	
 	printf( "Multicast Audio Streaming Toolkit (version %s)\n", PACKAGE_VERSION);
-	printf( "%s [options] <address>[/<port>]\n", PROGRAM_NAME);
+	printf( "%s [options] <address>[/<port>]\n", MAST_TOOL_NAME);
 	printf( "    -s <ssrc>     Source identifier (if unspecified it is random)\n");
 	printf( "    -t <ttl>      Time to live\n");
 	printf( "    -p <payload>  The payload type to send\n");
@@ -179,7 +179,8 @@ int main(int argc, char **argv)
 
 	
 	// Create an RTP session
-	session = mast_init_ortp( RTP_SESSION_SENDONLY );
+	session = mast_init_ortp( MAST_TOOL_NAME, RTP_SESSION_SENDONLY );
+
 
 	// Parse the command line
 	parse_cmd_line( argc, argv, session );

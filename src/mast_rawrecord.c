@@ -35,7 +35,7 @@
 #include "mpa_header.h"
 
 
-#define PROGRAM_NAME "mast_rawrecord"
+#define MAST_TOOL_NAME		"mast_rawrecord"
 
 
 /* Global Variables */
@@ -63,8 +63,8 @@ PayloadType	payload_type_mpeg_audio={
 
 int usage() {
 	
-	fprintf(stderr, "%s package version %s.\n\n", PACKAGE, VERSION);
-	fprintf(stderr, "%s <addr>/<port> [<filename>]\n", PROGRAM_NAME);
+	fprintf(stderr, "Multicast Audio Streaming Toolkit (version %s)\n", PACKAGE_VERSION);
+	fprintf(stderr, "%s <addr>/<port> [<filename>]\n", MAST_TOOL_NAME);
 	
 	exit(1);
 	
@@ -163,6 +163,8 @@ int main(int argc, char **argv)
 	FILE* output_file = NULL;
 	int ts=0;
 	
+	// Create an RTP session
+	session = mast_init_ortp( MAST_TOOL_NAME, RTP_SESSION_SENDONLY );
 	
 	// Parse commandline parameters
 	parse_args( argc, argv );
@@ -196,15 +198,6 @@ int main(int argc, char **argv)
 	signal(SIGTERM,signal_handler);
 
 
-	// Create new session
-	session=rtp_session_new(RTP_SESSION_RECVONLY);
-	rtp_session_set_local_addr(session, g_address, g_port);
-
-	
-	// Set RTCP parameters
-	mast_set_source_sdes( session );
-	
-	
 	
 	while(running)
 	{

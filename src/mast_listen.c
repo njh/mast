@@ -39,8 +39,8 @@
 
 
 
-#define PROGRAM_NAME "mastclient"
-#define DEFAULT_DEVICE "/dev/dsp"
+#define MAST_TOOL_NAME		"mast_listen"
+#define DEFAULT_DEVICE		"/dev/dsp"
 
 
 
@@ -49,7 +49,8 @@ static void
 usage()
 {
 
-	fprintf(stderr, "%s [options] <addr>/<port>\n", PROGRAM_NAME);
+	fprintf(stderr, "Multicast Audio Streaming Toolkit (version %s)\n", PACKAGE_VERSION);
+	fprintf(stderr, "%s [options] <addr>/<port>\n", MAST_TOOL_NAME);
 	fprintf(stderr, "   -s <ssrc> specify ssrc - otherwise use first recieved\n");
 	fprintf(stderr, "   -p <payload type> only accept specific payload\n");
 //	fprintf(stderr, "   -t <ttl> (for RTCP reports - default 127)\n");
@@ -296,10 +297,12 @@ client_main_loop(config_t* config, mcast_socket_t* rtp_socket)
 int
 main(int argc, char **argv)
 {
+	RtpSession* session = NULL;
+//	RtpProfile* profile = &av_profile;
 	//mcast_socket_t *mcast_socket = NULL;
 
-	// Set sensible defaults
-	//config = mast_config_init( );
+	// Create an RTP session
+	session = mast_init_ortp( MAST_TOOL_NAME, RTP_SESSION_SENDONLY );
 	
 
 	// Parse the command line
