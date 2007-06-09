@@ -67,7 +67,7 @@ static void parse_cmd_line(int argc, char **argv, RtpSession* session)
 
 
 	// Parse the options/switches
-	while ((ch = getopt(argc, argv, "s:t:p:z:d:lh?")) != -1)
+	while ((ch = getopt(argc, argv, "h?")) != -1)
 	switch (ch) {
 
 /* may still be useful for RTCP		
@@ -114,7 +114,7 @@ static void parse_cmd_line(int argc, char **argv, RtpSession* session)
 	}
 	
 
-	// Get the input file
+	// Get the output file
 	if (argc > optind) {
 		g_filename = argv[optind];
 		optind++;
