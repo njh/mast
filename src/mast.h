@@ -32,6 +32,7 @@
 #define DEFAULT_PAYLOAD_LIMIT		(1450)
 #define DEFAULT_PAYLOAD_TYPE		"L16"
 #define DEFAULT_RTP_PORT			(5004)
+#define DEFAULT_TIMEOUT				(10)
 
 // RAT only accepts packets if they contain multiples of 160 samples
 #define FRAMES_PER_UNIT				(160)
@@ -102,7 +103,7 @@ void mast_message_handler( int level, const char* file, int line, char *fmt, ...
 int mast_still_running();
 void mast_setup_signals();
 int mast_parse_dscp( const char* value );
-
+mblk_t *mast_wait_for_rtp_packet( RtpSession * session, int seconds );
 
 
 #endif

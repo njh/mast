@@ -46,7 +46,7 @@ static void ssrc_changed_cb(RtpSession *session)
 
 static void pt_changed_cb(RtpSession *session)
 {
-	MAST_INFO("The ssrc has changed");
+	MAST_INFO("The payload type has changed");
 }
 
 static void network_error_cb(RtpSession *session, const char* msg)
@@ -287,6 +287,58 @@ int mast_parse_dscp( const char* value )
 
 	// Accept integers too
 	return atoi( value );
+}
+
+
+
+/* This isn't part of the public/publish oRTP API */
+int rtp_session_rtp_recv (RtpSession * session, uint32_t user_ts);
+
+
+mblk_t *mast_wait_for_rtp_packet( RtpSession * session, int seconds )
+{
+	struct timeval timeout;
+	fd_set readfds;
+	int retval = -1;
+
+
+	/* reset the session */
+	rtp_session_reset( session );
+	
+	/* set the timeout */
+	timeout.tv_sec = seconds;
+	timeout.tv_usec = 0;
+
+	/* Watch socket to see when it has input */
+	FD_ZERO(&readfds);
+	FD_SET( rtp_session_get_rtp_socket(session), &readfds);
+	retval = select(FD_SETSIZE, &readfds, NULL, NULL, &timeout);
+
+
+	// Check return value 
+	if (retval == -1) {
+		MAST_ERROR("select() failed: %s", strerror(errno));
+		return NULL;
+	} else if (retval==0) {
+		MAST_ERROR("Timed out waiting for packet after %d seconds", seconds);
+		return NULL;
+	}
+	
+	
+
+	/* recieve packet and put it in queue */
+	rtp_session_rtp_recv( session, 0 );
+	
+	
+	/* check that there is something in the queue */
+	if (qempty(&session->rtp.rq) ) {
+		MAST_ERROR("Queue is empty after trying to recieve packet");
+		return NULL;
+	}
+	
+	/* take the packet off the queue and return it */
+	return getq(&session->rtp.rq);
+
 }
 
 

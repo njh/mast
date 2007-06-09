@@ -12,6 +12,9 @@ mast_clockcast - Multicast Talking Clock
 Built-in audio resampling (using Secret Rabbit Code)
 
 
+Seperate out some of the common code in each of the tools source files
+	- Address / port parsing
+	
 
 JACK support
 	- see jack.udp source code (sw-23)

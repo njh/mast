@@ -2,12 +2,22 @@
 bin_PROGRAMS = @BUILD_PROGRAMS@
 
 EXTRA_PROGRAMS = \
+	mast_info \
 	mast_rawcast \
 	mast_rawrecord \
 	mast_cast \
 	mast_listen \
 	mast_filecast \
 	mast_record
+
+
+
+mast_info_SOURCES = \
+	mast_info.c \
+	mpa_header.c \
+	mpa_header.h \
+	mast.h \
+	util.c
 
 
 mast_rawcast_SOURCES = \
