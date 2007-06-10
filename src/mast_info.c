@@ -191,7 +191,7 @@ int main(int argc, char **argv)
 		if (!mpa_header_parse( mpa_ptr, &mh)) {
 			MAST_WARNING("Failed to parse MPEG Audio header");
 		} else {
-			mpa_header_print( stdout, &mh );
+			mpa_header_debug( stdout, &mh );
 		}
 	}
 	

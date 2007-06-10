@@ -116,8 +116,8 @@ static void parse_header(mpa_header_t *mh, u_int32_t header)
 		mh->framesize = (mh->samples * mh->bitrate * 1000 / mh->samplerate) / 8 + mh->padding;
 }
 
-// For debugging
-void mpa_header_print( FILE* out, mpa_header_t *mh )
+// Print out all field values for debugging
+void mpa_header_debug( FILE* out, mpa_header_t *mh )
 {
 	fprintf(out, "MPEG Version      : ");
 	if (mh->version==1)			fprintf(out, "MPEG-1");
@@ -145,6 +145,28 @@ void mpa_header_print( FILE* out, mpa_header_t *mh )
 	//fprintf(out, "Channels          : %d\n", mh->channels);
 	fprintf(out, "Samples per frame : %d\n", mh->samples);
 	fprintf(out, "Bytes per frame   : %d\n", mh->framesize);
+}
+
+
+// concise informational string
+void mpa_header_print( FILE* out, mpa_header_t *mh )
+{
+
+	if (mh->version==1)			fprintf(out, "MPEG-1 ");
+	else if (mh->version==2)	fprintf(out, "MPEG-2 ");
+	else if (mh->version==3)	fprintf(out, "MPEG-2.5 ");
+	else 						fprintf(out, "MPEG-?? ");
+
+	fprintf(out, "layer %d, ", mh->layer);
+	fprintf(out, "%d kbps, ", mh->bitrate);
+	fprintf(out, "%d Hz, ", mh->samplerate);
+	
+	if (mh->mode==MPA_MODE_STEREO)		fprintf(out, "Stereo");
+	else if (mh->mode==MPA_MODE_JOINT)	fprintf(out, "Joint Stereo");
+	else if (mh->mode==MPA_MODE_DUAL)	fprintf(out, "Dual");
+	else if (mh->mode==MPA_MODE_MONO)	fprintf(out, "Mono");
+
+	fprintf(out, "\n");
 }
 
 
