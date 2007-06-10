@@ -247,7 +247,7 @@ int main(int argc, char **argv)
 	int frames_per_packet = 0;
 	int16_t *audio_buffer = NULL;
 	u_int8_t *payload_buffer = NULL;
-	int user_ts = 0;
+	int ts = 0;
 	int pt_idx = -1;
 
 	
@@ -352,7 +352,7 @@ int main(int argc, char **argv)
 		payload_bytes = codec->encode(codec,
 					frames_read*pt->channels, audio_buffer, 
 					g_payload_size_limit, payload_buffer );
-		if (payload_bytes == -1)
+		if (payload_bytes<0)
 		{
 			MAST_ERROR("Codec encode failed" );
 			break;
@@ -361,8 +361,8 @@ int main(int argc, char **argv)
 	
 		if (payload_bytes) {
 			// Send out an RTP packet
-			rtp_session_send_with_ts(session, payload_buffer, payload_bytes, user_ts);
-			user_ts+=frames_read;
+			rtp_session_send_with_ts(session, payload_buffer, payload_bytes, ts);
+			ts+=frames_read;
 		}
 		
 
@@ -391,6 +391,12 @@ int main(int argc, char **argv)
 	if (audio_buffer) {
 		free(audio_buffer);
 		audio_buffer=NULL;
+	}
+	
+	// De-initialise the codec
+	if (codec) {
+		codec->deinit( codec );
+		codec=NULL;
 	}
 	 
 	// Close input file

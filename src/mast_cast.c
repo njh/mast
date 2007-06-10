@@ -222,8 +222,8 @@ int main(int argc, char **argv)
 		//encode_audio();
 	
 		// Send out an RTP packet
-		//rtp_session_send_with_ts(session, (uint8_t*)audio_buffer, frames_read*bytes_per_frame, user_ts);
-		//user_ts+=frames_read;
+		//rtp_session_send_with_ts(session, (uint8_t*)audio_buffer, frames_read*bytes_per_frame, ts);
+		//ts+=frames_read;
 
 
 			
