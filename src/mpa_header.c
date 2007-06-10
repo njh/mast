@@ -33,6 +33,7 @@
 #endif
 
 #include <stdio.h>
+#include <string.h>
 #include <stdlib.h>
 
 #include "mpa_header.h"
@@ -138,7 +139,7 @@ void mpa_header_debug( FILE* out, mpa_header_t *mh )
 
 	fprintf(out, "Error Protection  : %s\n", mh->error_protection ? "Yes" : "No" );
 	fprintf(out, "Padding           : %s\n", mh->padding ? "Yes" : "No" );
-	fprintf(out, "Extension Bit     : %s\n", mh->extension ? "Set" : "Not Set" );
+	fprintf(out, "Extension Bit     : %s\n", mh->extension ? "Yes" : "No" );
 	//fprintf(out, "mode_ext          : %d\n", mh->mode_ext);
 	fprintf(out, "Copyright         : %s\n", mh->copyright ? "Yes" : "No" );
 	fprintf(out, "Original          : %s\n", mh->original ? "Yes" : "No" );
@@ -179,6 +180,9 @@ int mpa_header_parse( const u_int8_t* buff, mpa_header_t *mh)
 		((u_int32_t)buff[1] << 16) |
 		((u_int32_t)buff[2] << 8)  |
 		((u_int32_t)buff[3]);
+
+	/* zero the structure */
+	memset(mh, 0, sizeof( mpa_header_t ) );
 
 	/* fill out the header struct */
 	parse_header(mh, head);
