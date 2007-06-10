@@ -69,6 +69,12 @@ mast_filecast_SOURCES = \
 mast_record_CFLAGS = @SNDFILE_CFLAGS@
 mast_record_LDADD = @SNDFILE_LIBS@
 mast_record_SOURCES = \
+	codecs.h \
+	codecs.c \
+	codec_gsm.c \
+	codec_l16.c \
+	codec_pcma.c \
+	codec_pcmu.c \
 	mast_record.c \
 	mast.h \
 	util.c

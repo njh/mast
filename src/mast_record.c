@@ -59,6 +59,63 @@ static int usage() {
 
 
 
+static SNDFILE* open_output_file( char* filename, PayloadType* pt )
+{
+	SNDFILE* output = NULL;
+	SF_INFO sfinfo;
+	char* suffix = NULL;
+	int k=0, count=0;
+
+	// Zero the SF_INFO structure
+	bzero( &sfinfo, sizeof( sfinfo ) );
+	
+	// Get the filename suffix
+	suffix = strrchr(g_filename, '.') + 1;
+	if (suffix==NULL || strlen(suffix)==0) {
+		MAST_FATAL("output filename doesn't have a file type extention");
+	}
+
+	// Get the number of entries in the simple file format table
+	if (sf_command (NULL, SFC_GET_SIMPLE_FORMAT_COUNT, &count, sizeof (int))) {
+		MAST_FATAL("failed to get simple output format count");
+	}
+
+	// Look at each simple file format in the table
+	for (k = 0 ; k < count ; k++)
+	{
+		SF_FORMAT_INFO	format_info;
+		format_info.format = k;
+		if (sf_command (NULL, SFC_GET_SIMPLE_FORMAT, &format_info, sizeof (format_info))) {
+			MAST_FATAL("failed to get information about simple format %d", k);
+		}
+		if (strcasecmp( format_info.extension, suffix )==0) {
+			// Found match :)
+			printf("Output file format: %s\n", format_info.name );
+			sfinfo.format = format_info.format;
+			break;
+		}
+	}
+
+	// Check it found something
+	if (sfinfo.format == 0x00) {
+		MAST_FATAL( "No simple libsndfile format flags defined for file extention '%s'", suffix );
+	}
+	
+	
+	// Set the samplerate and number of channels
+	sfinfo.channels = pt->channels;
+	sfinfo.samplerate = pt->clock_rate;
+	
+
+	// Open the output file
+	output = sf_open( filename, SFM_WRITE, &sfinfo );
+	if (output==NULL) MAST_FATAL( "failed to open output file: %s", sf_strerror(NULL) );
+
+	return output;
+}
+
+
+
 static void parse_cmd_line(int argc, char **argv, RtpSession* session)
 {
 	char* local_address = NULL;
@@ -127,134 +184,19 @@ static void parse_cmd_line(int argc, char **argv, RtpSession* session)
 
 
 
-/*
-static void
-client_main_loop(config_t* config, mcast_socket_t* rtp_socket)
-{
-	unsigned int last_seq=0, ssrc = 0;
-	rtp_packet_t *packet = NULL;
-	struct timeval last_valid;			// Time last valid packet was recieved
-	audio_t * audio = NULL;
-
-	// Allocate memory for packet buffers
-	packet = rtp_packet_init( config );
-	
-	
-	fprintf(stderr, "Waiting for first packet...\n");
-
-	// Loop foreverish
-
-	while(still_running) {
-
-		// Wait for an RTP packet 
-		if (rtp_packet_recv( rtp_socket, packet )<=0) break;
-		
-		
-		
-		if (ssrc && ssrc != packet->head.ssrc) {
-			if (config->verbose)
-				fprintf(stderr, "ignoring packet from another source: 0x%x\n", packet->head.ssrc);
-			continue;
-		}
-		
-		// wait for specific SSRC ? 
-		if (config->ssrc && packet->head.ssrc != config->ssrc) {
-			if (config->verbose)
-				fprintf(stderr, "ignoring packet from non-chosen source: 0x%x\n", packet->head.ssrc);
-			continue;
-		}
-
-		
-		// Time to initalise ?
-		if (!ssrc) {
-		
-			// Is it the payload we requested ? 
-			if (config->payload_type != -1 && 
-			    config->payload_type != packet->head.pt)
-			{
-				if (config->verbose)
-					fprintf(stderr, "ignoring packet which isn't of chosen payload type: %d\n", packet->head.pt);
-			    continue;
-			}
-		
-			// Store the payload type and payload size 
-			config->payload_type = packet->head.pt;
-			config->payload_size = packet->payload_size;
-			ssrc = packet->head.ssrc;
-		
-			audio = audio_open_decoder( config );
-			packet->frame_size = audio->encoded_frame_size;
-
-			// Display info about the stream 
-			fprintf(stderr, "Src IP: %s\n", packet->src_ip);
-			fprintf(stderr, "SSRC: 0x%8.8x\n", ssrc);
-			fprintf(stderr, "Payload: %d\n", config->payload_type);
-			fprintf(stderr, "Sample Rate: %d Hz\n", audio->samplerate);
-			fprintf(stderr, "Channels: %d\n", audio->channels);
-			fprintf(stderr, "Size of first payload: %d bytes\n", packet->payload_size);
-		}
-		
-		
-		if (packet->head.pt != config->payload_type) {
-			if (config->verbose)
-				fprintf(stderr, "Error payload changed part way through stream: %d\n", packet->head.pt);
-			break;
-		}
-		
-		
-		
-		if (last_seq && last_seq != packet->head.seq-1 && last_seq!=65535) {
-			int diff = abs(packet->head.seq-last_seq);
-			int samples = diff * (config->payload_size / audio->encoded_frame_size);
-			
-			if (config->verbose)
-				fprintf(stderr, "packet missing/out of sequence. this=%u last=%u diff=%u lost=%fs\n",
-						packet->head.seq, last_seq, diff, samples * ((float)1/audio->samplerate) );
-			
-			// Decode and output audio
-			audio_decode( audio, &packet->payload, packet->payload_size );
-
-		} else {
-
-			// Store the time of this successful packet 
-			gettimeofday(&last_valid, NULL);
-
-		}
-		
-		// Decode and output audio
-		audio_decode( audio, &packet->payload, packet->payload_size );
-
-
-		//if (last_seq < packet->head.seq || last_seq==65535)
-				last_seq = packet->head.seq;
-
-	}	// while
-
-
-
-	// Free the packet buffers
-	rtp_packet_delete( packet );
-
-
-	audio_close(audio);
-}
-*/
-
-
-
-int
-main(int argc, char **argv)
+int main(int argc, char **argv)
 {
 	RtpSession* session = NULL;
-//	RtpProfile* profile = &av_profile;
+	RtpProfile* profile = &av_profile;
+	PayloadType* pt = NULL;
 	SNDFILE* output = NULL;
 	mblk_t* packet = NULL;
-	SF_INFO sfinfo;
-//	mast_codec_t *codec = NULL;
+	mblk_t* body = NULL;
+	mast_codec_t *codec = NULL;
 	int16_t *audio_buffer = NULL;
-	char* suffix = NULL;
-      int      i,       k, count ;
-	int user_ts = 9999;
+	int audio_buffer_len = 0;
+	int ts_diff = 0;
+	int ts = 0;
 
 	
 	// Create an RTP session
@@ -265,64 +207,38 @@ main(int argc, char **argv)
 	// and configure the session
 	parse_cmd_line( argc, argv, session );
 	
-	// Zero the SF_INFO structure
-	bzero( &sfinfo, sizeof( sfinfo ) );
 	
-	// Get the filename suffix
-	suffix = strrchr(g_filename, '.') + 1;
-	if (suffix==NULL || strlen(suffix)==0) {
-		MAST_FATAL("output filename doesn't have a file type extention");
-	}
-
-	// Get the number of entries in the simple file format table
-	if (sf_command (NULL, SFC_GET_SIMPLE_FORMAT_COUNT, &count, sizeof (int))) {
-		MAST_FATAL("failed to get simple output format count");
-	}
-
-	// Look at each simple file format in the table
-	for (k = 0 ; k < count ; k++)
-	{
-		SF_FORMAT_INFO	format_info;
-		format_info.format = k;
-		if (sf_command (NULL, SFC_GET_SIMPLE_FORMAT, &format_info, sizeof (format_info))) {
-			MAST_FATAL("failed to get information about simple format %d", k);
-		}
-		if (strcasecmp( format_info.extension, suffix )==0) {
-			// Found match :)
-			printf("Output file format: %s\n", format_info.name );
-			sfinfo.format = format_info.format;
-			break;
-		}
-	}
-
-	// Check it found something
-	if (sfinfo.format == 0x00) {
-		MAST_FATAL( "No simple libsndfile format flags defined for file extention '%s'", suffix );
-	}
+	// Recieve an initial packet
+	packet = mast_wait_for_rtp_packet( session, DEFAULT_TIMEOUT );
+	if (packet == NULL) MAST_FATAL("Failed to receive an initial packet");
+	body = packet->b_cont;
 	
-
-
-	// Get the first packet, so that we know the format
-	for(i=0;i<10000;i++) {
-		packet = rtp_session_recvm_with_ts( session, user_ts );
-		if (packet == NULL) {
-			MAST_WARNING( "failed to read packet" );
-		} else {
-			mblk_t *body = packet->b_cont;
-			int payload_len = (body->b_wptr - body->b_rptr);
-			printf("pt=%d, ", rtp_session_get_recv_payload_type( session ) );
-			printf("ts=%d, ", rtp_session_get_current_recv_ts( session ) );
-			printf("payload_len=%d\n", payload_len );
-			user_ts+=160;
-		}
-		
-	}	
-
-
+	// Lookup the payload type
+	pt = rtp_profile_get_payload( profile, rtp_get_payload_type( packet ) );
+	if (pt == NULL) MAST_FATAL( "Payload type %d isn't registered with oRTP", rtp_get_payload_type( packet ) );
+	fprintf(stderr, "Payload type: %s\n", payload_type_get_rtpmap( pt ));
+	
+	// Work out the duration of the packet
+	ts_diff = ((body->b_wptr - body->b_rptr) * pt->clock_rate) / (pt->normal_bitrate/8) ;
+	MAST_DEBUG("ts_diff = %d", ts_diff);
+	
 	// Open the output file
-	//output = sf_open( g_filename, SFM_WRITE, &sfinfo );
-	//if (output==NULL) MAST_FATAL( "failed to open output file: %s", sf_strerror(NULL) );
+	output = open_output_file( g_filename, pt );
+	if (output==NULL) MAST_FATAL( "failed to open output file" );
+	
+	// We can free the packet now
+	freemsg( packet );
 
+
+	// Load the codec
+	codec = mast_init_codec( pt->mime_type );
+	if (codec == NULL) MAST_FATAL("Failed to get initialise codec" );
+
+	// Allocate memory for audio buffer
+	audio_buffer_len = ts_diff * sizeof(int16_t) * pt->channels;
+	audio_buffer = (int16_t*)malloc( audio_buffer_len );
+	if (audio_buffer == NULL) MAST_FATAL("Failed to allocate memory for audio buffer");
+	
 
 	// Setup signal handlers
 	mast_setup_signals();
@@ -333,12 +249,37 @@ main(int argc, char **argv)
 	{
 
 		// Read in a packet
-		
-		// Decode the audio
-		
-		// Write to disk
+		packet = rtp_session_recvm_with_ts( session, ts );
+		if (packet==NULL) {
 
-		break;
+			MAST_DEBUG( "packet is NULL" );
+
+		} else {
+			int samples_decoded = 0;
+			int samples_written = 0;
+			body = packet->b_cont;
+		
+			// Decode the audio
+			samples_decoded = codec->decode(codec,
+						(body->b_wptr - body->b_rptr), body->b_rptr, 
+						audio_buffer_len, audio_buffer );
+			if (samples_decoded<0)
+			{
+				MAST_ERROR("Codec decode failed" );
+				break;
+			}
+			
+			// Write to disk
+			samples_written = sf_write_short( output, audio_buffer, samples_decoded );
+			if (samples_written<0) {
+				MAST_ERROR("Failed to write audio samples to disk: %s", sf_strerror( output ));
+				break;
+			}
+		}
+		
+
+		// Increment the timestamp for the next packet
+		ts += ts_diff;
 	}
 	
 
@@ -347,8 +288,14 @@ main(int argc, char **argv)
 		free(audio_buffer);
 		audio_buffer=NULL;
 	}
+
+	// De-initialise the codec
+	if (codec) {
+		codec->deinit( codec );
+		codec=NULL;
+	}
 	 
-	// Close input file
+	// Close output file
 	if (sf_close( output )) {
 		MAST_ERROR("Failed to close output file:\n%s", sf_strerror(output));
 	}
