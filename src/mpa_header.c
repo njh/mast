@@ -117,32 +117,34 @@ static void parse_header(mpa_header_t *mh, u_int32_t header)
 }
 
 // For debugging
-void mpa_header_print( mpa_header_t *mh )
+void mpa_header_print( FILE* out, mpa_header_t *mh )
 {
-	if (mh->version==1)			fprintf(stderr, "version=MPEG-1\n");
-	else if (mh->version==2)	fprintf(stderr, "version=MPEG-2\n");
-	else if (mh->version==3)	fprintf(stderr, "version=MPEG-2.5\n");
-	else 						fprintf(stderr, "version=unknown\n");
-
-	fprintf(stderr, "layer=%d\n", mh->layer);
+	fprintf(out, "MPEG Version      : ");
+	if (mh->version==1)			fprintf(out, "MPEG-1");
+	else if (mh->version==2)	fprintf(out, "MPEG-2");
+	else if (mh->version==3)	fprintf(out, "MPEG-2.5");
+	else 						fprintf(out, "unknown");
+	fprintf(out, " (Layer %d)\n", mh->layer);
 	
-	if (mh->mode==MPA_MODE_STEREO)		fprintf(stderr, "mode=Stereo\n");
-	else if (mh->mode==MPA_MODE_JOINT)	fprintf(stderr, "mode=Joint Stereo\n");
-	else if (mh->mode==MPA_MODE_DUAL)	fprintf(stderr, "mode=Dual\n");
-	else if (mh->mode==MPA_MODE_MONO)	fprintf(stderr, "mode=Mono\n");
-	else 								fprintf(stderr, "mode=unknown\n");
+	fprintf(out, "Mode              : ");
+	if (mh->mode==MPA_MODE_STEREO)		fprintf(out, "Stereo\n");
+	else if (mh->mode==MPA_MODE_JOINT)	fprintf(out, "Joint Stereo\n");
+	else if (mh->mode==MPA_MODE_DUAL)	fprintf(out, "Dual\n");
+	else if (mh->mode==MPA_MODE_MONO)	fprintf(out, "Mono\n");
+	else 								fprintf(out, "unknown\n");
 
-	fprintf(stderr, "error_protection=%d\n", mh->error_protection);
-	fprintf(stderr, "padding=%d\n", mh->padding);
-	fprintf(stderr, "extension=%d\n", mh->extension);
-	fprintf(stderr, "mode_ext=%d\n", mh->mode_ext);
-	fprintf(stderr, "copyright=%d\n", mh->copyright);
-	fprintf(stderr, "original=%d\n", mh->original);
-	fprintf(stderr, "channels=%d\n", mh->channels);
-	fprintf(stderr, "bitrate=%d\n", mh->bitrate);
-	fprintf(stderr, "samplerate=%d\n", mh->samplerate);
-	fprintf(stderr, "samples=%d\n", mh->samples);
-	fprintf(stderr, "framesize=%d\n", mh->framesize);
+	fprintf(out, "Bitrate           : %d kbps\n", mh->bitrate);
+	fprintf(out, "Sample Rate       : %d Hz\n", mh->samplerate);
+
+	fprintf(out, "Error Protection  : %s\n", mh->error_protection ? "Yes" : "No" );
+	fprintf(out, "Padding           : %s\n", mh->padding ? "Yes" : "No" );
+	fprintf(out, "Extension Bit     : %s\n", mh->extension ? "Set" : "Not Set" );
+	//fprintf(out, "mode_ext          : %d\n", mh->mode_ext);
+	fprintf(out, "Copyright         : %s\n", mh->copyright ? "Yes" : "No" );
+	fprintf(out, "Original          : %s\n", mh->original ? "Yes" : "No" );
+	//fprintf(out, "Channels          : %d\n", mh->channels);
+	fprintf(out, "Samples per frame : %d\n", mh->samples);
+	fprintf(out, "Bytes per frame   : %d\n", mh->framesize);
 }
 
 

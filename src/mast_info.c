@@ -24,6 +24,7 @@
 #include <signal.h>
 #include <string.h>
 #include <unistd.h>
+#include <ctype.h>
 #include <time.h>
 #include <errno.h>
 #include <string.h>
@@ -34,6 +35,7 @@
 
 #include "config.h"
 #include "codecs.h"
+#include "mpa_header.h"
 #include "mast.h"
 
 
@@ -102,6 +104,8 @@ static void parse_cmd_line(int argc, char **argv, RtpSession* session)
 
 
 
+
+
 int main(int argc, char **argv)
 {
 	RtpSession* session = NULL;
@@ -141,14 +145,14 @@ int main(int argc, char **argv)
 	printf("Sequence Number : %d\n", rtp_get_seqnumber( packet ) );
 	printf("Timestamp       : %d\n", rtp_get_timestamp( packet ) );
 	printf("SSRC Identifier : %d\n", rtp_get_ssrc( packet ) );
-	printf("Marker Bit      : %d\n", rtp_get_markbit( packet ) );
+	printf("Marker Bit      : %s\n", rtp_get_markbit( packet ) ? "Set" : "Not Set");
 	printf("\n");
 	
 
 	// Lookup the payload type
 	pt = rtp_profile_get_payload( profile, rtp_get_payload_type( packet ) );
 	if (pt == NULL) {
-		MAST_WARNING( "payload type %d isn't registered with oRTP", rtp_get_payload_type( packet ) );
+		MAST_WARNING( "Payload type %d isn't registered with oRTP", rtp_get_payload_type( packet ) );
 	} else {
 		const char* mime_major = "?";
 
@@ -160,25 +164,35 @@ int main(int argc, char **argv)
 		else if (pt->type==PAYLOAD_VIDEO) mime_major = "video";
 		printf("Mime Type       : %s/%s\n", mime_major, pt->mime_type);
 		
-		if (pt->clock_rate) printf("Cock Rate       : %d Hz\n", pt->clock_rate);
-		if (pt->bits_per_sample) printf("Bits per Sample : %d\n", pt->bits_per_sample);
-		if (pt->normal_bitrate) printf("Normal Bitrate  : %d kbps\n", (pt->normal_bitrate/1000));
-		if (pt->channels) printf("Channels        : %d\n", pt->channels);
-		if (pt->recv_fmtp) printf("Recieve FMTP    : %s\n", pt->recv_fmtp);
-		if (pt->send_fmtp) printf("Send FMTP       : %s\n", pt->send_fmtp);
+		if (pt->clock_rate)			printf("Cock Rate       : %d Hz\n", pt->clock_rate);
+		if (pt->channels)			printf("Channels        : %d\n", pt->channels);
+		if (pt->bits_per_sample)	printf("Bits per Sample : %d\n", pt->bits_per_sample);
+		if (pt->normal_bitrate) {
+			printf("Normal Bitrate  : %d kbps\n", (pt->normal_bitrate/1000));
+			printf("Packet duration : %d ms\n", (payload_size*1000)/(pt->normal_bitrate/8) );
+		}
+		if (pt->recv_fmtp)			printf("Recieve FMTP    : %s\n", pt->recv_fmtp);
+		if (pt->send_fmtp)			printf("Send FMTP       : %s\n", pt->send_fmtp);
 		printf("\n");
 		
-		//printf("Packet duration: %d bytes\n", payload_size );
 	
 	}
 
 
 	// Parse the MPEG Audio header
-	if (rtp_get_payload_type( packet ) == 14) {
+	if (rtp_get_payload_type( packet ) == RTP_MPEG_AUDIO_PT) {
+		/* FIXME: check fragment offset header (see rfc2250) */
+		unsigned char* mpa_ptr = body->b_rptr + 4;
+		mpa_header_t mh;
+	
 		printf("MPEG Audio Header\n");
 		printf("=================\n");
-	
-	
+		
+		if (!mpa_header_parse( mpa_ptr, &mh)) {
+			MAST_WARNING("Failed to parse MPEG Audio header");
+		} else {
+			mpa_header_print( stdout, &mh );
+		}
 	}
 	
 

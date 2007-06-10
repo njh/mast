@@ -46,4 +46,4 @@ typedef struct {
 // Get parse the header of a frame of mpeg audio
 int mpa_header_parse( const u_int8_t* buff, mpa_header_t *mh);
 
-void mpa_header_print( mpa_header_t *mh );
+void mpa_header_print( FILE* out, mpa_header_t *mh );

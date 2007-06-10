@@ -57,7 +57,7 @@ PayloadType	payload_type_mpeg_audio={
 	NULL,	// zero pattern N/A
 	0,		// pattern_length N/A
 	0,		// normal_bitrate
-	"mpa",	// MIME Type
+	"MPA",	// MIME Type
 	0		// flags
 };
 
@@ -363,7 +363,7 @@ static void main_loop_mpa( RtpSession *session, FILE* input, u_int8_t* buffer )
 					// Check that the next header is valid too
 					if (mpa_header_parse( mpabuf, &mh )) {
 						MAST_WARNING( "Gained sync on MPEG audio stream" );
-						mpa_header_print( &mh );
+						mpa_header_print( stdout, &mh );
 						synced = 1;
 						
 						// Work out how big payload will be
@@ -450,7 +450,7 @@ int main(int argc, char **argv)
 	// The main loop
 	if (strcasecmp( g_chosen_payload_type, "MPA") == 0) {
 	
-		if (rtp_session_set_send_payload_type( session, 14 )) {
+		if (rtp_session_set_send_payload_type( session, RTP_MPEG_AUDIO_PT )) {
 			MAST_FATAL("Failed to set session payload type index");
 		}
 	
