@@ -203,6 +203,7 @@ static FILE* open_source( char* filename )
 
 static void main_loop_gsm( RtpSession *session, FILE* input, u_int8_t* buffer )
 {
+	int ever_synced = 0;
 	int synced = 0;
 	int timestamp = 0;
 	
@@ -218,6 +219,12 @@ static void main_loop_gsm( RtpSession *session, FILE* input, u_int8_t* buffer )
 		// Check for EOF
 		if (feof( input )) {
 			MAST_WARNING( "Reached EOF" );
+			
+			if (!ever_synced) {
+				MAST_ERROR("Reached end of file without ever gaining sync." );
+				break;
+			}
+			
 			if (g_loop_file) {
 				if (fseek(input, 0, SEEK_SET)) {
 					MAST_ERROR("Failed to seek to start of file: %s", strerror(errno) );
@@ -259,6 +266,7 @@ static void main_loop_gsm( RtpSession *session, FILE* input, u_int8_t* buffer )
 				// Again, checked the signature
 				if ((byte & 0xF0) == GSM_FRAME_SIGNATURE) {
 					synced=1;
+					ever_synced=1;
 					MAST_DEBUG( "Gained GSM Audio sync");
 					ungetc(byte, input);
 				} else {
@@ -294,7 +302,8 @@ static void main_loop_mpa( RtpSession *session, FILE* input, u_int8_t* buffer )
 	mpa_header_t mh;
 	u_int8_t* mpabuf = buffer+4;
 	int timestamp = 0;
-	int synced=0;
+	int ever_synced = 0;
+	int synced = 0;
 	
 	// Four null bytes at start of buffer
 	// which make up the MPEG Audio RTP header
@@ -312,6 +321,12 @@ static void main_loop_mpa( RtpSession *session, FILE* input, u_int8_t* buffer )
 		// Check for EOF
 		if (feof( input )) {
 			MAST_WARNING( "Reached EOF" );
+
+			if (!ever_synced) {
+				MAST_ERROR("Reached end of file without ever gaining sync." );
+				break;
+			}
+
 			if (g_loop_file) {
 				if (fseek(input, 0, SEEK_SET)) {
 					MAST_ERROR("Failed to seek to start of file: %s", strerror(errno) );
@@ -365,6 +380,7 @@ static void main_loop_mpa( RtpSession *session, FILE* input, u_int8_t* buffer )
 						MAST_INFO( "Gained sync on MPEG audio stream" );
 						mpa_header_print( stdout, &mh );
 						synced = 1;
+						ever_synced = 1;
 						
 						// Work out how big payload will be
 						if (g_payload_size_limit < mh.framesize) {
