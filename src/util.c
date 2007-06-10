@@ -42,6 +42,10 @@ static char* mast_tool_name = NULL;
 static void ssrc_changed_cb(RtpSession *session)
 {
 	MAST_INFO("The ssrc has changed");
+
+	/* reset the session */
+	rtp_session_reset( session );
+
 }
 
 static void pt_changed_cb(RtpSession *session)
@@ -93,7 +97,6 @@ RtpSession *mast_init_ortp( char* tool_name, int mode )
 	rtp_session_signal_connect(session,"ssrc_changed",(RtpCallback)ssrc_changed_cb, 0);
 	rtp_session_signal_connect(session,"payload_type_changed",(RtpCallback)pt_changed_cb, 0);
 	rtp_session_signal_connect(session,"payload_type_changed",(RtpCallback)network_error_cb, 0);
-//	rtp_session_signal_connect(session,"ssrc_changed",(RtpCallback)rtp_session_reset,0);
 
 
 	// Set RTCP parameters
