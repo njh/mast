@@ -362,7 +362,7 @@ static void main_loop_mpa( RtpSession *session, FILE* input, u_int8_t* buffer )
 					
 					// Check that the next header is valid too
 					if (mpa_header_parse( mpabuf, &mh )) {
-						MAST_WARNING( "Gained sync on MPEG audio stream" );
+						MAST_INFO( "Gained sync on MPEG audio stream" );
 						mpa_header_print( stdout, &mh );
 						synced = 1;
 						
