@@ -41,77 +41,21 @@
 
 
 /* Global Variables */
-char* g_filename = NULL;
+char *g_filename = NULL;			// filename of output file
 
 
 
-static int usage() {
+static int usage()
+{
 	
-	printf( "Multicast Audio Streaming Toolkit (version %s)\n", PACKAGE_VERSION);
-	printf( "%s [options] <address>[/<port>] <filename>\n", MAST_TOOL_NAME);
+	fprintf(stderr, "Multicast Audio Streaming Toolkit (version %s)\n", PACKAGE_VERSION);
+	fprintf(stderr, "%s [options] <address>[/<port>] <filename>\n", MAST_TOOL_NAME);
 //	printf( "    -s <ssrc>     Source identifier (otherwise use first recieved)\n");
 //	printf( "    -t <ttl>      Time to live\n");
 //	printf( "    -p <payload>  The payload type to send\n");
 	
 	exit(1);
 	
-}
-
-
-
-static SNDFILE* open_output_file( char* filename, PayloadType* pt )
-{
-	SNDFILE* output = NULL;
-	SF_INFO sfinfo;
-	char* suffix = NULL;
-	int k=0, count=0;
-
-	// Zero the SF_INFO structure
-	bzero( &sfinfo, sizeof( sfinfo ) );
-	
-	// Get the filename suffix
-	suffix = strrchr(g_filename, '.') + 1;
-	if (suffix==NULL || strlen(suffix)==0) {
-		MAST_FATAL("output filename doesn't have a file type extention");
-	}
-
-	// Get the number of entries in the simple file format table
-	if (sf_command (NULL, SFC_GET_SIMPLE_FORMAT_COUNT, &count, sizeof (int))) {
-		MAST_FATAL("failed to get simple output format count");
-	}
-
-	// Look at each simple file format in the table
-	for (k = 0 ; k < count ; k++)
-	{
-		SF_FORMAT_INFO	format_info;
-		format_info.format = k;
-		if (sf_command (NULL, SFC_GET_SIMPLE_FORMAT, &format_info, sizeof (format_info))) {
-			MAST_FATAL("failed to get information about simple format %d", k);
-		}
-		if (strcasecmp( format_info.extension, suffix )==0) {
-			// Found match :)
-			printf("Output file format: %s\n", format_info.name );
-			sfinfo.format = format_info.format;
-			break;
-		}
-	}
-
-	// Check it found something
-	if (sfinfo.format == 0x00) {
-		MAST_FATAL( "No simple libsndfile format flags defined for file extention '%s'", suffix );
-	}
-	
-	
-	// Set the samplerate and number of channels
-	sfinfo.channels = pt->channels;
-	sfinfo.samplerate = pt->clock_rate;
-	
-
-	// Open the output file
-	output = sf_open( filename, SFM_WRITE, &sfinfo );
-	if (output==NULL) MAST_FATAL( "failed to open output file: %s", sf_strerror(NULL) );
-
-	return output;
 }
 
 
@@ -183,6 +127,62 @@ static void parse_cmd_line(int argc, char **argv, RtpSession* session)
 }
 
 
+static SNDFILE* open_output_file( char* filename, PayloadType* pt )
+{
+	SNDFILE* output = NULL;
+	SF_INFO sfinfo;
+	char* suffix = NULL;
+	int k=0, count=0;
+
+	// Zero the SF_INFO structure
+	bzero( &sfinfo, sizeof( sfinfo ) );
+	
+	// Get the filename suffix
+	suffix = strrchr(g_filename, '.') + 1;
+	if (suffix==NULL || strlen(suffix)==0) {
+		MAST_FATAL("output filename doesn't have a file type extention");
+	}
+
+	// Get the number of entries in the simple file format table
+	if (sf_command (NULL, SFC_GET_SIMPLE_FORMAT_COUNT, &count, sizeof (int))) {
+		MAST_FATAL("failed to get simple output format count");
+	}
+
+	// Look at each simple file format in the table
+	for (k = 0 ; k < count ; k++)
+	{
+		SF_FORMAT_INFO	format_info;
+		format_info.format = k;
+		if (sf_command (NULL, SFC_GET_SIMPLE_FORMAT, &format_info, sizeof (format_info))) {
+			MAST_FATAL("failed to get information about simple format %d", k);
+		}
+		if (strcasecmp( format_info.extension, suffix )==0) {
+			// Found match :)
+			printf("Output file format: %s\n", format_info.name );
+			sfinfo.format = format_info.format;
+			break;
+		}
+	}
+
+	// Check it found something
+	if (sfinfo.format == 0x00) {
+		MAST_FATAL( "No simple libsndfile format flags defined for file extention '%s'", suffix );
+	}
+	
+	
+	// Set the samplerate and number of channels
+	sfinfo.channels = pt->channels;
+	sfinfo.samplerate = pt->clock_rate;
+	
+
+	// Open the output file
+	output = sf_open( filename, SFM_WRITE, &sfinfo );
+	if (output==NULL) MAST_FATAL( "failed to open output file: %s", sf_strerror(NULL) );
+
+	return output;
+}
+
+
 
 int main(int argc, char **argv)
 {
@@ -200,14 +200,15 @@ int main(int argc, char **argv)
 
 	
 	// Create an RTP session
-	session = mast_init_ortp( MAST_TOOL_NAME, RTP_SESSION_SENDONLY );
+	session = mast_init_ortp( MAST_TOOL_NAME, RTP_SESSION_RECVONLY );
 
 
 	// Parse the command line arguments 
 	// and configure the session
 	parse_cmd_line( argc, argv, session );
 	
-	
+
+
 	// Recieve an initial packet
 	packet = mast_wait_for_rtp_packet( session, DEFAULT_TIMEOUT );
 	if (packet == NULL) MAST_FATAL("Failed to receive an initial packet");
