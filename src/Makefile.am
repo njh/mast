@@ -6,7 +6,6 @@ EXTRA_PROGRAMS = \
 	mast_rawcast \
 	mast_rawrecord \
 	mast_cast \
-	mast_listen \
 	mast_filecast \
 	mast_record
 
@@ -40,14 +39,6 @@ mast_cast_CFLAGS = @JACK_CFLAGS@
 mast_cast_LDADD = @JACK_LIBS@
 mast_cast_SOURCES = \
 	mast_cast.c \
-	mast.h \
-	util.c
-
-
-mast_listen_CFLAGS = @JACK_CFLAGS@
-mast_listen_LDADD = @JACK_LIBS@
-mast_listen_SOURCES = \
-	mast_listen.c \
 	mast.h \
 	util.c
 

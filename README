@@ -38,7 +38,6 @@ Tools in MAST
 -------------
 
 mast_info		Display information about first packet received
-mast_listen		Client / Listener -> Jack
 mast_cast		Live Audio Broadcaster <- Jack
 mast_filecast	Audio file broadcaster
 mast_rawcast	Directly broadcast a previously encoded audio file

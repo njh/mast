@@ -3,7 +3,7 @@ Finish convertion from pcm6cast to MAST.
 	- ipv4 examples
 	- merge in new multicast socket code
 
-mast_info - recieve the first packet of a stream and display info about it
+mast_listen - Client / Listener -> Jack
 mast_meter - automatically connect mast_listen to jack_meter
 mast_transcast	Reflect and transcode RTP streams
 mast_clockcast - Multicast Talking Clock

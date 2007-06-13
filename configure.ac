@@ -130,7 +130,7 @@ dnl ############## Decide what to build
 BUILD_PROGRAMS="mast_info mast_rawcast mast_rawrecord"
 
 if test x$HAVE_JACK = "xYes"; then
-	BUILD_PROGRAMS="$BUILD_PROGRAMS mast_cast mast_listen"
+	BUILD_PROGRAMS="$BUILD_PROGRAMS mast_cast"
 fi
 
 if test x$HAVE_SNDFILE = "xYes"; then
