@@ -10,6 +10,16 @@ EXTRA_PROGRAMS = \
 	mast_record
 
 
+noinst_LIBRARIES = libmastcodecs.a
+libmastcodecs_a_SOURCES = \
+	codecs.h \
+	codecs.c \
+	codec_gsm.c \
+	codec_l16.c \
+	codec_pcma.c \
+	codec_pcmu.c
+
+     
 
 mast_info_SOURCES = \
 	mast_info.c \
@@ -36,7 +46,7 @@ mast_rawrecord_SOURCES = \
 
 
 mast_cast_CFLAGS = @JACK_CFLAGS@
-mast_cast_LDADD = @JACK_LIBS@
+mast_cast_LDADD = libmastcodecs.a @JACK_LIBS@
 mast_cast_SOURCES = \
 	mast_cast.c \
 	mast.h \
@@ -44,28 +54,16 @@ mast_cast_SOURCES = \
 
 
 mast_filecast_CFLAGS = @SNDFILE_CFLAGS@
-mast_filecast_LDADD = @SNDFILE_LIBS@
+mast_filecast_LDADD = libmastcodecs.a @SNDFILE_LIBS@
 mast_filecast_SOURCES = \
-	codecs.h \
-	codecs.c \
-	codec_gsm.c \
-	codec_l16.c \
-	codec_pcma.c \
-	codec_pcmu.c \
 	mast_filecast.c \
 	mast.h \
 	util.c
 
 
 mast_record_CFLAGS = @SNDFILE_CFLAGS@
-mast_record_LDADD = @SNDFILE_LIBS@
+mast_record_LDADD = libmastcodecs.a @SNDFILE_LIBS@
 mast_record_SOURCES = \
-	codecs.h \
-	codecs.c \
-	codec_gsm.c \
-	codec_l16.c \
-	codec_pcma.c \
-	codec_pcmu.c \
 	mast_record.c \
 	mast.h \
 	util.c
