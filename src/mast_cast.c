@@ -29,6 +29,8 @@
 #include <string.h>
 
 #include <ortp/ortp.h>
+#include <jack/jack.h>
+#include <jack/ringbuffer.h>
 
 #include "config.h"
 #include "mast.h"
