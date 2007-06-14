@@ -302,7 +302,7 @@ main(int argc, char **argv)
 	//mcast_socket_t *mcast_socket = NULL;
 
 	// Create an RTP session
-	session = mast_init_ortp( MAST_TOOL_NAME, RTP_SESSION_SENDONLY );
+	session = mast_init_ortp( MAST_TOOL_NAME, RTP_SESSION_RECVONLY );
 	
 
 	// Parse the command line
