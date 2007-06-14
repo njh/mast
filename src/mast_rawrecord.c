@@ -18,7 +18,6 @@
  *  $Id:$
  */
 
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <signal.h>
@@ -27,6 +26,7 @@
 #include <time.h>
 #include <errno.h>
 #include <string.h>
+#include <getopt.h>
 
 #include <ortp/ortp.h>
 
@@ -35,14 +35,12 @@
 #include "mpa_header.h"
 
 
+
 #define MAST_TOOL_NAME		"mast_rawrecord"
 
 
 /* Global Variables */
-int running = TRUE;					// true while the programme is running
 char *g_filename = NULL;			// filename of output file
-char *g_address = NULL;			// ip address / multicast group
-int g_port = DEFAULT_RTP_PORT;	// port number
 
 
 
@@ -61,10 +59,14 @@ PayloadType	payload_type_mpeg_audio={
 
 
 
-int usage() {
+static int usage()
+{
 	
 	fprintf(stderr, "Multicast Audio Streaming Toolkit (version %s)\n", PACKAGE_VERSION);
-	fprintf(stderr, "%s <addr>/<port> [<filename>]\n", MAST_TOOL_NAME);
+	fprintf(stderr, "%s [options] <address>[/<port>] <filename>\n", MAST_TOOL_NAME);
+//	printf( "    -s <ssrc>     Source identifier (otherwise use first recieved)\n");
+//	printf( "    -t <ttl>      Time to live\n");
+//	printf( "    -p <payload>  The payload type to send\n");
 	
 	exit(1);
 	
@@ -72,161 +74,177 @@ int usage() {
 
 
 
-void parse_args(int argc, char **argv)
+static void parse_cmd_line(int argc, char **argv, RtpSession* session)
 {
-	int i;
-	
-	// Check the number of arguments
-	if (argc < 2 || argc > 3) usage();
+	char* local_address = NULL;
+	int local_port = DEFAULT_RTP_PORT;
+	int ch;
 
 
-	// Extract the address
-	g_address = argv[1];
-	for(i=0; i<strlen(g_address); i++) {
-		if (g_address[i]=='/') {
-			g_address[i] = '\0';
-			g_port = atoi(&g_address[i+1]);
-			break;
-		}
-	}
-	
-	// Extra argument?
-	if (argc==3) {
-		// Output filename
-		g_filename = argv[2];
-	}
+	// Parse the options/switches
+	while ((ch = getopt(argc, argv, "h?")) != -1)
+	switch (ch) {
 
-}
-
-
-
-void signal_handler(int signum)
-{
-	switch( signum) {
-		case SIGINT: fprintf(stderr, "Caught signal: SIGINT\n" ); break;
-		case SIGTERM: fprintf(stderr, "Caught signal: SIGTERM\n" ); break;
-		default: fprintf(stderr, "Caught signal: %d\n", signum ); break;
-	}	
-	
-	running=0;
-}
-
-
-
-unsigned char* check_payload( mblk_t *hdr, mblk_t *body, int *payload_len, int *ts_delta )
-{
-	int payload_type = rtp_get_payload_type(hdr);
-	
-
-	switch( payload_type ) {
-	
-		case RTP_MPEG_AUDIO_PT: {
-			mpa_header_t mh;
-			u_int32_t frag_offset = ((u_int32_t)body->b_rptr[1] << 8) | ((u_int32_t)body->b_rptr[0]);
-			unsigned char *payload = body->b_rptr+4+frag_offset;
-			if (frag_offset != 0) {
-				fprintf( stderr, "Warning: frag_offset != 0\n" );
+/* may still be useful for RTCP		
+		case 't':
+			if (rtp_session_set_multicast_ttl( session, atoi(optarg) )) {
+				MAST_FATAL("Failed to set multicast TTL");
 			}
-
-			*payload_len = (body->b_wptr - body->b_rptr) - 4 - frag_offset;
-			
-			if (mpa_header_parse( (unsigned char *)payload, &mh)) {
-				int frame_count = *payload_len / mh.framesize;
-				*ts_delta = ((mh.samples * 90000) / mh.samplerate) * frame_count;
-				
-				return payload;
-
-			} else {
-				fprintf( stderr, "Failed to parse MPEG audio header\n" );
-			}
-			
-			break;
-		}
-		
-		default:
-			fprintf(stderr, "Unsupported payload type: %d\n", payload_type );
 		break;
+*/
+
+		case '?':
+		case 'h':
+		default:
+			usage();
+	}
+
+
+	// Parse the ip address and port
+	if (argc > optind) {
+		local_address = argv[optind];
+		optind++;
 		
+		// Look for port in the address
+		char* portstr = strchr(local_address, '/');
+		if (portstr && strlen(portstr)>1) {
+			*portstr = 0;
+			portstr++;
+			local_port = atoi(portstr);
+		}
+	
+	} else {
+		MAST_ERROR("missing address/port to send to");
+		usage();
 	}
 	
-	return NULL;
+	// Make sure the port number is even
+	if (local_port%2 == 1) local_port--;
+	
+	// Set the remote address/port
+	if (rtp_session_set_local_addr( session, local_address, local_port )) {
+		MAST_FATAL("Failed to set receive address/port (%s/%d)", local_address, local_port);
+	} else {
+		printf( "Receive address: %s/%d\n", local_address,  local_port );
+	}
+	
+
+	// Get the output file
+	if (argc > optind) {
+		g_filename = argv[optind];
+		optind++;
+	} else {
+		MAST_ERROR("missing audio output filename");
+		usage();
+	}
 
 }
 
 
+static FILE* open_output_file( char* filename )
+{
+	FILE* output = NULL;
+
+
+	// Open the output file
+	if (strcmp(filename, "-")==0) {
+		fprintf(stderr, "Output file: STDOUT\n");
+		output = stdout;
+	} else { 
+		fprintf(stderr, "Output file: %s\n", filename);
+		output = fopen( filename, "wb" );
+	}
+
+	// Check pointer isn't NULL
+	if (output==NULL) {
+		MAST_FATAL( "failed to open output file: %s", strerror(errno) );
+	}
+	
+	return output;
+}
 
 
 
 int main(int argc, char **argv)
 {
-	RtpSession *session=NULL;
-	FILE* output_file = NULL;
-	int ts=0;
+	RtpSession* session = NULL;
+	RtpProfile* profile = &av_profile;
+	PayloadType* pt = NULL;
+	FILE* output = NULL;
+	mblk_t* packet = NULL;
+	mblk_t* body = NULL;
+	int ts_diff = 0;
+	int ts = 0;
+
 	
 	// Create an RTP session
-	session = mast_init_ortp( MAST_TOOL_NAME, RTP_SESSION_SENDONLY );
-	
-	// Parse commandline parameters
-	parse_args( argc, argv );
-	
-	fprintf(stderr, "Source Address: %s\n", g_address);
-	fprintf(stderr, "Source Port: %d\n", g_port);
-	
-	// Open output file ?
-	if (g_filename) {
-		fprintf(stderr, "Output file: %s\n", g_filename);
-		output_file = fopen( g_filename, "wb" );
-		if (output_file==NULL) {
-			perror("failed to open output file");
-			exit(-5);
-		}
-	} else {
-		fprintf(stderr, "Output file: STDOUT\n");
-		output_file = stdout;
-	}
-	
-	
-	// Initialise ortp
-	ortp_set_log_level_mask( ORTP_WARNING|ORTP_ERROR|ORTP_FATAL );
-	ortp_init();
-	
-	/* Add MPEG Audio payload type 14 in the AV profile.*/
-	rtp_profile_set_payload(&av_profile, RTP_MPEG_AUDIO_PT, &payload_type_mpeg_audio);
-
-	
-	signal(SIGINT,signal_handler);
-	signal(SIGTERM,signal_handler);
+	session = mast_init_ortp( MAST_TOOL_NAME, RTP_SESSION_RECVONLY );
 
 
+	// Parse the command line arguments 
+	// and configure the session
+	parse_cmd_line( argc, argv, session );
 	
-	while(running)
+
+	
+	
+	// Recieve an initial packet
+	packet = mast_wait_for_rtp_packet( session, DEFAULT_TIMEOUT );
+	if (packet == NULL) MAST_FATAL("Failed to receive an initial packet");
+	body = packet->b_cont;
+	
+	// Lookup the payload type
+	pt = rtp_profile_get_payload( profile, rtp_get_payload_type( packet ) );
+	if (pt == NULL) MAST_FATAL( "Payload type %d isn't registered with oRTP", rtp_get_payload_type( packet ) );
+	fprintf(stderr, "Payload type: %s\n", payload_type_get_rtpmap( pt ));
+	
+	// Work out the duration of the packet
+	ts_diff = ((body->b_wptr - body->b_rptr) * pt->clock_rate) / (pt->normal_bitrate/8) ;
+	MAST_DEBUG("ts_diff = %d", ts_diff);
+
+
+	// Open the output file
+	output = open_output_file( g_filename );
+	if (output==NULL) MAST_FATAL( "failed to open output file" );
+	
+	// We can free the packet now
+	freemsg( packet );
+	
+
+
+	// Setup signal handlers
+	mast_setup_signals();
+
+
+	// The main loop
+	while( mast_still_running() )
 	{
-	
-		// Fetch a packet
-		mblk_t *pkt = rtp_session_recvm_with_ts(session, ts );
-		if (pkt!=NULL) {
-			unsigned char *payload = NULL;
-			int payload_len = 0;
-			int ts_delta = 0;
+		// Read in a packet
+		packet = rtp_session_recvm_with_ts( session, ts );
+		if (packet==NULL) {
 
-			payload = check_payload( pkt, pkt->b_cont, &payload_len, &ts_delta );
-			if (payload) {
-				if (fwrite( payload, payload_len, 1, output_file ) < 1) {
-					perror("failed to write to output file");
-					exit(-5);
-				}
-				ts += ts_delta;
-			}
+			MAST_DEBUG( "packet is NULL" );
+
+		} else {
+			// Write the packet to disk
+			
 		}
-
+		
+		// Increment the timestamp for the next packet
+		ts += ts_diff;
 	}
 
 
-	rtp_session_destroy(session);
-	ortp_exit();
-
-	 
-	// Success !
+	// Close output file
+	if (fclose( output )) {
+		MAST_ERROR("Failed to close output file:\n%s", strerror(errno));
+	}
+	
+	// Close RTP session
+	mast_deinit_ortp( session );
+	
+	
+	// Success
 	return 0;
 }
 
