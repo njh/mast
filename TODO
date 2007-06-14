@@ -3,9 +3,9 @@ Finish convertion from pcm6cast to MAST.
 	- ipv4 examples
 	- merge in new multicast socket code
 
+mast_transcast	Reflect and transcode RTP streams
 mast_listen - Client / Listener -> Jack
 mast_meter - automatically connect mast_listen to jack_meter
-mast_transcast	Reflect and transcode RTP streams
 mast_clockcast - Multicast Talking Clock
 
 
@@ -32,6 +32,8 @@ Choice of scheme for packet loss recovery (does oRTP do this?)
  - Silence
  - Repeat
 
+
+Support multiple frames per packet in mast_rawcast
 
 Add SDP generation and RTSP announce support.
 Add session announement use SAP
@@ -85,7 +87,7 @@ Static Types that could be added
 
 12	audio/QCELP		8000	1		MPlayer source code?
 
-14	audio/MPA		*		*		mpglib / toolame
+14	audio/MPA		*		*		mpg123 / toolame
 
 16	audio/DVI4		11025	1		adpcm.c
 17	audio/DVI4		22050	1		adpcm.c
