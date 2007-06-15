@@ -34,6 +34,7 @@ Choice of scheme for packet loss recovery (does oRTP do this?)
 
 
 Support multiple frames per packet in mast_rawcast
+Support for taking shoutcast stream as input using CURL?
 
 Add SDP generation and RTSP announce support.
 Add session announement use SAP
