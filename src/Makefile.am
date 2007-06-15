@@ -49,6 +49,8 @@ mast_cast_CFLAGS = @JACK_CFLAGS@
 mast_cast_LDADD = libmastcodecs.a @JACK_LIBS@
 mast_cast_SOURCES = \
 	mast_cast.c \
+	mpa_header.c \
+	mpa_header.h \
 	mast.h \
 	util.c
 
@@ -57,6 +59,8 @@ mast_filecast_CFLAGS = @SNDFILE_CFLAGS@
 mast_filecast_LDADD = libmastcodecs.a @SNDFILE_LIBS@
 mast_filecast_SOURCES = \
 	mast_filecast.c \
+	mpa_header.c \
+	mpa_header.h \
 	mast.h \
 	util.c
 
@@ -65,5 +69,7 @@ mast_record_CFLAGS = @SNDFILE_CFLAGS@
 mast_record_LDADD = libmastcodecs.a @SNDFILE_LIBS@
 mast_record_SOURCES = \
 	mast_record.c \
+	mpa_header.c \
+	mpa_header.h \
 	mast.h \
 	util.c

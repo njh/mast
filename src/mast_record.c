@@ -191,7 +191,6 @@ int main(int argc, char **argv)
 	PayloadType* pt = NULL;
 	SNDFILE* output = NULL;
 	mblk_t* packet = NULL;
-	mblk_t* body = NULL;
 	mast_codec_t *codec = NULL;
 	int16_t *audio_buffer = NULL;
 	int audio_buffer_len = 0;
@@ -212,7 +211,6 @@ int main(int argc, char **argv)
 	// Recieve an initial packet
 	packet = mast_wait_for_rtp_packet( session, DEFAULT_TIMEOUT );
 	if (packet == NULL) MAST_FATAL("Failed to receive an initial packet");
-	body = packet->b_cont;
 	
 	// Lookup the payload type
 	pt = rtp_profile_get_payload( profile, rtp_get_payload_type( packet ) );
@@ -220,7 +218,7 @@ int main(int argc, char **argv)
 	fprintf(stderr, "Payload type: %s\n", payload_type_get_rtpmap( pt ));
 	
 	// Work out the duration of the packet
-	ts_diff = ((body->b_wptr - body->b_rptr) * pt->clock_rate) / (pt->normal_bitrate/8) ;
+	ts_diff = mast_rtp_packet_duration( packet );
 	MAST_DEBUG("ts_diff = %d", ts_diff);
 	
 	// Open the output file
@@ -256,25 +254,33 @@ int main(int argc, char **argv)
 			MAST_DEBUG( "packet is NULL" );
 
 		} else {
-			int samples_decoded = 0;
-			int samples_written = 0;
-			body = packet->b_cont;
-		
-			// Decode the audio
-			samples_decoded = codec->decode(codec,
-						(body->b_wptr - body->b_rptr), body->b_rptr, 
-						audio_buffer_len, audio_buffer );
-			if (samples_decoded<0)
-			{
-				MAST_ERROR("Codec decode failed" );
-				break;
-			}
-			
-			// Write to disk
-			samples_written = sf_write_short( output, audio_buffer, samples_decoded );
-			if (samples_written<0) {
-				MAST_ERROR("Failed to write audio samples to disk: %s", sf_strerror( output ));
-				break;
+			unsigned int data_len = mast_rtp_packet_size( packet );
+			if (data_len==0) {
+				MAST_WARNING("Failed to get size of packet's payload");
+			} else {
+				unsigned char* data_ptr = packet->b_cont->b_rptr;
+				int samples_decoded = 0;
+				int samples_written = 0;
+
+				// Decode the audio
+				samples_decoded = codec->decode(codec, data_len, data_ptr, 
+							audio_buffer_len, audio_buffer );
+				if (samples_decoded<0)
+				{
+					MAST_ERROR("Codec decode failed" );
+					break;
+				}
+				
+				// Update the timestamp difference
+				ts_diff = mast_rtp_packet_duration( packet );
+				MAST_DEBUG("ts_diff = %d", ts_diff);
+				
+				// Write to disk
+				samples_written = sf_write_short( output, audio_buffer, samples_decoded );
+				if (samples_written<0) {
+					MAST_ERROR("Failed to write audio samples to disk: %s", sf_strerror( output ));
+					break;
+				}
 			}
 		}
 		

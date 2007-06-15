@@ -45,19 +45,6 @@ char *g_filename = NULL;			// filename of output file
 
 
 
-// RTP Payload Type for MPEG Audio
-PayloadType	payload_type_mpeg_audio={
-	PAYLOAD_AUDIO_PACKETIZED, // type
-	90000,	// clock rate
-	0,		// bytes per sample N/A
-	NULL,	// zero pattern N/A
-	0,		// pattern_length N/A
-	0,		// normal_bitrate
-	"mpa",	// MIME Type
-	0		// flags
-};
-
-
 
 static int usage()
 {
@@ -172,7 +159,6 @@ int main(int argc, char **argv)
 	PayloadType* pt = NULL;
 	FILE* output = NULL;
 	mblk_t* packet = NULL;
-	mblk_t* body = NULL;
 	int ts_diff = 0;
 	int ts = 0;
 
@@ -191,7 +177,6 @@ int main(int argc, char **argv)
 	// Recieve an initial packet
 	packet = mast_wait_for_rtp_packet( session, DEFAULT_TIMEOUT );
 	if (packet == NULL) MAST_FATAL("Failed to receive an initial packet");
-	body = packet->b_cont;
 	
 	// Lookup the payload type
 	pt = rtp_profile_get_payload( profile, rtp_get_payload_type( packet ) );
@@ -199,7 +184,7 @@ int main(int argc, char **argv)
 	fprintf(stderr, "Payload type: %s\n", payload_type_get_rtpmap( pt ));
 	
 	// Work out the duration of the packet
-	ts_diff = ((body->b_wptr - body->b_rptr) * pt->clock_rate) / (pt->normal_bitrate/8) ;
+	ts_diff = mast_rtp_packet_duration( packet );
 	MAST_DEBUG("ts_diff = %d", ts_diff);
 
 
@@ -219,6 +204,7 @@ int main(int argc, char **argv)
 	// The main loop
 	while( mast_still_running() )
 	{
+
 		// Read in a packet
 		packet = rtp_session_recvm_with_ts( session, ts );
 		if (packet==NULL) {
@@ -226,8 +212,31 @@ int main(int argc, char **argv)
 			MAST_DEBUG( "packet is NULL" );
 
 		} else {
-			// Write the packet to disk
-			
+			unsigned int data_len = mast_rtp_packet_size( packet );
+			if (data_len==0) {
+				MAST_WARNING("Failed to get size of packet's payload");
+			} else {
+				unsigned char* data_ptr = packet->b_cont->b_rptr;
+				int bytes_written = 0;
+				
+				// Skip the extra header for MPA payload
+				if (rtp_get_payload_type( packet ) == RTP_MPEG_AUDIO_PT) {
+					data_ptr += 4;
+					data_len -= 4;
+				}
+				
+				// Update the timestamp difference
+				ts_diff = mast_rtp_packet_duration( packet );
+				MAST_DEBUG("ts_diff = %d", ts_diff);
+				MAST_DEBUG("data_len = %d", data_len);
+
+				// Write to disk
+				bytes_written = fwrite( data_ptr, 1, data_len, output );
+				if (bytes_written != data_len) {
+					MAST_ERROR("Failed to write data to disk: %s", strerror(errno) );
+					break;
+				}
+			}
 		}
 		
 		// Increment the timestamp for the next packet

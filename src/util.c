@@ -30,11 +30,27 @@
 
 #include "config.h"
 #include "mast.h"
+#include "mpa_header.h"
 
 
 /* Globals */
 static int mast_running = TRUE;
 static char* mast_tool_name = NULL;
+
+
+// RTP Payload Type for MPEG Audio
+PayloadType	payload_type_mpeg_audio = {
+	PAYLOAD_AUDIO_PACKETIZED, // type
+	90000,	// clock rate
+	0,		// bytes per sample N/A
+	NULL,	// zero pattern N/A
+	0,		// pattern_length N/A
+	0,		// normal_bitrate
+	"mpa",	// MIME Type
+	0		// flags
+};
+
+
 
 
 
@@ -62,7 +78,8 @@ static void network_error_cb(RtpSession *session, const char* msg)
 /* Initialise the oRTP library */
 RtpSession *mast_init_ortp( char* tool_name, int mode )
 {
-	RtpSession * session = NULL;
+	RtpSession* session = NULL;
+	RtpProfile* profile = &av_profile;
 	int log_level = ORTP_WARNING|ORTP_ERROR|ORTP_FATAL;
 	
 	// Store the tool name
@@ -97,6 +114,11 @@ RtpSession *mast_init_ortp( char* tool_name, int mode )
 	rtp_session_signal_connect(session,"ssrc_changed",(RtpCallback)ssrc_changed_cb, 0);
 	rtp_session_signal_connect(session,"payload_type_changed",(RtpCallback)pt_changed_cb, 0);
 	rtp_session_signal_connect(session,"payload_type_changed",(RtpCallback)network_error_cb, 0);
+
+
+	// Set the MPEG Audio payload type to 14 in the AV profile
+	rtp_profile_set_payload(profile, RTP_MPEG_AUDIO_PT, &payload_type_mpeg_audio);
+
 
 
 	// Set RTCP parameters
@@ -342,6 +364,58 @@ mblk_t *mast_wait_for_rtp_packet( RtpSession * session, int seconds )
 	/* take the packet off the queue and return it */
 	return getq(&session->rtp.rq);
 
+}
+
+
+
+
+void mast_update_mpa_pt( mblk_t* packet ) 
+{
+
+	if (packet && packet->b_cont) {
+		unsigned char* mpa_ptr = packet->b_cont->b_rptr + 4;
+		mpa_header_t mh;
+		
+		if (!mpa_header_parse( mpa_ptr, &mh)) {
+			MAST_FATAL("Failed to parse MPEG Audio header");
+		}
+	
+		// Adjust the normal bitrate
+		payload_type_mpeg_audio.normal_bitrate = mh.bitrate * 1000;
+	}
+	
+}
+
+
+/* Return the size of an RTP packet (in bytes) */
+int mast_rtp_packet_size( mblk_t* packet ) {
+	if (packet && packet->b_cont) {
+		return (packet->b_cont->b_wptr - packet->b_cont->b_rptr);
+	} else {
+		return 0;
+	}
+}
+
+
+/* Return the duration of an RTP packet (timestamp difference) */
+int mast_rtp_packet_duration( mblk_t* packet )
+{
+	PayloadType* pt = NULL;
+	int payload_size = mast_rtp_packet_size(packet);
+	if (payload_size==0) return 0;
+	
+	// Update oRTP payload type, if it is MPEG Audio
+	if (rtp_get_payload_type( packet ) == RTP_MPEG_AUDIO_PT) {
+		mast_update_mpa_pt( packet );
+		payload_size -= 4;	// extra 4 bytes of headers in MPA
+	}
+
+	// Lookup the payload details	
+	pt = rtp_profile_get_payload( &av_profile, rtp_get_payload_type( packet ) );
+	if (pt == NULL) return 0;
+	
+	// Work out the duration of the packet
+	return (payload_size * pt->clock_rate) / (pt->normal_bitrate/8);
 }
 
 

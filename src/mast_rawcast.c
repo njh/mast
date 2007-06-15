@@ -49,21 +49,6 @@ char* g_filename = NULL;
 
 
 
-// RTP Payload Type for MPEG Audio
-PayloadType	payload_type_mpeg_audio={
-	PAYLOAD_AUDIO_PACKETIZED, // type
-	90000,	// clock rate
-	0,		// bytes per sample N/A
-	NULL,	// zero pattern N/A
-	0,		// pattern_length N/A
-	0,		// normal_bitrate
-	"MPA",	// MIME Type
-	0		// flags
-};
-
-
-
-
 static int usage() {
 	
 	printf( "Multicast Audio Streaming Toolkit (version %s)\n", PACKAGE_VERSION);
@@ -431,7 +416,6 @@ static void main_loop_mpa( RtpSession *session, FILE* input, u_int8_t* buffer )
 int main(int argc, char **argv)
 {
 	RtpSession *session = NULL;
-	RtpProfile* profile = &av_profile;
 	FILE* input = NULL;
 	u_int8_t *buffer = NULL;
 	
@@ -439,9 +423,6 @@ int main(int argc, char **argv)
 	// Create an RTP session
 	session = mast_init_ortp( MAST_TOOL_NAME, RTP_SESSION_SENDONLY );
 
-
-	// Set the MPEG Audio payload type to 14 in the AV profile
-	rtp_profile_set_payload(profile, RTP_MPEG_AUDIO_PT, &payload_type_mpeg_audio);
 
 	// Parse the command line arguments 
 	// and configure the session
