@@ -27,20 +27,21 @@
 #include <time.h>
 #include <errno.h>
 #include <string.h>
+#include <getopt.h>
 
 #include <ortp/ortp.h>
-#include <jack/jack.h>
-#include <jack/ringbuffer.h>
 
 #include "config.h"
+#include "codecs.h"
 #include "mast.h"
 
 
-#define MAST_TOOL_NAME "mast_cast"
+#define MAST_TOOL_NAME	"mast_cast"
 
 
 /* Global Variables */
 int g_loop_file = FALSE;
+char* g_client_name = MAST_TOOL_NAME;
 int g_payload_size_limit = DEFAULT_PAYLOAD_LIMIT;
 char* g_payload_type = DEFAULT_PAYLOAD_TYPE;
 char* g_filename = NULL;
@@ -59,6 +60,9 @@ static int usage() {
 	printf( "    -p <payload>  The payload type to send\n");
 	printf( "    -z <size>     Set the per-packet payload size\n");
 	printf( "    -d <dcsp>     DCSP Quality of Service value\n");
+	printf( "    -r <msec>     Ring-buffer duration in milliseconds\n");
+	printf( "    -c <channels> Number of audio channels\n");
+	printf( "    -n <name>     Name for this JACK client\n");
 	
 	exit(1);
 	
@@ -175,7 +179,7 @@ int main(int argc, char **argv)
 	RtpProfile* profile = &av_profile;
 	PayloadType* pt = NULL;
 	int bytes_per_frame = 0;
-	short *audio_buffer = NULL;
+	int16_t *audio_buffer = NULL;
 	int frames_per_packet = 0;
 	int pt_idx = -1;
 
@@ -184,7 +188,8 @@ int main(int argc, char **argv)
 	session = mast_init_ortp( MAST_TOOL_NAME, RTP_SESSION_SENDONLY );
 
 
-	// Parse the command line
+	// Parse the command line arguments 
+	// and configure the session
 	parse_cmd_line( argc, argv, session );
 
 	

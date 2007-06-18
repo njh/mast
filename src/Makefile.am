@@ -49,6 +49,8 @@ mast_cast_CFLAGS = @JACK_CFLAGS@
 mast_cast_LDADD = libmastcodecs.a @JACK_LIBS@
 mast_cast_SOURCES = \
 	mast_cast.c \
+	mastjack.c \
+	mastjack.h \
 	mpa_header.c \
 	mpa_header.h \
 	mast.h \

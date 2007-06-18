@@ -33,6 +33,7 @@
 #define DEFAULT_PAYLOAD_TYPE		"L16"
 #define DEFAULT_RTP_PORT			(5004)
 #define DEFAULT_TIMEOUT				(10)
+#define DEFAULT_RINGBUFFER_DURATION	(100)
 
 // RAT only accepts packets if they contain multiples of 160 samples
 #define FRAMES_PER_UNIT				(160)
