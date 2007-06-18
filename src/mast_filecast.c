@@ -29,8 +29,8 @@
 #include <string.h>
 #include <getopt.h>
 
-#include <sndfile.h>
 #include <ortp/ortp.h>
+#include <sndfile.h>
 
 #include "config.h"
 #include "codecs.h"
