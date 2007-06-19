@@ -67,23 +67,6 @@ PKG_CHECK_MODULES(ORTP, ortp >= 0.13.1, ,
 )
 
 
-dnl Check for libgsm
-AC_CHECK_LIB( [gsm], [gsm_create],
-	[ AC_CHECK_HEADER( [gsm.h],
-		[ HAVE_GSM="Yes" ],
-		[ HAVE_GSM="No"
-		  AC_MSG_WARN([Found GSM library but NOT header files on your system]) ] )
-	],
-	[ HAVE_GSM="No" ],
-)
-
-if test x$HAVE_GSM = xYes; then
-	AC_DEFINE_UNQUOTED([HAVE_GSM], 1, [Define to indicate the GSM library availability])
-	CFLAGS="$CFLAGS"
-	LIBS="/sw/lib/libgsm.a"
-fi
-
-
 dnl Check for libsndfile (it is optional)
 PKG_CHECK_MODULES(SNDFILE, sndfile >= 1.0.0,
 	[ HAVE_SNDFILE="Yes" ],
@@ -101,7 +84,7 @@ PKG_CHECK_MODULES(JACK, jack,
 dnl ############## Header Checks
 
 AC_HEADER_STDC
-AC_CHECK_HEADERS([stdlib.h string.h unistd.h signal.h])
+AC_CHECK_HEADERS([stdlib.h string.h unistd.h signal.h malloc.h])
 
 
 
@@ -114,7 +97,7 @@ AC_CHECK_TYPE(u_int8_t, unsigned char)
 
 
 dnl ############## Compiler and Linker Flags
-CFLAGS="$CFLAGS -std=c99 $ORTP_CFLAGS"
+CFLAGS="$CFLAGS $ORTP_CFLAGS"
 LDFLAGS="$LDFLAGS $ORTP_LIBS"
 
 if test x$Debugging = xEnabled; then
@@ -143,7 +126,7 @@ AC_SUBST(BUILD_PROGRAMS)
 
 dnl ############## Final Output
 
-AC_CONFIG_FILES([Makefile src/Makefile doc/Makefile])
+AC_CONFIG_FILES([Makefile src/Makefile doc/Makefile libgsm/Makefile])
 
 AC_OUTPUT
 
@@ -157,7 +140,6 @@ echo "
 
   Install path .......... $prefix
   Debugging ............. $Debugging
-  GSM Codec Support ..... $HAVE_GSM
   Jack Support .......... $HAVE_JACK
   Libsndfile support .... $HAVE_SNDFILE
   

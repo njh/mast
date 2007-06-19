@@ -18,12 +18,15 @@
  *  $Id:$
  */
 
-#include <unistd.h>
-#include <string.h>
 #include <netdb.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdarg.h>
+#include <unistd.h>
+#include <string.h>
+#include <strings.h>
+#include <signal.h>
+#include <resolv.h>
 
 #include <ortp/ortp.h>
 

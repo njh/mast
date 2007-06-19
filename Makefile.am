@@ -4,6 +4,6 @@ VERSION: configure.ac
 	echo "${PACKAGE_NAME}" > VERSION; \
 	echo "${PACKAGE_VERSION}" >> VERSION
 
-SUBDIRS = src @BUILD_DOC@
+SUBDIRS = libgsm src @BUILD_DOC@
 EXTRA_DIST = VERSION autogen.sh
 
