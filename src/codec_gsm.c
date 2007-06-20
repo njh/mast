@@ -27,10 +27,7 @@
 #include "codecs.h"
 #include "mast.h"
 
-
-#ifdef HAVE_GSM
-
-#include <gsm.h>
+#include "../libgsm/gsm.h"
 
 
 
@@ -141,15 +138,3 @@ mast_codec_t* mast_init_gsm()
 	
 	return codec;
 }
-
-
-#else	// HAVE_GSM
-
-// We don't have the GSM library
-mast_codec_t* mast_init_gsm()
-{
-	MAST_ERROR( "The libgsm library wasn't available at compile time" );
-	return NULL;
-}
-
-#endif

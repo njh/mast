@@ -11,7 +11,6 @@ EXTRA_PROGRAMS = \
 
 
 noinst_LIBRARIES = libmastcodecs.a
-libmastcodecs_a_LIBADD = ../libgsm/libgsm.a
 libmastcodecs_a_SOURCES = \
 	codecs.h \
 	codecs.c \
@@ -47,7 +46,7 @@ mast_rawrecord_SOURCES = \
 
 
 mast_cast_CFLAGS = @JACK_CFLAGS@
-mast_cast_LDADD = libmastcodecs.a @JACK_LIBS@
+mast_cast_LDADD = libmastcodecs.a ../libgsm/libgsm.a @JACK_LIBS@
 mast_cast_SOURCES = \
 	mast_cast.c \
 	mastjack.c \
@@ -59,7 +58,7 @@ mast_cast_SOURCES = \
 
 
 mast_filecast_CFLAGS = @SNDFILE_CFLAGS@
-mast_filecast_LDADD = libmastcodecs.a @SNDFILE_LIBS@
+mast_filecast_LDADD = libmastcodecs.a ../libgsm/libgsm.a @SNDFILE_LIBS@
 mast_filecast_SOURCES = \
 	mast_filecast.c \
 	mpa_header.c \
@@ -69,10 +68,11 @@ mast_filecast_SOURCES = \
 
 
 mast_record_CFLAGS = @SNDFILE_CFLAGS@
-mast_record_LDADD = libmastcodecs.a @SNDFILE_LIBS@
+mast_record_LDADD = libmastcodecs.a ../libgsm/libgsm.a @SNDFILE_LIBS@
 mast_record_SOURCES = \
 	mast_record.c \
 	mpa_header.c \
 	mpa_header.h \
 	mast.h \
 	util.c
+
