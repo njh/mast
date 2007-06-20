@@ -22,3 +22,5 @@ libgsm_a_SOURCES = \
 	short_term.c \
 	table.c \
 	unproto.h
+
+EXTRA_DIST = README COPYRIGHT
