@@ -104,6 +104,7 @@ void mast_message_handler( int level, const char* file, int line, char *fmt, ...
 int mast_still_running();
 void mast_setup_signals();
 int mast_parse_dscp( const char* value );
+void mast_set_session_ssrc( RtpSession * session, char* ssrc_str );
 mblk_t *mast_wait_for_rtp_packet( RtpSession * session, int seconds );
 int mast_rtp_packet_size( mblk_t* packet );
 int mast_rtp_packet_duration( mblk_t* packet );

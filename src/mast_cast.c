@@ -55,7 +55,7 @@ static int usage() {
 	
 	printf( "Multicast Audio Streaming Toolkit (version %s)\n", PACKAGE_VERSION);
 	printf( "%s [options] <address>[/<port>]\n", MAST_TOOL_NAME);
-	printf( "    -s <ssrc>     Source identifier (if unspecified it is random)\n");
+	printf( "    -s <ssrc>     Source identifier in hex (default is random)\n");
 	printf( "    -t <ttl>      Time to live\n");
 	printf( "    -p <payload>  The payload type to send\n");
 	printf( "    -z <size>     Set the per-packet payload size\n");
@@ -79,26 +79,9 @@ static void parse_cmd_line(int argc, char **argv, RtpSession* session)
 	// Parse the options/switches
 	while ((ch = getopt(argc, argv, "s:t:p:z:d:lh?")) != -1)
 	switch (ch) {
-		case 's': {
-			// ssrc
-			char * ssrc_str = optarg;
-			int ssrc;
-			
-			// Remove 0x from the start of the string
-			if (optarg[0] == '0' && (optarg[1] == 'x' || optarg[1] == 'X')) {
-				ssrc_str += 2;
-			}
-			
-			// Parse the hexadecimal number into an integer
-			if (sscanf(ssrc_str, "%x", &ssrc)<=0) {
-				MAST_ERROR("SSRC should be a hexadeicmal number");
-				usage();
-			}
-			
-			// Set it in the session
-			rtp_session_set_ssrc( session, ssrc );
-			break;
-		}
+		case 's':
+			mast_set_session_ssrc( session, optarg );
+		break;
 		
 		case 't':
 			if (rtp_session_set_multicast_ttl( session, atoi(optarg) )) {

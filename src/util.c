@@ -319,6 +319,30 @@ int mast_parse_dscp( const char* value )
 
 
 
+// Take an hex SSRC string (from command line) and set it for session
+void mast_set_session_ssrc( RtpSession * session, char* ssrc_str )
+{
+	int ssrc = 0;
+	
+	// Remove 0x from the start of the string
+	if (optarg[0] == '0' && (optarg[1] == 'x' || optarg[1] == 'X')) {
+		ssrc_str += 2;
+	}
+	
+	// Parse the hexadecimal number into an integer
+	if (sscanf(ssrc_str, "%x", &ssrc)<=0) {
+		MAST_ERROR("SSRC should be a hexadeicmal number");
+		return;
+	}
+	
+	// Set it in the session
+	MAST_DEBUG( "SSRC for session set to 0x%x", ssrc );
+	rtp_session_set_ssrc( session, ssrc );
+
+}
+
+
+
 /* This isn't part of the public/publish oRTP API */
 int rtp_session_rtp_recv (RtpSession * session, uint32_t user_ts);
 
