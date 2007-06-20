@@ -15,11 +15,17 @@ libmastcodecs_a_SOURCES = \
 	codecs.h \
 	codecs.c \
 	codec_gsm.c \
+	codec_lpc10.c \
 	codec_l16.c \
 	codec_pcma.c \
 	codec_pcmu.c
 
-     
+MAST_CODEC_LIBS = \
+	libmastcodecs.a \
+	../libgsm/libgsm.a \
+	../liblpc10/liblpc10.a
+
+
 
 mast_info_SOURCES = \
 	mast_info.c \
@@ -46,7 +52,7 @@ mast_rawrecord_SOURCES = \
 
 
 mast_cast_CFLAGS = @JACK_CFLAGS@
-mast_cast_LDADD = libmastcodecs.a ../libgsm/libgsm.a @JACK_LIBS@
+mast_cast_LDADD = $(MAST_CODEC_LIBS) @JACK_LIBS@
 mast_cast_SOURCES = \
 	mast_cast.c \
 	mastjack.c \
@@ -58,7 +64,7 @@ mast_cast_SOURCES = \
 
 
 mast_filecast_CFLAGS = @SNDFILE_CFLAGS@
-mast_filecast_LDADD = libmastcodecs.a ../libgsm/libgsm.a @SNDFILE_LIBS@
+mast_filecast_LDADD = $(MAST_CODEC_LIBS) @SNDFILE_LIBS@
 mast_filecast_SOURCES = \
 	mast_filecast.c \
 	mpa_header.c \
@@ -68,7 +74,7 @@ mast_filecast_SOURCES = \
 
 
 mast_record_CFLAGS = @SNDFILE_CFLAGS@
-mast_record_LDADD = libmastcodecs.a ../libgsm/libgsm.a @SNDFILE_LIBS@
+mast_record_LDADD = $(MAST_CODEC_LIBS) @SNDFILE_LIBS@
 mast_record_SOURCES = \
 	mast_record.c \
 	mpa_header.c \
