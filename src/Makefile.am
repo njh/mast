@@ -11,6 +11,7 @@ EXTRA_PROGRAMS = \
 
 
 noinst_LIBRARIES = libmastcodecs.a
+libmastcodecs_a_LIBADD = ../libgsm/libgsm.a
 libmastcodecs_a_SOURCES = \
 	codecs.h \
 	codecs.c \
