@@ -37,6 +37,7 @@
 
 // ------- Globals -------
 int g_channels = 2;
+int g_do_autoconnect = FALSE;
 int g_rb_duration = DEFAULT_RINGBUFFER_DURATION;
 jack_port_t *inport[2] = {NULL, NULL};
 jack_ringbuffer_t *ringbuffer[2] = {NULL, NULL};
@@ -57,7 +58,7 @@ static int callback_jack(jack_nframes_t nframes, void *arg)
         char *buf  = (char*)jack_port_get_buffer(inport[c], nframes);
         size_t len = jack_ringbuffer_write(ringbuffer[c], buf, to_write);
         if (len < to_write) {
-            MAST_FATAL("Failed to write to ring ruffer.");
+            MAST_FATAL("Failed to write to ring ruffer");
             return 1;
          }
 	}
@@ -74,90 +75,87 @@ static int callback_jack(jack_nframes_t nframes, void *arg)
 // Callback called by JACK when jackd is shutting down
 static void shutdown_callback_jack(void *arg)
 {
-	MAST_ERROR("Rotter quitting because jackd is shutting down." );
+	MAST_ERROR("MAST quitting because jackd is shutting down" );
 	
 	// Signal the main thead to stop
 	running=0;
 }
 
-// Connect one Jack port to another
-void connect_jack_port( const char* out, jack_port_t *port )
-{
-	const char* in = jack_port_name( port );
-	int err;
-		
-	MAST_INFO("Connecting '%s' to '%s'", out, in);
-	
-	if ((err = jack_connect(client, out, in)) != 0) {
-		MAST_FATAL("connect_jack_port(): failed to jack_connect() ports: %d",err);
-	}
-}
+*/
 
 
 // Crude way of automatically connecting up jack ports
-void autoconnect_jack_ports( jack_client_t* client )
+static void autoconnect_jack_ports( jack_client_t* client )
 {
 	const char **all_ports;
 	unsigned int ch=0;
+	int err = 0;
 	int i;
 
 	// Get a list of all the jack ports
 	all_ports = jack_get_ports(client, NULL, NULL, JackPortIsOutput);
 	if (!all_ports) {
-		MAST_FATAL("autoconnect_jack_ports(): jack_get_ports() returned NULL.");
+		MAST_FATAL("autoconnect_jack_ports(): jack_get_ports() returned NULL");
 	}
 	
 	// Step through each port name
 	for (i = 0; all_ports[i]; ++i) {
+		const char* local_port = jack_port_name( inport[ch] );
 		
 		// Connect the port
-		connect_jack_port( all_ports[i], inport[ch] );
+		MAST_INFO("Connecting '%s' => '%s'", all_ports[i], local_port);
+		err = jack_connect(client, all_ports[i], local_port);
+		if (err != 0) MAST_FATAL("connect_jack_port(): failed to jack_connect() ports: %d", err);
 		
 		// Found enough ports ?
-		if (++ch >= channels) break;
+		if (++ch >= g_channels) break;
 	}
 	
 	free( all_ports );
 }
-*/
 
 
 // Initialise Jack related stuff
-jack_client_t* init_jack( const char* client_name, jack_options_t jack_opt ) 
+jack_client_t* mast_init_jack( const char* client_name, jack_options_t jack_opt ) 
 {
 	jack_client_t* client = NULL;
 	jack_status_t status;
 	size_t ringbuffer_size = 0;
-	int i;
+	int i = 0;
 
 	// Register with Jack
 	if ((client = jack_client_open(client_name, jack_opt, &status)) == 0) {
-		MAST_FATAL("Failed to start jack client: 0x%x", status);
+		MAST_ERROR("Failed to start jack client: 0x%x", status);
+		return NULL;
+	} else {
+		MAST_INFO( "JACK client registered as '%s'", jack_get_client_name( client ) );
 	}
-	MAST_INFO( "JACK client registered as '%s'.", jack_get_client_name( client ) );
-
 
 	// Create our input port(s)
 	if (g_channels==1) {
 		if (!(inport[0] = jack_port_register(client, "mono", JACK_DEFAULT_AUDIO_TYPE, JackPortIsInput, 0))) {
-			MAST_FATAL("Cannot register mono input port.");
+			MAST_ERROR("Cannot register mono input port");
+			return NULL;
 		}
 	} else {
 		if (!(inport[0] = jack_port_register(client, "left", JACK_DEFAULT_AUDIO_TYPE, JackPortIsInput, 0))) {
-			MAST_FATAL("Cannot register left input port.");
+			MAST_ERROR("Cannot register left input port");
+			return NULL;
 		}
 		
 		if (!(inport[1] = jack_port_register(client, "right", JACK_DEFAULT_AUDIO_TYPE, JackPortIsInput, 0))) {
-			MAST_FATAL( "Cannot register left input port.");
+			MAST_ERROR( "Cannot register left input port");
+			return NULL;
 		}
 	}
 	
 	// Create ring buffers
 	ringbuffer_size = jack_get_sample_rate( client ) * g_rb_duration * sizeof(float) / 1000;
-	MAST_DEBUG("Size of the ring buffers is %d ms (%d bytes).", g_rb_duration, (int)ringbuffer_size );
+	MAST_DEBUG("Size of the ring buffers is %d ms (%d bytes)", g_rb_duration, (int)ringbuffer_size );
 	for(i=0; i<g_channels; i++) {
 		if (!(ringbuffer[i] = jack_ringbuffer_create( ringbuffer_size ))) {
-			MAST_FATAL("Cannot create ringbuffer %d.", i);
+			MAST_ERROR("Cannot create ringbuffer %d", i);
+			return NULL;
 		}
 	}
 	
@@ -167,18 +165,26 @@ jack_client_t* init_jack( const char* client_name, jack_options_t jack_opt )
 	// Register callback
 	jack_set_process_callback(client, callback_jack, NULL);
 	
+
+	// Activate JACK
+	if (jack_activate(client)) MAST_FATAL("Cannot activate JACK client");
+	
+	/* Auto connect ports ? */
+	if (g_do_autoconnect) autoconnect_jack_ports( client );
 	
 	return client;
 }
 
 
 // Shut down jack related stuff
-void deinit_jack( jack_client_t *client )
+void mast_deinit_jack( jack_client_t *client )
 {
 	int c;
 	
 	// Leave the Jack graph
-	jack_client_close(client);
+	if (jack_client_close(client)) {
+		MAST_WARNING("Failed to close jack client");
+	}
 	
 	// Free up the ring buffers
 	for(c=0;c<2;c++) {

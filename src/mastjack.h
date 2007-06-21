@@ -23,6 +23,11 @@
 #include <jack/ringbuffer.h>
 
 
-jack_client_t* init_jack( const char* client_name, jack_options_t jack_opt );
-void deinit_jack( jack_client_t *client );
+/* Functions in mastjack.c */
+jack_client_t* mast_init_jack( const char* client_name, jack_options_t jack_opt );
+void mast_deinit_jack( jack_client_t *client );
 
+
+/* Globals in mastjack.c */
+extern int g_channels;
+extern int g_do_autoconnect;

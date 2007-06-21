@@ -231,8 +231,10 @@ void mast_message_handler( int level, const char* file, int line, char *fmt, ...
 	
 	// Display the error message
 	switch( level ) {
+#ifdef DEBUGGING
 		case MSG_LEVEL_DEBUG:	fprintf( fd, "Debug: " ); break;
 		case MSG_LEVEL_INFO:	fprintf( fd, "Info: " ); break;
+#endif
 		case MSG_LEVEL_WARNING:	fprintf( fd, "Warning: " ); break;
 		case MSG_LEVEL_ERROR:	fprintf( fd, "Error: " ); break;
 		case MSG_LEVEL_FATAL:	fprintf( fd, "Fatal Error: " ); break;

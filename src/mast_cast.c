@@ -33,6 +33,7 @@
 
 #include "config.h"
 #include "codecs.h"
+#include "mastjack.h"
 #include "mast.h"
 
 
@@ -40,11 +41,10 @@
 
 
 /* Global Variables */
-int g_loop_file = FALSE;
 char* g_client_name = MAST_TOOL_NAME;
+jack_options_t g_client_opt = JackNullOption;
 int g_payload_size_limit = DEFAULT_PAYLOAD_LIMIT;
 char* g_payload_type = DEFAULT_PAYLOAD_TYPE;
-char* g_filename = NULL;
 
 
 
@@ -63,6 +63,7 @@ static int usage() {
 	printf( "    -r <msec>     Ring-buffer duration in milliseconds\n");
 	printf( "    -c <channels> Number of audio channels\n");
 	printf( "    -n <name>     Name for this JACK client\n");
+	printf( "    -a            Auto-connect jack input ports\n");
 	
 	exit(1);
 	
@@ -77,8 +78,12 @@ static void parse_cmd_line(int argc, char **argv, RtpSession* session)
 
 
 	// Parse the options/switches
-	while ((ch = getopt(argc, argv, "s:t:p:z:d:lh?")) != -1)
+	while ((ch = getopt(argc, argv, "as:t:p:z:d:h?")) != -1)
 	switch (ch) {
+		case 'a':
+			g_do_autoconnect = TRUE;
+		break;
+	
 		case 's':
 			mast_set_session_ssrc( session, optarg );
 		break;
@@ -101,10 +106,6 @@ static void parse_cmd_line(int argc, char **argv, RtpSession* session)
 			if (rtp_session_set_dscp( session, mast_parse_dscp(optarg) )) {
 				MAST_FATAL("Failed to set DSCP value");
 			}
-		break;
-		
-		case 'l':
-			g_loop_file = TRUE;
 		break;
 		
 		case '?':
@@ -139,19 +140,9 @@ static void parse_cmd_line(int argc, char **argv, RtpSession* session)
 	if (rtp_session_set_remote_addr( session, remote_address, remote_port )) {
 		MAST_FATAL("Failed to set remote address/port (%s/%d)", remote_address, remote_port);
 	} else {
-		printf( "Remote address: %s/%d\n", remote_address,  remote_port );
+		MAST_INFO( "Remote address: %s/%d", remote_address,  remote_port );
 	}
 	
-
-	// Get the input file
-	if (argc > optind) {
-		g_filename = argv[optind];
-		optind++;
-	} else {
-		MAST_ERROR("missing audio input filename");
-		usage();
-	}
-
 }
 
 
@@ -159,12 +150,14 @@ static void parse_cmd_line(int argc, char **argv, RtpSession* session)
 int main(int argc, char **argv)
 {
 	RtpSession* session = NULL;
-	RtpProfile* profile = &av_profile;
 	PayloadType* pt = NULL;
-	int bytes_per_frame = 0;
+	jack_client_t* client = NULL;
+	mast_codec_t *codec = NULL;
 	int16_t *audio_buffer = NULL;
-	int frames_per_packet = 0;
-	int pt_idx = -1;
+	u_int8_t *payload_buffer = NULL;
+	int samples_per_packet = 0;
+	int samplerate = 0;
+//	int ts = 0;
 
 	
 	// Create an RTP session
@@ -177,27 +170,39 @@ int main(int argc, char **argv)
 
 	
 
-	// And load a codec for the payload
+	// Initialise Jack
+	client = mast_init_jack( g_client_name, g_client_opt );
+	if (client == NULL) MAST_FATAL("Failed to initialise JACK client");
 	
+	// Get the samplerate of the JACK Router
+	samplerate = jack_get_sample_rate( client );
+	MAST_INFO("Samplerate of JACK router: %d Hz", samplerate );
 
 
-	// Display some information about output stream
-	//printf( "Remote address: %s/%d\n", remote_address,  remote_port );
-	//printf( "Payload type: %s (pt=%d)\n", mime_type, pt_idx );
-	//printf( "Bytes per packet: %d\n", g_payload_size_limit );
-	//printf( "Bytes per frame: %d\n", bytes_per_frame );
-	//printf( "Frames per packet: %d\n", (int)frames_per_packet );
-	printf( "---------------------------------------------------------\n");
-	
-	// Get the PayloadType structure
-	pt = rtp_profile_get_payload( profile, pt_idx );
+	// Display some information about the chosen payload type
+	MAST_INFO( "Sending SSRC: 0x%x", session->snd.ssrc );
+	MAST_INFO( "Payload type: %s/%d/%d", g_payload_type, samplerate, g_channels );
+
+
+	// Work out the payload type index to use
+	pt = mast_choose_payloadtype( session, g_payload_type, samplerate, g_channels );
 	if (pt == NULL) MAST_FATAL("Failed to get payload type information from oRTP");
-
-	// Allocate memory for audio and packet buffers
-	audio_buffer = (short*)malloc( bytes_per_frame * frames_per_packet );
-	if (audio_buffer==NULL) MAST_FATAL("Failed to allocate memory for audio buffer");
 	
+	// Load the codec
+	codec = mast_init_codec( g_payload_type );
+	if (codec == NULL) MAST_FATAL("Failed to get initialise codec" );
 
+	// Calculate the packet size
+	samples_per_packet = mast_calc_samples_per_packet( pt, g_payload_size_limit );
+	if (samples_per_packet<=0) MAST_FATAL( "Invalid number of samples per packet" );
+
+	// Allocate memory for audio buffer
+	audio_buffer = (int16_t*)malloc( samples_per_packet * sizeof(int16_t) * pt->channels );
+	if (audio_buffer == NULL) MAST_FATAL("Failed to allocate memory for audio buffer");
+
+	// Allocate memory for the packet buffer
+	payload_buffer = (u_int8_t*)malloc( g_payload_size_limit );
+	if (payload_buffer == NULL) MAST_FATAL("Failed to allocate memory for payload buffer");
 
 
 	// Setup signal handlers
@@ -218,13 +223,30 @@ int main(int argc, char **argv)
 
 			
 	}
+	
+	// Free up the buffers audio/read buffers
+	if (payload_buffer) {
+		free(payload_buffer);
+		payload_buffer=NULL;
+	}
+	if (audio_buffer) {
+		free(audio_buffer);
+		audio_buffer=NULL;
+	}
+	
+	// De-initialise the codec
+	if (codec) {
+		codec->deinit( codec );
+		codec=NULL;
+	}
 
-
+	// Close JACK client
+	mast_deinit_jack( client );
 	 
 	// Close RTP session
 	mast_deinit_ortp( session );
 	
-	 
+	
 	// Success !
 	return 0;
 }
