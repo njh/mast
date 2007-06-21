@@ -202,7 +202,7 @@ static void parse_cmd_line(int argc, char **argv, RtpSession* session)
 	if (rtp_session_set_remote_addr( session, remote_address, remote_port )) {
 		MAST_FATAL("Failed to set remote address/port (%s/%d)", remote_address, remote_port);
 	} else {
-		printf( "Remote address: %s/%d\n", remote_address,  remote_port );
+		MAST_INFO( "Remote address: %s/%d", remote_address,  remote_port );
 	}
 	
 
@@ -222,13 +222,13 @@ static void parse_cmd_line(int argc, char **argv, RtpSession* session)
 int main(int argc, char **argv)
 {
 	RtpSession* session = NULL;
+	PayloadType* pt = NULL;
 	SNDFILE* input = NULL;
 	SF_INFO sfinfo;
 	mast_codec_t *codec = NULL;
-	PayloadType* pt = NULL;
 	int16_t *audio_buffer = NULL;
 	u_int8_t *payload_buffer = NULL;
-	int samples_per_packet=0;
+	int samples_per_packet = 0;
 	int ts = 0;
 
 	
