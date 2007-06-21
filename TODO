@@ -21,7 +21,7 @@ JACK support
 
 Make fink+Debian packages
 
-Change sources if one drops out
+Change sources if one drops out?
 
 Abort after timeout if no valid packets have been received
 
@@ -43,17 +43,6 @@ Or perhaps use SDP parser to use SDP files as config files?
 Perl script to open SDP files using mast_listen?
 
 
-Have a small / simple packet buffer to re-order minor packet ordering problems
- - I implemented a simple version of this 
-   There seems to be far more lost packets, than out of order ones
-   so I removed the 'hacked in' support for this
-
-Check for duplicated packets and verify timestamps
-
-Fix timing problems in mastcast which are causing Jitter problems
- - Looked at this and can't see a better solution ?
- - Timing is almost exactly the same as rat when broadcasting from sound card
-
 Allow client to only play from specified SRC IP
  - and remove the SSRC selecting code ?
 
@@ -61,7 +50,7 @@ Display Current Play state info with \r
 
 Allow choice of interface for Multicast
 
-
+Use 32-bit floats for audio internally (instead of 16-bit ints)
 
 
 
@@ -72,26 +61,30 @@ Allow choice of interface for Multicast
 Static Types that could be added
 --------------------------------
 
-0	audio/PCMU		8000	1		(G.711) Built-in
+0	audio/PCMU		8000	1		(G.711) Already Built-in
 3	audio/GSM		8000	1		libgsm (static library)
+4	audio/G723		8000	1		?
 
-5	audio/DVI4		8000	1		adpcm.c
-6	audio/DVI4		16000	1		adpcm.c
-7	audio/LPC		8000	1		(asterisk source?)
+5	audio/DVI4		8000	1		Borrow from asterisk source?
+6	audio/DVI4		16000	1		Borrow from asterisk source?
+7	audio/LPC		8000	1		Borrow from asterisk source?
 
 
-8	audio/PCMA		8000	1		(G.711) Built-in
-9	audio/G722		8000	1		Built-in
+8	audio/PCMA		8000	1		(G.711) Already Built-in
+9	audio/G722		8000	1		?
 
-10	audio/L16		44100	2		Built-in
-11	audio/L16		44100	1		Built-in
+10	audio/L16		44100	2		Already Built-in
+11	audio/L16		44100	1		Already Built-in
 
 12	audio/QCELP		8000	1		MPlayer source code?
+13	audio/CN		8000	1		(Comfort Noise) N/A
 
 14	audio/MPA		*		*		mpg123 / toolame
+15	audio/G728		8000	1		?
 
-16	audio/DVI4		11025	1		adpcm.c
-17	audio/DVI4		22050	1		adpcm.c
+16	audio/DVI4		11025	1		Borrow from asterisk source?
+17	audio/DVI4		22050	1		Borrow from asterisk source?
+18	audio/G729		8000	1		?
 
 
 See RFC4856 for RTP MIME type registration.
