@@ -30,13 +30,13 @@
 #define DEFAULT_RTP_SSRC			(0)
 #define DEFAULT_MULTICAST_TTL		(5)
 #define DEFAULT_PAYLOAD_LIMIT		(1450)
-#define DEFAULT_PAYLOAD_TYPE		"L16"
+#define DEFAULT_PAYLOAD_TYPE		"PCMU"
 #define DEFAULT_RTP_PORT			(5004)
 #define DEFAULT_TIMEOUT				(10)
 #define DEFAULT_RINGBUFFER_DURATION	(100)
 
 // RAT only accepts packets if they contain multiples of 160 samples
-#define FRAMES_PER_UNIT				(160)
+#define SAMPLES_PER_UNIT			(160)
 
 // Standard string buffer size
 #define STR_BUF_SIZE				(255)
@@ -45,9 +45,9 @@
 #define RTP_MPEG_AUDIO_PT			(14)
 
 // GSM codec specifics
-#define	GSM_FRAME_SAMPLES	(160)
-#define GSM_FRAME_BYTES		(33)
-#define GSM_FRAME_SIGNATURE	(0xD0)
+#define	GSM_FRAME_SAMPLES			(160)
+#define GSM_FRAME_BYTES				(33)
+#define GSM_FRAME_SIGNATURE			(0xD0)
 
 
 
@@ -108,6 +108,8 @@ void mast_set_session_ssrc( RtpSession * session, char* ssrc_str );
 mblk_t *mast_wait_for_rtp_packet( RtpSession * session, int seconds );
 int mast_rtp_packet_size( mblk_t* packet );
 int mast_rtp_packet_duration( mblk_t* packet );
+int mast_calc_samples_per_packet( PayloadType *pt, int max_packet_size );
+PayloadType* mast_choose_payloadtype( RtpSession * session, const char* payload_type, int samplerate, int channels );
 void mast_update_mpa_pt( mblk_t* packet );
 
 

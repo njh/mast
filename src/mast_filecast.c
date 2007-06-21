@@ -222,16 +222,14 @@ static void parse_cmd_line(int argc, char **argv, RtpSession* session)
 int main(int argc, char **argv)
 {
 	RtpSession* session = NULL;
-	RtpProfile* profile = &av_profile;
 	SNDFILE* input = NULL;
 	SF_INFO sfinfo;
 	mast_codec_t *codec = NULL;
 	PayloadType* pt = NULL;
-	int frames_per_packet = 0;
 	int16_t *audio_buffer = NULL;
 	u_int8_t *payload_buffer = NULL;
+	int samples_per_packet=0;
 	int ts = 0;
-	int pt_idx = -1;
 
 	
 	// Create an RTP session
@@ -253,60 +251,24 @@ int main(int argc, char **argv)
 	print_file_info( input, &sfinfo );
 	
 	// Display some information about the chosen payload type
-	printf( "Sending SSRC: %x\n", session->snd.ssrc );
-	printf( "Payload type: %s/%d/%d\n", g_payload_type, sfinfo.samplerate, sfinfo.channels );
+	MAST_INFO( "Sending SSRC: 0x%x", session->snd.ssrc );
+	MAST_INFO( "Payload type: %s/%d/%d", g_payload_type, sfinfo.samplerate, sfinfo.channels );
 
 
 	// Work out the payload type index to use
-	pt_idx = rtp_profile_find_payload_number( profile, g_payload_type, sfinfo.samplerate, sfinfo.channels );
-	if ( pt_idx<0 ) MAST_FATAL("Failed to find static payload type index");
-	printf( "Payload type index: %d\n", pt_idx );
-
-
-	// Get the PayloadType structure
-	pt = rtp_profile_get_payload( profile, pt_idx );
+	pt = mast_choose_payloadtype( session, g_payload_type, sfinfo.samplerate, sfinfo.channels );
 	if (pt == NULL) MAST_FATAL("Failed to get payload type information from oRTP");
-
-
-	// Set the payload type in the session
-	if (rtp_session_set_send_payload_type( session, pt_idx )) {
-		MAST_FATAL("Failed to set session payload type index");
-	}
 	
 	// Load the codec
 	codec = mast_init_codec( g_payload_type );
 	if (codec == NULL) MAST_FATAL("Failed to get initialise codec" );
 
-
-	// Calculate how much audio goes in each packet
-	if (pt->type == PAYLOAD_AUDIO_CONTINUOUS) {
-		int bytes_per_frame, bytes_per_unit;
-		bytes_per_frame = pt->bits_per_sample / 8;
-		printf( "Bytes per sample: %d\n", bytes_per_frame );
-		if (bytes_per_frame<=0) MAST_FATAL( "Invalid number of bytes per frame" );
-		bytes_per_unit = bytes_per_frame * FRAMES_PER_UNIT;
-		frames_per_packet = (g_payload_size_limit / bytes_per_unit) * FRAMES_PER_UNIT;
-		printf( "Packet size: %d bytes\n", (frames_per_packet * bytes_per_frame) );
-	
-	} else if (strcmp(pt->mime_type, "GSM")==0) {
-	
-		// FIXME: clean this code up a bit
-		frames_per_packet = (g_payload_size_limit / GSM_FRAME_BYTES) * GSM_FRAME_SAMPLES;
-		printf( "Packet size: %d bytes\n", (frames_per_packet/GSM_FRAME_SAMPLES)*GSM_FRAME_BYTES );
-
-	} else {
-		MAST_FATAL("Only PAYLOAD_AUDIO_CONTINUOUS is currently supported");
-	}
-
-
-	printf( "Audio samples per packet: %d\n", frames_per_packet );
-	printf( "Packet duration: %d ms\n", (frames_per_packet*1000 / pt->clock_rate));
-	printf( "---------------------------------------------------------\n");
-	if (frames_per_packet<=0) MAST_FATAL( "Invalid number of samples per packet" );
-
+	// Calculate the packet size
+	samples_per_packet = mast_calc_samples_per_packet( pt, g_payload_size_limit );
+	if (samples_per_packet<=0) MAST_FATAL( "Invalid number of samples per packet" );
 
 	// Allocate memory for audio buffer
-	audio_buffer = (int16_t*)malloc( frames_per_packet * sizeof(int16_t) * pt->channels );
+	audio_buffer = (int16_t*)malloc( samples_per_packet * sizeof(int16_t) * pt->channels );
 	if (audio_buffer == NULL) MAST_FATAL("Failed to allocate memory for audio buffer");
 
 	// Allocate memory for the packet buffer
@@ -322,18 +284,18 @@ int main(int argc, char **argv)
 	// The main loop
 	while( mast_still_running() )
 	{
-		int frames_read = sf_readf_short( input, audio_buffer, frames_per_packet );
+		int samples_read = sf_readf_short( input, audio_buffer, samples_per_packet );
 		int payload_bytes = 0;
 		
 		// Was there an error?
-		if (frames_read < 0) {
+		if (samples_read < 0) {
 			MAST_ERROR("Failed to read from file: %s", sf_strerror( input ) );
 			break;
 		}
 		
 		// Encode audio
 		payload_bytes = codec->encode(codec,
-					frames_read*pt->channels, audio_buffer, 
+					samples_read*pt->channels, audio_buffer, 
 					g_payload_size_limit, payload_buffer );
 		if (payload_bytes<0)
 		{
@@ -345,13 +307,13 @@ int main(int argc, char **argv)
 		if (payload_bytes) {
 			// Send out an RTP packet
 			rtp_session_send_with_ts(session, payload_buffer, payload_bytes, ts);
-			ts+=frames_read;
+			ts+=samples_read;
 		}
 		
 
 		// Reached end of file?
-		if (frames_read < frames_per_packet) {
-			MAST_DEBUG("Reached end of file (frames_read=%d)", frames_read);
+		if (samples_read < samples_per_packet) {
+			MAST_DEBUG("Reached end of file (samples_read=%d)", samples_read);
 			if (g_loop_file) {
 				// Seek back to the beginning
 				if (sf_seek( input, 0, SEEK_SET )) {

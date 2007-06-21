@@ -446,3 +446,48 @@ int mast_rtp_packet_duration( mblk_t* packet )
 }
 
 
+/* Return the recommended number of samples to send per packet */
+int mast_calc_samples_per_packet( PayloadType *pt, int max_packet_size )
+{
+	int bits_per_sample = (pt->normal_bitrate / pt->clock_rate);
+	int bytes_per_unit = (pt->normal_bitrate*SAMPLES_PER_UNIT)/(pt->clock_rate*8);
+	int units_per_packet = max_packet_size / bytes_per_unit;
+	int samples_per_packet = units_per_packet * SAMPLES_PER_UNIT;
+
+	// Display packet size information
+	MAST_DEBUG( "Bits per sample: %d", bits_per_sample );
+	MAST_DEBUG( "Bytes per Unit: %d", bytes_per_unit );
+	MAST_DEBUG( "Samples per Unit: %d", SAMPLES_PER_UNIT );
+	MAST_DEBUG( "Units per packet: %d", units_per_packet );
+	MAST_INFO( "Packet size: %d bytes", (samples_per_packet * bits_per_sample)/8 );
+	MAST_INFO( "Packet duration: %d ms", (samples_per_packet*1000 / pt->clock_rate));
+
+	return samples_per_packet;
+}
+
+
+/* Return a payloadtype based on the codec, samplerate and number of channels */
+PayloadType* mast_choose_payloadtype( RtpSession * session, const char* payload_type, int samplerate, int channels )
+{
+	RtpProfile* profile = &av_profile;
+	PayloadType* pt = NULL;
+	int pt_idx = -1;
+
+	pt_idx = rtp_profile_find_payload_number( profile, payload_type, samplerate, channels );
+	if ( pt_idx<0 ) return NULL;
+	MAST_INFO( "Payload type index: %d", pt_idx );
+
+
+	// Get the PayloadType structure
+	pt = rtp_profile_get_payload( profile, pt_idx );
+	if (pt == NULL) return NULL;
+
+
+	// Set the payload type in the session
+	if (rtp_session_set_send_payload_type( session, pt_idx )) {
+		MAST_FATAL("Failed to set session payload type index");
+	}
+
+	return pt;
+}
+
