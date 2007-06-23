@@ -37,8 +37,8 @@
 
 
 /* Globals */
-static int mast_running = TRUE;
-static char* mast_tool_name = NULL;
+static int g_mast_running = TRUE;
+static char* g_mast_tool_name = NULL;
 
 
 // RTP Payload Type for MPEG Audio
@@ -86,7 +86,7 @@ RtpSession *mast_init_ortp( char* tool_name, int mode )
 	int log_level = ORTP_WARNING|ORTP_ERROR|ORTP_FATAL;
 	
 	// Store the tool name
-	mast_tool_name = tool_name;
+	g_mast_tool_name = tool_name;
 	
 	// Initialise the oRTP library
 	ortp_init();
@@ -186,7 +186,7 @@ char* mast_gethostname()
 /* Get the name of the current tool */
 char* mast_get_tool_name()
 {
-	if (mast_tool_name) return mast_tool_name;
+	if (g_mast_tool_name) return g_mast_tool_name;
 	else return "Unknown Tool";
 }
 
@@ -257,17 +257,24 @@ void mast_message_handler( int level, const char* file, int line, char *fmt, ...
 /* Signal callback handler */
 static void mast_termination_handler(int signum)
 {
-	mast_running = FALSE;
 	switch(signum) {
-		case SIGTERM:	fprintf(stderr, "Got termination signal.\n"); break;
-		case SIGINT:	fprintf(stderr, "Got interupt signal.\n"); break;
+		case SIGTERM:	MAST_INFO("Got termination signal"); break;
+		case SIGINT:	MAST_INFO("Got interupt signal"); break;
 	}
+	
+	mast_stop_running();
 }
 
 /* Returns true if the programme should keep running */
 int mast_still_running()
 {
-	return mast_running;
+	return g_mast_running;
+}
+
+/* Stop the process */
+void mast_stop_running()
+{
+	g_mast_running = FALSE;
 }
 
 /* Setup signal handlers */
@@ -278,9 +285,7 @@ void mast_setup_signals()
 	signal(SIGINT, mast_termination_handler);
 	//signal(SIGHUP, mast_termination_handler);
 
-	// Set this 
-	mast_running = TRUE;
-
+	g_mast_running = TRUE;
 }
 
 

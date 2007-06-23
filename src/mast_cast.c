@@ -156,8 +156,9 @@ int main(int argc, char **argv)
 	int16_t *audio_buffer = NULL;
 	u_int8_t *payload_buffer = NULL;
 	int samples_per_packet = 0;
+	int audio_buffer_size = 0;
 	int samplerate = 0;
-//	int ts = 0;
+	int ts = 0;
 
 	
 	// Create an RTP session
@@ -172,11 +173,11 @@ int main(int argc, char **argv)
 
 	// Initialise Jack
 	client = mast_init_jack( g_client_name, g_client_opt );
-	if (client == NULL) MAST_FATAL("Failed to initialise JACK client");
+	if (client == NULL) MAST_FATAL( "Failed to initialise JACK client" );
 	
 	// Get the samplerate of the JACK Router
 	samplerate = jack_get_sample_rate( client );
-	MAST_INFO("Samplerate of JACK router: %d Hz", samplerate );
+	MAST_INFO( "Samplerate of JACK engine: %d Hz", samplerate );
 
 
 	// Display some information about the chosen payload type
@@ -197,7 +198,8 @@ int main(int argc, char **argv)
 	if (samples_per_packet<=0) MAST_FATAL( "Invalid number of samples per packet" );
 
 	// Allocate memory for audio buffer
-	audio_buffer = (int16_t*)malloc( samples_per_packet * sizeof(int16_t) * pt->channels );
+	audio_buffer_size = samples_per_packet * sizeof(int16_t) * pt->channels;
+	audio_buffer = (int16_t*)malloc( audio_buffer_size );
 	if (audio_buffer == NULL) MAST_FATAL("Failed to allocate memory for audio buffer");
 
 	// Allocate memory for the packet buffer
@@ -209,18 +211,48 @@ int main(int argc, char **argv)
 	mast_setup_signals();
 
 
+	// Wait until the ring buffer is half full
+	while( jack_ringbuffer_read_space( g_ringbuffer ) < (g_ringbuffer->size/2)) {
+	
+		// Sleep for 1ms
+		usleep( 1000 );
+	}
+	
+
 	// The main loop
 	while( mast_still_running() )
 	{
-		//read_audio();
+		size_t payload_bytes = 0;
+		size_t bytes_read = 0;
+		
+		// Copy frames from ring buffer to temporary buffer
+		bytes_read = jack_ringbuffer_read(g_ringbuffer, (char*)audio_buffer, audio_buffer_size);
+		if (bytes_read<0) MAST_FATAL( "Failed to read from ringbuffer" );
+		
+		// No audio available?
+		if (bytes_read == 0) {
+			MAST_WARNING( "No audio available in ringbuffer; sleeping for a bit", bytes_read );
 
-		//encode_audio();
-	
-		// Send out an RTP packet
-		//rtp_session_send_with_ts(session, (uint8_t*)audio_buffer, frames_read*bytes_per_frame, ts);
-		//ts+=frames_read;
-
-
+			// Sleep for the duration of a couple of packets and then try again
+			usleep( (samples_per_packet*1000000*2) / samplerate );
+			continue;
+		}
+		
+		// Encode audio
+		payload_bytes = codec->encode(codec,
+					(bytes_read / sizeof(int16_t)), audio_buffer, 
+					g_payload_size_limit, payload_buffer );
+		if (payload_bytes<0)
+		{
+			MAST_ERROR("Codec encode failed" );
+			break;
+		}
+		
+		if (payload_bytes) {
+			// Send out an RTP packet
+			rtp_session_send_with_ts(session, payload_buffer, payload_bytes, ts);
+			ts+= (bytes_read / (sizeof(int16_t)*g_channels));
+		}
 			
 	}
 	

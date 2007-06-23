@@ -33,7 +33,7 @@
 #define DEFAULT_PAYLOAD_TYPE		"L16"
 #define DEFAULT_RTP_PORT			(5004)
 #define DEFAULT_TIMEOUT				(10)
-#define DEFAULT_RINGBUFFER_DURATION	(100)
+#define DEFAULT_RINGBUFFER_DURATION	(50)
 
 // RAT only accepts packets if they contain multiples of 160 samples
 #define SAMPLES_PER_UNIT			(160)
@@ -102,6 +102,7 @@ char* mast_gethostname();
 void mast_set_source_sdes( RtpSession *session );
 void mast_message_handler( int level, const char* file, int line, char *fmt, ... );
 int mast_still_running();
+void mast_stop_running();
 void mast_setup_signals();
 int mast_parse_dscp( const char* value );
 void mast_set_session_ssrc( RtpSession * session, char* ssrc_str );
