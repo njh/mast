@@ -231,7 +231,7 @@ int main(int argc, char **argv)
 		
 		// No audio available?
 		if (bytes_read == 0) {
-			MAST_WARNING( "No audio available in ringbuffer; sleeping for a bit", bytes_read );
+			MAST_WARNING( "No audio available in ringbuffer; sleeping for a bit" );
 
 			// Sleep for the duration of a couple of packets and then try again
 			usleep( (samples_per_packet*1000000*2) / samplerate );
