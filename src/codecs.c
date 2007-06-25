@@ -46,7 +46,7 @@ static struct {
 } mast_codecs[] = {
 	{ "GSM",	mast_init_gsm },
 	{ "L16",	mast_init_l16 },
-	{ "LPC",	mast_init_lpc10 },
+	{ "LPC",	mast_init_lpc },
 	{ "PCMA",	mast_init_pcma },
 	{ "PCMU",	mast_init_pcmu },
 	{ NULL, 	NULL }

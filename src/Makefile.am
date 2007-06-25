@@ -15,16 +15,14 @@ libmastcodecs_a_SOURCES = \
 	codecs.h \
 	codecs.c \
 	codec_gsm.c \
-	codec_lpc10.c \
+	codec_lpc.c \
 	codec_l16.c \
 	codec_pcma.c \
 	codec_pcmu.c
 
 MAST_CODEC_LIBS = \
 	libmastcodecs.a \
-	../libgsm/libgsm.a \
-	../liblpc10/liblpc10.a
-
+	../libgsm/libgsm.a
 
 
 mast_info_SOURCES = \
