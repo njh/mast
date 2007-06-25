@@ -63,7 +63,8 @@ static int process_callback(jack_nframes_t nframes, void *arg)
  
 		// Convert the audio to signed 16-bit
 		for(n=0; n<nframes; n++) {
-			int tmp = lrintf(buf[n] * 32768.0f);
+			//int tmp = lrintf(buf[n] * 32768.0f);	FIXME: can't get this to compile on Linux
+			int tmp = (buf[n] * 32768.0f);
 			if (tmp > SHRT_MAX) {
 				g_convbuffer[(n*g_channels)+c] = SHRT_MAX;
 			} else if (tmp < SHRT_MIN) {
