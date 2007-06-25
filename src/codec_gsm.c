@@ -43,7 +43,7 @@ static u_int32_t encode_gsm(
 	int f = 0;
 	
 	if (inputsize % GSM_FRAME_SAMPLES) {
-		MAST_DEBUG("encode_gsm: number of input samples isn't a multiple of 160 (%d)", inputsize);
+		MAST_DEBUG("encode_gsm: number of input samples (%d) isn't a multiple of %d", inputsize, GSM_FRAME_SAMPLES);
 	}
 
 	if (outputsize < (frames*GSM_FRAME_BYTES)) {
@@ -53,7 +53,7 @@ static u_int32_t encode_gsm(
 
 	// Encode frame by frame
 	for(f=0; f<frames; f++) {
-		gsm_signal* signal = input+(GSM_FRAME_SAMPLES*f);
+		gsm_signal* signal = &input[GSM_FRAME_SAMPLES*f];
 		gsm_byte* byte = output+(GSM_FRAME_BYTES*f);
 		gsm_encode(gsm_handle, signal, byte);
 	}
@@ -81,7 +81,7 @@ static u_int32_t decode_gsm(
 	// Decode frame by frame
 	for(f=0; f<frames; f++) {
 		gsm_byte* byte = input+(GSM_FRAME_BYTES*f);
-		gsm_signal* signal = output+(GSM_FRAME_SAMPLES*f);
+		gsm_signal* signal = &output[GSM_FRAME_SAMPLES*f];
 		gsm_decode(gsm_handle, byte, signal);
 	}
 
