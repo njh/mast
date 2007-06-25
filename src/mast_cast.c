@@ -78,7 +78,7 @@ static void parse_cmd_line(int argc, char **argv, RtpSession* session)
 
 
 	// Parse the options/switches
-	while ((ch = getopt(argc, argv, "as:t:p:z:d:h?")) != -1)
+	while ((ch = getopt(argc, argv, "as:t:p:z:d:c:h?")) != -1)
 	switch (ch) {
 		case 'a':
 			g_do_autoconnect = TRUE;
@@ -106,6 +106,10 @@ static void parse_cmd_line(int argc, char **argv, RtpSession* session)
 			if (rtp_session_set_dscp( session, mast_parse_dscp(optarg) )) {
 				MAST_FATAL("Failed to set DSCP value");
 			}
+		break;
+
+		case 'c':
+			g_channels = atoi(optarg);
 		break;
 		
 		case '?':

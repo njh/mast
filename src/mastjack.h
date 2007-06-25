@@ -29,7 +29,9 @@ void mast_deinit_jack( jack_client_t *client );
 
 
 /* Globals in mastjack.c */
-extern jack_ringbuffer_t *g_ringbuffer;
-extern int g_rb_duration;
 extern int g_channels;
 extern int g_do_autoconnect;
+extern int g_rb_duration;
+extern jack_port_t *g_jackport[2];
+extern jack_ringbuffer_t *g_ringbuffer;
+extern int16_t *g_convbuffer;
