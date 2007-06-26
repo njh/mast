@@ -112,6 +112,10 @@ static void parse_cmd_line(int argc, char **argv, RtpSession* session)
 			g_channels = atoi(optarg);
 		break;
 		
+		case 'r':
+			g_rb_duration = atoi(optarg);
+		break;
+		
 		case '?':
 		case 'h':
 		default:
@@ -232,6 +236,8 @@ int main(int argc, char **argv)
 		// Copy frames from ring buffer to temporary buffer
 		bytes_read = jack_ringbuffer_read(g_ringbuffer, (char*)audio_buffer, audio_buffer_size);
 		if (bytes_read<0) MAST_FATAL( "Failed to read from ringbuffer" );
+		
+		MAST_DEBUG("Ring buffer is %u%% full", (jack_ringbuffer_read_space(g_ringbuffer)*100) / g_ringbuffer->size);
 		
 		// No audio available?
 		if (bytes_read == 0) {
