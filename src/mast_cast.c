@@ -78,7 +78,7 @@ static void parse_cmd_line(int argc, char **argv, RtpSession* session)
 
 
 	// Parse the options/switches
-	while ((ch = getopt(argc, argv, "as:t:p:z:d:c:h?")) != -1)
+	while ((ch = getopt(argc, argv, "as:t:p:z:d:c:r:h?")) != -1)
 	switch (ch) {
 		case 'a':
 			g_do_autoconnect = TRUE;
@@ -170,7 +170,11 @@ int main(int argc, char **argv)
 
 	
 	// Create an RTP session
-	session = mast_init_ortp( MAST_TOOL_NAME, RTP_SESSION_SENDONLY );
+	session = mast_init_ortp( MAST_TOOL_NAME, RTP_SESSION_SENDONLY, FALSE );
+	
+	// For this session we don't want blocking or scheduling
+	rtp_session_set_scheduling_mode(session, FALSE);
+	rtp_session_set_blocking_mode(session, FALSE);
 
 
 	// Parse the command line arguments 
@@ -220,11 +224,11 @@ int main(int argc, char **argv)
 
 
 	// Wait until the ring buffer is half full
-	while( jack_ringbuffer_read_space( g_ringbuffer ) < (g_ringbuffer->size/2)) {
-	
-		// Sleep for 1ms
-		usleep( 1000 );
-	}
+	//while( jack_ringbuffer_read_space( g_ringbuffer ) < (g_ringbuffer->size/2)) {
+	//
+	//	// Sleep for 1ms
+	//	usleep( 1000 );
+	//}
 	
 
 	// The main loop
@@ -232,22 +236,24 @@ int main(int argc, char **argv)
 	{
 		size_t payload_bytes = 0;
 		size_t bytes_read = 0;
-		
-		// Copy frames from ring buffer to temporary buffer
-		bytes_read = jack_ringbuffer_read(g_ringbuffer, (char*)audio_buffer, audio_buffer_size);
-		if (bytes_read<0) MAST_FATAL( "Failed to read from ringbuffer" );
-		
-		MAST_DEBUG("Ring buffer is %u%% full", (jack_ringbuffer_read_space(g_ringbuffer)*100) / g_ringbuffer->size);
-		
-		// No audio available?
-		if (bytes_read == 0) {
-			MAST_WARNING( "No audio available in ringbuffer; sleeping for a bit" );
 
-			// Sleep for the duration of a couple of packets and then try again
-			usleep( (samples_per_packet*1000000*2) / samplerate );
+		// Wait for some audio
+		if (jack_ringbuffer_read_space(g_ringbuffer) < audio_buffer_size) {
+			//MAST_WARNING( "No audio available in ringbuffer; sleeping for a bit", microseconds );
+
+			// Sleep for the duration of a packets and then try again
+			usleep( (samples_per_packet*1000000) / samplerate );
 			continue;
 		}
+
+		// Copy frames from ring buffer to temporary buffer
+		bytes_read = jack_ringbuffer_read(g_ringbuffer, (char*)audio_buffer, audio_buffer_size);
+		if (bytes_read<=0) MAST_FATAL( "Failed to read from ringbuffer" );
+		if (bytes_read!=audio_buffer_size) MAST_WARNING("Failed to read enough audio for a full packet");
 		
+
+		//MAST_DEBUG("Ring buffer is now %u%% full", (jack_ringbuffer_read_space(g_ringbuffer)*100) / g_ringbuffer->size);
+
 		// Encode audio
 		payload_bytes = codec->encode(codec,
 					(bytes_read / sizeof(int16_t)), audio_buffer, 

@@ -199,7 +199,7 @@ int main(int argc, char **argv)
 
 	
 	// Create an RTP session
-	session = mast_init_ortp( MAST_TOOL_NAME, RTP_SESSION_RECVONLY );
+	session = mast_init_ortp( MAST_TOOL_NAME, RTP_SESSION_RECVONLY, TRUE );
 
 
 	// Parse the command line arguments 

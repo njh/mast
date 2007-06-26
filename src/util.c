@@ -79,7 +79,7 @@ static void network_error_cb(RtpSession *session, const char* msg)
 
 
 /* Initialise the oRTP library */
-RtpSession *mast_init_ortp( char* tool_name, int mode )
+RtpSession *mast_init_ortp( char* tool_name, int mode, int scheduling )
 {
 	RtpSession* session = NULL;
 	RtpProfile* profile = &av_profile;
@@ -90,7 +90,9 @@ RtpSession *mast_init_ortp( char* tool_name, int mode )
 	
 	// Initialise the oRTP library
 	ortp_init();
-	ortp_scheduler_init();
+	
+	// Enable packet scheduling?
+	if (scheduling)	ortp_scheduler_init();
 
 	
 	// Set the logging message level
@@ -109,8 +111,8 @@ RtpSession *mast_init_ortp( char* tool_name, int mode )
 	}
 
 	// Configure the RTP session
-	rtp_session_set_scheduling_mode(session, TRUE);
-	rtp_session_set_blocking_mode(session, TRUE);
+	rtp_session_set_scheduling_mode(session, scheduling);
+	rtp_session_set_blocking_mode(session, scheduling);
 	rtp_session_set_multicast_loopback(session, TRUE);
 
 	// Callbacks

@@ -117,7 +117,7 @@ int main(int argc, char **argv)
 
 	
 	// Create an RTP session
-	session = mast_init_ortp( MAST_TOOL_NAME, RTP_SESSION_RECVONLY );
+	session = mast_init_ortp( MAST_TOOL_NAME, RTP_SESSION_RECVONLY, TRUE );
 
 
 	// Parse the command line arguments 
@@ -140,11 +140,11 @@ int main(int argc, char **argv)
 	// Display information about the packet received
 	printf("RTP Header\n");
 	printf("==========\n");
-	printf("Payload type    : %d\n", rtp_get_payload_type( packet ) );
-	printf("Payload size    : %d bytes\n", payload_size );
-	printf("Sequence Number : %d\n", rtp_get_seqnumber( packet ) );
-	printf("Timestamp       : %d\n", rtp_get_timestamp( packet ) );
-	printf("SSRC Identifier : %d\n", rtp_get_ssrc( packet ) );
+	printf("Payload type    : %u\n", rtp_get_payload_type( packet ) );
+	printf("Payload size    : %u bytes\n", payload_size );
+	printf("Sequence Number : %u\n", rtp_get_seqnumber( packet ) );
+	printf("Timestamp       : %u\n", rtp_get_timestamp( packet ) );
+	printf("SSRC Identifier : %x\n", rtp_get_ssrc( packet ) );
 	printf("Marker Bit      : %s\n", rtp_get_markbit( packet ) ? "Set" : "Not Set");
 	printf("\n");
 	
@@ -164,9 +164,9 @@ int main(int argc, char **argv)
 		else if (pt->type==PAYLOAD_VIDEO) mime_major = "video";
 		printf("Mime Type       : %s/%s\n", mime_major, pt->mime_type);
 		
-		if (pt->clock_rate)			printf("Cock Rate       : %d Hz\n", pt->clock_rate);
-		if (pt->channels)			printf("Channels        : %d\n", pt->channels);
-		if (pt->bits_per_sample)	printf("Bits per Sample : %d\n", pt->bits_per_sample);
+		if (pt->clock_rate)			printf("Cock Rate       : %u Hz\n", pt->clock_rate);
+		if (pt->channels)			printf("Channels        : %u\n", pt->channels);
+		if (pt->bits_per_sample)	printf("Bits per Sample : %u\n", pt->bits_per_sample);
 		if (pt->normal_bitrate) {
 			printf("Normal Bitrate  : %d kbps\n", (pt->normal_bitrate/1000));
 			printf("Packet duration : %d ms\n", (payload_size*1000)/(pt->normal_bitrate/8) );

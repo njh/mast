@@ -404,7 +404,7 @@ int main(int argc, char **argv)
 	
 	
 	// Create an RTP session
-	session = mast_init_ortp( MAST_TOOL_NAME, RTP_SESSION_SENDONLY );
+	session = mast_init_ortp( MAST_TOOL_NAME, RTP_SESSION_SENDONLY, TRUE );
 
 
 	// Parse the command line arguments 
