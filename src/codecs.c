@@ -44,6 +44,7 @@ static struct {
 	char* mime_subtype;
 	mast_codec_t* (*init)();
 } mast_codecs[] = {
+	{ "DVI4",	mast_init_dvi4 },
 	{ "GSM",	mast_init_gsm },
 	{ "L16",	mast_init_l16 },
 	{ "LPC",	mast_init_lpc },
