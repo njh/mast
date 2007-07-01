@@ -1,7 +1,6 @@
 
-Finish convertion from pcm6cast to MAST.
-	- ipv4 examples
-	- merge in new multicast socket code
+Fix bug in oRTP that is causing problems recieving non-8000khz streams.
+
 
 mast_transcast	Reflect and transcode RTP streams
 mast_listen - Client / Listener -> Jack
