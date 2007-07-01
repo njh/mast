@@ -1,5 +1,6 @@
 
 Fix bug in oRTP that is causing problems recieving non-8000khz streams.
+Fix bug in oRTP that is causing 000000 RTCP message in RAT.
 
 
 mast_transcast	Reflect and transcode RTP streams
