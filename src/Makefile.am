@@ -14,7 +14,6 @@ noinst_LIBRARIES = libmastcodecs.a
 libmastcodecs_a_SOURCES = \
 	codecs.h \
 	codecs.c \
-	codec_dvi4.c \
 	codec_gsm.c \
 	codec_lpc.c \
 	codec_l16.c \
