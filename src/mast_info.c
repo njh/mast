@@ -95,9 +95,9 @@ static void parse_cmd_line(int argc, char **argv, RtpSession* session)
 	
 	// Set the remote address/port
 	if (rtp_session_set_local_addr( session, local_address, local_port )) {
-		MAST_FATAL("Failed to set receive address/port (%s/%d)", local_address, local_port);
+		MAST_FATAL("Failed to set receive address/port (%s/%u)", local_address, local_port);
 	} else {
-		printf( "Receive address: %s/%d\n", local_address,  local_port );
+		printf( "Receive address: %s/%u\n", local_address,  local_port );
 	}
 	
 }
@@ -138,6 +138,7 @@ int main(int argc, char **argv)
 
 	
 	// Display information about the packet received
+	printf("\n");
 	printf("RTP Header\n");
 	printf("==========\n");
 	printf("Payload type    : %u\n", rtp_get_payload_type( packet ) );
@@ -152,7 +153,7 @@ int main(int argc, char **argv)
 	// Lookup the payload type
 	pt = rtp_profile_get_payload( profile, rtp_get_payload_type( packet ) );
 	if (pt == NULL) {
-		MAST_WARNING( "Payload type %d isn't registered with oRTP", rtp_get_payload_type( packet ) );
+		MAST_WARNING( "Payload type %u isn't registered with oRTP", rtp_get_payload_type( packet ) );
 	} else {
 		const char* mime_major = "?";
 
@@ -168,8 +169,8 @@ int main(int argc, char **argv)
 		if (pt->channels)			printf("Channels        : %u\n", pt->channels);
 		if (pt->bits_per_sample)	printf("Bits per Sample : %u\n", pt->bits_per_sample);
 		if (pt->normal_bitrate) {
-			printf("Normal Bitrate  : %d kbps\n", (pt->normal_bitrate/1000));
-			printf("Packet duration : %d ms\n", (payload_size*1000)/(pt->normal_bitrate/8) );
+			printf("Normal Bitrate  : %u kbps\n", (pt->normal_bitrate/1000));
+			printf("Packet duration : %u ms\n", (payload_size*1000)/(pt->normal_bitrate/8) );
 		}
 		if (pt->recv_fmtp)			printf("Recieve FMTP    : %s\n", pt->recv_fmtp);
 		if (pt->send_fmtp)			printf("Send FMTP       : %s\n", pt->send_fmtp);
