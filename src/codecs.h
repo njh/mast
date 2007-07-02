@@ -45,7 +45,7 @@ mast_codec_t* mast_init_codec( char* mime_subtype );
 
 
 // Specific codec Initialisers
-mast_codec_t* mast_init_dvi4();		// codec_dvi4.c
+//mast_codec_t* mast_init_dvi4();		// codec_dvi4.c
 mast_codec_t* mast_init_gsm();		// codec_gsm.c
 mast_codec_t* mast_init_l16();		// codec_l16.c
 mast_codec_t* mast_init_lpc();		// codec_lpc.c
