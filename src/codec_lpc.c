@@ -6,6 +6,9 @@
  *  written by Ron Zuckerman, Motorola, posted to the Usenet group
  *  comp.dsp on June 26, 1992.
  *
+ *  This file is based on the sources from:
+ *  ftp://parcftp.xerox.com/pub/net-research/lpc.tar.Z
+ *
  *
  *  Each LPC frame is 14 bytes / 160 samples long
  *
