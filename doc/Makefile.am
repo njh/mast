@@ -1,34 +1,37 @@
 
-ASCIIDOC = @ASCIIDOC@
-XMLTO = @XMLTO@
+man_MANS = mast_cast.1 mast_client.1
 
-man_MANS = mastcast.1 mastclient.1
-
-
+HTMLPAGES =  README.html INSTALL.html
 HTMLMANPAGES = $(man_MANS:%=%.html)
 XMLMANPAGES = $(man_MANS:%=%.xml)
 ASCMANPAGES = $(man_MANS:%=%.asc)
 
 
-noinst_DATA = $(HTMLMANPAGES) $(XMLMANPAGES) README.html INSTALL.html
+## Tool locations
+ASCIIDOC = @ASCIIDOC@
+XMLTO = @XMLTO@
 
-README.html: ../README
-	$(ASCIIDOC) -d article -b html -o $@ $<
-	
-INSTALL.html: ../INSTALL
-	$(ASCIIDOC) -d article -b html -o $@ $<
 
+## Only re-build documentation if tools are available
+if BUILD_DOC 
+
+$(HTMLPAGES): %.html: %.asc
+	$(ASCIIDOC) -d article -b xhtml11 -o $@ $<
 
 $(HTMLMANPAGES): %.html: %.asc
-	$(ASCIIDOC) -d manpage -b html -o $@ $<
+	$(ASCIIDOC) -d manpage -b xhtml11 -o $@ $<
 
 $(XMLMANPAGES): %.xml: %.asc
 	$(ASCIIDOC) -d manpage -b docbook -o $@ $<
 
 $(man_MANS): %: %.xml
 	$(XMLTO) man $<
-	
-CLEANFILES = $(man_MANS) $(HTMLMANPAGES) $(XMLMANPAGES) README.html INSTALL.html \
-			 manpage.links manpage.refs
 
-EXTRA_DIST = $(ASCMANPAGES)
+endif
+
+
+
+dist_doc_DATA = $(HTMLPAGES) $(HTMLMANPAGES)
+DISTCLEANFILES = $(man_MANS) $(HTMLMANPAGES)
+CLEANFILES = $(XMLMANPAGES) manpage.links manpage.refs
+EXTRA_DIST = $(ASCMANPAGES) $(man_MANS) $(HTMLPAGES) $(HTMLMANPAGES)

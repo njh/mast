@@ -47,12 +47,12 @@ AC_PATH_PROG( [XMLTO], [xmlto] )
 AC_SUBST( XMLTO )
 
 if test "x$ac_cv_path_ASCIIDOC" != "x" -a "x$ac_cv_path_XMLTO" != "x"; then
-	BUILD_DOC="doc"
+	BUILD_DOC="Yes"
 else
-	BUILD_DOC=""
-	AC_MSG_WARN([Not building documentation because tools are missing])
+	BUILD_DOC="No"
+	AC_MSG_WARN([Not re-building documentation because tools are missing])
 fi
-AC_SUBST( BUILD_DOC )
+AM_CONDITIONAL(BUILD_DOC, test x$BUILD_DOC = xYes)
 
 
 
@@ -139,6 +139,7 @@ echo "
   Copyright (C) 2003-2007 University of Southampton
 
   Install path .......... $prefix
+  Rebuilding Docs ....... $BUILD_DOC
   Debugging ............. $Debugging
   Jack Support .......... $HAVE_JACK
   Libsndfile support .... $HAVE_SNDFILE
