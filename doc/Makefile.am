@@ -15,7 +15,10 @@ XMLTO = @XMLTO@
 ## Only re-build documentation if tools are available
 if BUILD_DOC 
 
-$(HTMLPAGES): %.html: %.asc
+INSTALL.html: ../INSTALL
+	$(ASCIIDOC) -d article -b xhtml11 -o $@ $<
+
+README.html: ../README
 	$(ASCIIDOC) -d article -b xhtml11 -o $@ $<
 
 $(HTMLMANPAGES): %.html: %.asc

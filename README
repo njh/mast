@@ -25,12 +25,12 @@ MAST is licenced under the GNU General Public License, see the file COPYING for 
 Current Limitations
 -------------------
 
-- No mixer support (can only recieve single source)
-- No sample rate conversion support
-- No upmixing/downmixing support
-- No clock skew error correction
-- mast_rawcast currently only supports GSM and MPEG Audio
-- due to problems with oRTP, only 8000Hz streams can be recieved
+- No mixer support (can only recieve single source).
+- No sample rate conversion support.
+- No upmixing/downmixing support.
+- No clock skew error correction.
+- mast_rawcast currently only supports GSM and MPEG Audio.
+- due to problems with oRTP, only 8000Hz streams can be recieved.
 
 
 
