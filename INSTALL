@@ -2,7 +2,7 @@ Installation of MAST
 ====================
 Nicholas J. Humfrey <njh@ecs.soton.ac.uk>
 
-MAST uses autoconf, so should work on most POSIX systems.
+MAST uses autoconf/automake, so should work on most POSIX systems.
 
 
 Quick Start
@@ -17,28 +17,21 @@ Then as root:
  make install
 
 
-IPv6 Multicast on Linux
------------------------
-
-I have problems with IPv6 multicast on Linux kernels newer 
-than 2.4.18 (including 2.6.3). I do not understand the details
-but it seems to relate to falling back from MLDv2 to MLDv1.
-
-http://www.m6bone.net/article.php3?id_article=77
-
-
 Requirements
 ------------
+
+MAST requires a very recent version of oRTP currently only available in CVS.
+There is a tarball of this on the MAST website for convenience.
+
 
 Most of the requirments are optional,
 configure will add features depending on the
 libraries available on your system.
 
-mastclient requires either SDL/Jack/OSS for audio playback.
+mast_cast requires Jack for audio capture.
+
+mast_record and mast_filecast require libsndfile.
 
 
-- IPv6 Multicast <http://www.m6bone.net/>
-- libsndfile <http://www.mega-nerd.com/libsndfile/>
-- SDL >1.2  <http://www.libsdl.org>
-- toolame  <http://www.toolame.org>
-- JACK  <http://jackit.sf.net>
+- libsndfile <http://www.mega-nerd.com/libsndfile/[]>
+- JACK <http://www.jackaudio.org/[]>

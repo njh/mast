@@ -1,7 +1,7 @@
 
 man_MANS = mast_cast.1 mast_client.1
 
-HTMLPAGES =  README.html INSTALL.html
+HTMLPAGES =  README.html INSTALL.html TODO.html
 HTMLMANPAGES = $(man_MANS:%=%.html)
 XMLMANPAGES = $(man_MANS:%=%.xml)
 ASCMANPAGES = $(man_MANS:%=%.asc)
@@ -21,6 +21,9 @@ INSTALL.html: ../INSTALL
 README.html: ../README
 	$(ASCIIDOC) -d article -b xhtml11 -o $@ $<
 
+TODO.html: ../TODO
+	$(ASCIIDOC) -d article -b xhtml11 -o $@ $<
+
 $(HTMLMANPAGES): %.html: %.asc
 	$(ASCIIDOC) -d manpage -b xhtml11 -o $@ $<
 
@@ -35,6 +38,6 @@ endif
 
 
 dist_doc_DATA = $(HTMLPAGES) $(HTMLMANPAGES)
-DISTCLEANFILES = $(man_MANS) $(HTMLMANPAGES)
+DISTCLEANFILES = $(man_MANS) $(HTMLPAGES) $(HTMLMANPAGES)
 CLEANFILES = $(XMLMANPAGES) manpage.links manpage.refs
 EXTRA_DIST = $(ASCMANPAGES) $(man_MANS) $(HTMLPAGES) $(HTMLMANPAGES)

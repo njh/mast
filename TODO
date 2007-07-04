@@ -1,59 +1,59 @@
-
-Fix bug in oRTP that is causing problems recieving non-8000khz streams.
-Fix bug in oRTP that is causing 000000 RTCP message in RAT.
-
-
-mast_transcast	Reflect and transcode RTP streams
-mast_listen - Client / Listener -> Jack
-mast_meter - automatically connect mast_listen to jack_meter
-mast_clockcast - Multicast Talking Clock
-
-
-Built-in audio resampling (using Secret Rabbit Code)
-	- use resampling to cope with unsynced clocks
-
-Seperate out more of the common code in each of the tools source files
-	- Address / port parsing
-	
-
-JACK support
-	- see jack.udp source code (sw-23)
-
-Make fink+Debian packages
-
-Change sources if one drops out?
-
-Abort after timeout if no valid packets have been received
-
-Support streaming of multiple files in mast_filecast and mast_rawcast
-
-Choice of scheme for packet loss recovery (does oRTP do this?)
- - None
- - Silence
- - Repeat
-
-
-Support multiple frames per packet in mast_rawcast
-Support for taking shoutcast stream as input using CURL?
-
-Add SDP generation and RTSP announce support.
-Add session announement use SAP
-Simple SAP client too ?
-Or perhaps use SDP parser to use SDP files as config files?
-Perl script to open SDP files using mast_listen?
-
-
-Allow client to only play from specified SRC IP
- - and remove the SSRC selecting code ?
-
-Display Current Play state info with \r
-
-Allow choice of interface for Multicast
-
-Use 32-bit floats for audio internally (instead of 16-bit ints)
+MAST To-Do list
+===============
 
 
 
+- New tools
+  * mast_reflect - UDP Packet Refelector
+  * mast_listen - Client / Listener -> Jack
+  * mast_meter - automatically connect mast_listen to jack_meter
+  * mast_clockcast - Multicast Talking Clock
+  * mast_transcast  Reflect and transcode RTP streams
+
+
+
+- Support streaming of multiple files in mast_filecast and mast_rawcast
+- Support multiple frames per packet in mast_rawcast
+- Support for taking HTTP stream as input using libcurl?
+- Choose number of blocks/units per packet instead of maximum packet size?
+
+- Built-in audio resampling (using Secret Rabbit Code)
+  * use dynamic resampling to cope with unsynced clocks
+
+- Seperate out more of the common code in each of the tools source files
+  * Address / port parsing
+    
+
+
+- Properly implement change sources if one drops out?
+  * option to not allow SSRC changes?
+
+- Abort after timeout if no valid packets have been received
+
+- Choice of scheme for packet loss recovery (does oRTP do this?)
+  * None
+  * Silence
+  * Repeat
+
+
+
+- Add SDP generation and RTSP announce support.
+  * Or perhaps use SDP parser to use SDP files as config files?
+- Add session announement using SAP
+  * Simple SAP client too ?
+
+
+- Use 32-bit floats for audio internally (instead of 16-bit ints)
+
+
+
+
+Changes to make to oRTP
+-----------------------
+
+- Fix bug in oRTP that is causing problems recieving non-8000khz streams.
+- Fix bug in oRTP that is causing 000000 RTCP message in RAT.
+- Allow choice of interface for Multicast
 
 
 
@@ -61,52 +61,51 @@ Use 32-bit floats for audio internally (instead of 16-bit ints)
 Static Types that could be added
 --------------------------------
 
-0	audio/PCMU		8000	1		(G.711) Already Built-in
-3	audio/GSM		8000	1		libgsm (static library)
-4	audio/G723		8000	1		?
+    0   audio/PCMU      8000    1       (G.711) [Done]
+    3   audio/GSM       8000    1       [Done]
+    4   audio/G723      8000    1       ?
+    
+    5   audio/DVI4      8000    1       Borrow from asterisk source?
+    6   audio/DVI4      16000   1       Borrow from asterisk source?
+    7   audio/LPC       8000    1       [Done]
+    
+    
+    8   audio/PCMA      8000    1       (G.711) [Done]
+    9   audio/G722      8000    1       ?
+    
+    10  audio/L16       44100   2       [Done]
+    11  audio/L16       44100   1       [Done]
+    
+    12  audio/QCELP     8000    1       MPlayer source code?
+    13  audio/CN        8000    1       (Comfort Noise) N/A
+    
+    14  audio/MPA       *       *       mpg123 / toolame
+    15  audio/G728      8000    1       ?
+    
+    16  audio/DVI4      11025   1       Borrow from asterisk source?
+    17  audio/DVI4      22050   1       Borrow from asterisk source?
+    18  audio/G729      8000    1       ?
 
-5	audio/DVI4		8000	1		Borrow from asterisk source?
-6	audio/DVI4		16000	1		Borrow from asterisk source?
-7	audio/LPC		8000	1		Borrow from asterisk source?
 
-
-8	audio/PCMA		8000	1		(G.711) Already Built-in
-9	audio/G722		8000	1		?
-
-10	audio/L16		44100	2		Already Built-in
-11	audio/L16		44100	1		Already Built-in
-
-12	audio/QCELP		8000	1		MPlayer source code?
-13	audio/CN		8000	1		(Comfort Noise) N/A
-
-14	audio/MPA		*		*		mpg123 / toolame
-15	audio/G728		8000	1		?
-
-16	audio/DVI4		11025	1		Borrow from asterisk source?
-17	audio/DVI4		22050	1		Borrow from asterisk source?
-18	audio/G729		8000	1		?
-
-
-See RFC4856 for RTP MIME type registration.
+NOTE: See RFC4856 for RTP MIME type registration.
 
 
 
 Dynamic Types that could be added
 ---------------------------------
 
-audio/L8
-audio/L20
-audio/L24
-audio/mpa-robust
-audio/DAT12
-audio/speex
+    audio/L8
+    audio/L20
+    audio/L24
+    audio/mpa-robust
+    audio/DAT12
+    audio/speex
 
 
 
 Doesn't exist (yet)
 -------------------
 
-audio/L32		- 32 bit Integer 
-audio/L32F		- 32 bit IEEE floats (as used by JACK !)
-
+    audio/L32       - 32 bit Integer 
+    audio/L32F      - 32 bit IEEE floats (as used by JACK !)
 

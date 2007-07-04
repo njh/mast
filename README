@@ -3,14 +3,15 @@ MAST - Multicast Audio Streaming Toolkit
 Nicholas J. Humfrey <njh@ecs.soton.ac.uk>
 
 For the latest information on MAST, please see:
-http://www.ecs.soton.ac.uk/~njh/mast/
+http://www.ecs.soton.ac.uk/~njh/mast/[]
 
 
 
 What is MAST ?
 --------------
 
-MAST is an audio streaming broadcaster and client using RTP over IPv4 and IPv6 Multicast/Unicast.
+MAST is an audio streaming broadcaster and client using RTP over
+IPv4 and IPv6 Multicast/Unicast.
 
 Unlike VAT and RAT, which are designed primerily for audio conferencing, MAST
 is designed to be used for audio distribution and broadcast. It is currently limited 
@@ -19,6 +20,34 @@ to recieving a single audio source, unlike RAT which can mix serveral sources.
 It supports many of the audio payload types in the Audio-visual Profile (RTP/AVP).
 
 MAST is licenced under the GNU General Public License, see the file COPYING for details.
+
+
+
+Tools in MAST
+-------------
+
+  mast_info        Display information about first packet received
+  mast_cast        Live Audio broadcaster that sources audio from JACK
+  mast_filecast    Audio file broadcaster
+  mast_rawcast     Directly broadcast a previously encoded audio file
+  mast_record      Record/archive audio stream to audio file
+  mast_rawrecord   Record/archive raw streams directly to disc
+
+
+Supported Payloads
+------------------
+
+   0     8000Hz   Mono     u-law encoded
+   3     8000Hz   Mono     GSM
+   7     8000Hz   Mono     LPC
+   8     8000Hz   Mono     A-law encoded
+   10    44.1kHz  Stereo   Raw 16-bit linear audio
+   11    44.1kHz  Mono     Raw 16-bit linear audio
+
+
+Details are here:
+http://www.iana.org/assignments/rtp-parameters[]
+
 
 
 
@@ -33,110 +62,45 @@ Current Limitations
 - due to problems with oRTP, only 8000Hz streams can be recieved.
 
 
-
-Tools in MAST
--------------
-
-mast_info		Display information about first packet received
-mast_cast		Live Audio Broadcaster <- Jack
-mast_filecast	Audio file broadcaster
-mast_rawcast	Directly broadcast a previously encoded audio file
-mast_record		Record/archive audio stream to audio file
-mast_rawrecord	Record/archive streams directly to disc
-
-
-Supported Payloads
-------------------
-
-   0     8000Hz Mono      u-law encoded 16-bit PCM
-   8     8000Hz Mono      A-law encoded 16-bit PCM
-   10    44.1kHz Stereo   Raw 16-bit Audio
-   11    44.1kHz Mono     Raw 16-bit Audio
-
-
-Details are here:
-http://www.iana.org/assignments/rtp-parameters
-
-
-
 Test Stream
 -----------
 
 You can listen to a test stream coming from Unversity of Southampton:
 
 ----------------------------------------------------------
-[hwickabab:~] njh% mast_info ff7e:0440:2001:0630:00d0:f001:9000:1351
-Connecting to ff7e:0440:2001:0630:00d0:f001:9000:1351/5004.
-Joined multicast group.
-Waiting for first packet...
-Src IP: 2001:630:d0:201::83
-SSRC: 0x1630b576
-Payload: 0
-Sample Rate: 8000 Hz
-Channels: 1
-Size of first packet: 332 bytes
+njh@dobbie:~$ mast_info ff7e:0440:2001:0630:00d0:f001:9000:7e57
+Receive address: ff7e:0440:2001:0630:00d0:f001:9000:7e57/5004
+
+RTP Header
+==========
+Payload type    : 14
+Payload size    : 526 bytes
+Sequence Number : 60390
+Timestamp       : 3219875130
+SSRC Identifier : beef7e57
+Marker Bit      : Not Set
+
+Payload Details
+===============
+Mime Type       : audio/mpa
+Cock Rate       : 90000 Hz
+
+MPEG Audio Header
+=================
+MPEG Version      : MPEG-1 (Layer 2)
+Mode              : Stereo
+Bitrate           : 160 kbps
+Sample Rate       : 44100 Hz
+Error Protection  : No
+Padding           : No
+Extension Bit     : No
+Copyright         : No
+Original          : Yes
+Samples per frame : 1152
+Bytes per frame   : 522
 ----------------------------------------------------------
 
 Please email me if you have any problems listening.
 Please note that you *must* be connected to m6bone.
-(http://www.m6bone.net/)
-
-
-Setting up SDL audio output
----------------------------
-
-SDL's audio output settings can be configured by setting environment variables.
-
-You can choose the audio driver and sound card in this way.
-
-For details see:
-http://sdldoc.csn.ul.ie/sdlenvvars.php
-
-
-Example usage
--------------
-
-............................................
- mastcast -f audiofile.aiff FF03::123/5010
-............................................
-Broadcast a sound file out to multicast
-group FF02::123 and port 5010
-
-............................................
- mastclient FF03::123/5010
-............................................
-Listen to a stream on multicast on
-multicast group FF02::123 and port 5010
-
-
-............................................
- mastclient -f recording.wav FF03::123/5010
-............................................
-Record stream to raw audio file	
-
-
-............................................
- mastcast -d /dev/dsp -p 8 FF03::123/5010
-............................................
-Broadcast audio from sound card using
-payload 8
-
-
-............................................
- mastclient -q -p 10 -o FF03::123/5010 | \
- sox -r 44100 -c 2 -w -s -t raw -        \
-     -r 8000  -c 1 -w -s -t raw -      | \
- mastcast -p 10 -i FF03::124/5008         
-............................................
-Downsample from payload 10 to another
-multicast group using payload 8
-
-
-
-Machines Tested
----------------
-- PowerMac G4 - Mac OS X 10.2.8 and 10.3.2
-- AMD K6 - Debian Linux 2.4.22
-- i386 - FreeBSD 5.1-RELEASE
-
+(http://www.m6bone.net/[])
 
