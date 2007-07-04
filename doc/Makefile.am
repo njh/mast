@@ -1,5 +1,13 @@
 
-man_MANS = mast_cast.1 mast_client.1
+## Manual pages
+man_MANS = \
+	mast_info.1 \
+	mast_cast.1 \
+	mast_filecast.1 \
+	mast_rawcast.1 \
+	mast_record.1 \
+	mast_rawrecord.1
+	
 
 HTMLPAGES =  README.html INSTALL.html TODO.html
 HTMLMANPAGES = $(man_MANS:%=%.html)
