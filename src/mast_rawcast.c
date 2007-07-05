@@ -57,7 +57,7 @@ static int usage() {
 	printf( "    -t <ttl>      Time to live\n");
 	printf( "    -p <payload>  The payload type to send\n");
 	printf( "    -z <size>     Set the per-packet payload size\n");
-	printf( "    -d <dcsp>     DCSP Quality of Service value\n");
+	printf( "    -d <dscp>     DSCP Quality of Service value\n");
 	printf( "    -l            Loop the audio file\n");
 	
 	exit(1);

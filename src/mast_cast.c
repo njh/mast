@@ -59,7 +59,7 @@ static int usage() {
 	printf( "    -t <ttl>      Time to live\n");
 	printf( "    -p <payload>  The payload type to send\n");
 	printf( "    -z <size>     Set the per-packet payload size\n");
-	printf( "    -d <dcsp>     DCSP Quality of Service value\n");
+	printf( "    -d <dscp>     DSCP Quality of Service value\n");
 	printf( "    -r <msec>     Ring-buffer duration in milliseconds\n");
 	printf( "    -c <channels> Number of audio channels\n");
 	printf( "    -n <name>     Name for this JACK client\n");
