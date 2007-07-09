@@ -240,7 +240,7 @@ int main(int argc, char **argv)
 		if (jack_ringbuffer_read_space(g_ringbuffer) < audio_buffer_size) {
 			//MAST_WARNING( "No audio available in ringbuffer; sleeping for a bit", microseconds );
 
-			// Sleep for the duration of a packets and then try again
+			// Sleep for the duration of a packet and then try again
 			usleep( (samples_per_packet*1000000) / samplerate );
 			continue;
 		}
