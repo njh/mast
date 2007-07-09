@@ -5,7 +5,7 @@ AC_PREREQ(2.57)
 
 dnl ############# Initialisation
 
-AC_INIT([mast], [0.2a], [njh@ecs.soton.ac.uk])
+AC_INIT([mast], [0.2.1], [njh@ecs.soton.ac.uk])
 
 AC_CONFIG_SRCDIR(src/mast.h)
 AC_CONFIG_AUX_DIR(build) 
@@ -136,7 +136,6 @@ dnl ############## Display Message
 
 echo "
   Multicast Audio Streaming Toolkit $VERSION
-  Copyright (C) 2003-2007 University of Southampton
 
   Install path .......... $prefix
   Rebuilding Docs ....... $BUILD_DOC
