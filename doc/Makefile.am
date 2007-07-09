@@ -15,8 +15,12 @@ XMLMANPAGES = $(man_MANS:%=%.xml)
 ASCMANPAGES = $(man_MANS:%=%.asc)
 
 
-## Tool locations
-ASCIIDOC = @ASCIIDOC@
+## Tool Configuration
+ASCIIDOC = @ASCIIDOC@ \
+	-a revision="@PACKAGE_VERSION@" \
+	-a theme=mast \
+	-a linkcss \
+	-a stylesdir=. 
 XMLTO = @XMLTO@
 
 
