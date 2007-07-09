@@ -1,8 +1,28 @@
 /*
 	mast.css
-	Based on xhtml11.css from asciidoc version 7.0.2
+	
+	$Id:$
 */
 
+img { border: none; }
+
+.float-right
+{
+	border: none;
+	float: right;
+	padding: 0 0 25px 25px;
+}
+
+#valid-xhtml
+{
+	border: none;
+	float: right;
+	padding: 0 0 25px 25px;
+}
+
+
+
+/* The rest of this file is based on xhtml11.css from asciidoc version 7.0.2 */
 
 body {
   background: #ffffff;
