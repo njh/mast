@@ -29,8 +29,8 @@ Tools in MAST
   mast_info        Display information about first packet received
   mast_cast        Live Audio broadcaster that sources audio from JACK
   mast_filecast    Audio file broadcaster
-  mast_rawcast     Directly broadcast a previously encoded audio file
   mast_record      Record/archive audio stream to audio file
+  mast_rawcast     Directly broadcast a previously encoded audio file
   mast_rawrecord   Record/archive raw streams directly to disc
 
 
