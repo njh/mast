@@ -49,6 +49,7 @@ static int usage()
 	
 	fprintf(stderr, "Multicast Audio Streaming Toolkit (version %s)\n", PACKAGE_VERSION);
 	fprintf(stderr, "%s [options] <address>[/<port>] <filename>\n", MAST_TOOL_NAME);
+	printf( "    -l            List the available audio output formats\n");
 //	printf( "    -s <ssrc>     Source identifier (otherwise use first recieved)\n");
 //	printf( "    -t <ttl>      Time to live\n");
 //	printf( "    -p <payload>  The payload type to send\n");
@@ -57,6 +58,46 @@ static int usage()
 	
 }
 
+static void list_output_formats()
+{
+	int count = 0;
+	int k = 0;
+	const char* last_ext = "";
+	
+	
+	// Get the number of entries in the simple file format table
+	if (sf_command (NULL, SFC_GET_SIMPLE_FORMAT_COUNT, &count, sizeof (int))) {
+		MAST_FATAL("failed to get simple output format count");
+	}
+
+
+	printf("Available audio output formats:\n");
+
+	// Look at each simple file format in the table
+	for (k = 0 ; k < count ; k++)
+	{
+		SF_FORMAT_INFO	format_info;
+		format_info.format = k;
+		if (sf_command (NULL, SFC_GET_SIMPLE_FORMAT, &format_info, sizeof (format_info))) {
+			MAST_FATAL("failed to get information about simple format %d", k);
+		}
+		
+		if (strcmp(format_info.extension, last_ext)) {
+			printf("  .%-4s    %s\n", format_info.extension, format_info.name );
+			last_ext = format_info.extension;
+		}
+	}
+
+}
+
+static void display_recorded_duration( unsigned long seconds )
+{
+	int mins = seconds/60;
+	int secs = seconds%60;
+	
+	fprintf(stderr, "Recorded: %d:%2.2d    \r", mins, secs );
+
+}
 
 
 static void parse_cmd_line(int argc, char **argv, RtpSession* session)
@@ -67,7 +108,7 @@ static void parse_cmd_line(int argc, char **argv, RtpSession* session)
 
 
 	// Parse the options/switches
-	while ((ch = getopt(argc, argv, "h?")) != -1)
+	while ((ch = getopt(argc, argv, "lh?")) != -1)
 	switch (ch) {
 
 /* may still be useful for RTCP		
@@ -77,6 +118,9 @@ static void parse_cmd_line(int argc, char **argv, RtpSession* session)
 			}
 		break;
 */
+		case 'l':
+			list_output_formats();
+			exit(0);
 
 		case '?':
 		case 'h':
@@ -193,6 +237,7 @@ int main(int argc, char **argv)
 	mast_codec_t *codec = NULL;
 	int16_t *audio_buffer = NULL;
 	int audio_buffer_len = 0;
+	unsigned long total_samples_written = 0;
 	int ts_diff = 0;
 	int ts = 0;
 
@@ -272,7 +317,7 @@ int main(int argc, char **argv)
 				
 				// Update the timestamp difference
 				ts_diff = mast_rtp_packet_duration( packet );
-				MAST_DEBUG("ts_diff = %d", ts_diff);
+				//MAST_DEBUG("ts_diff = %d", ts_diff);
 				
 				// Write to disk
 				samples_written = sf_write_short( output, audio_buffer, samples_decoded );
@@ -280,14 +325,21 @@ int main(int argc, char **argv)
 					MAST_ERROR("Failed to write audio samples to disk: %s", sf_strerror( output ));
 					break;
 				}
+				total_samples_written += samples_written;
 			}
 		}
 		
+		// Display the duration recorded
+		display_recorded_duration( total_samples_written/pt->clock_rate );
 
 		// Increment the timestamp for the next packet
 		ts += ts_diff;
 	}
 	
+
+	// Display final total time recorded
+	display_recorded_duration( total_samples_written/pt->clock_rate );
+	fprintf(stderr, "\n");
 
 	// Free up the buffers audio/read buffers
 	if (audio_buffer) {
