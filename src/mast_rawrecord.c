@@ -49,7 +49,7 @@ static int usage()
 {
 	
 	fprintf(stderr, "Multicast Audio Streaming Toolkit (version %s)\n", PACKAGE_VERSION);
-	fprintf(stderr, "%s [options] <address>[/<port>] <filename>\n", MAST_TOOL_NAME);
+	fprintf(stderr, "%s <address>[/<port>] <filename>\n", MAST_TOOL_NAME);
 //	printf( "    -s <ssrc>     Source identifier (otherwise use first recieved)\n");
 //	printf( "    -t <ttl>      Time to live\n");
 //	printf( "    -p <payload>  The payload type to send\n");
