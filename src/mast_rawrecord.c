@@ -100,7 +100,7 @@ static void parse_cmd_line(int argc, char **argv, RtpSession* session)
 		}
 	
 	} else {
-		MAST_ERROR("missing address/port to send to");
+		MAST_ERROR("missing address/port to receive from");
 		usage();
 	}
 	
