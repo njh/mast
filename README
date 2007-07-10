@@ -31,7 +31,7 @@ Tools in MAST
   mast_filecast    Audio file broadcaster
   mast_record      Record/archive audio stream to audio file
   mast_rawcast     Directly broadcast a previously encoded audio file
-  mast_rawrecord   Record/archive raw streams directly to disc
+  mast_rawrecord   Record/archive raw streams directly to disk
 
 
 Supported Payloads
