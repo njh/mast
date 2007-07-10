@@ -45,7 +45,7 @@
 static int usage() {
 	
 	printf( "Multicast Audio Streaming Toolkit (version %s)\n", PACKAGE_VERSION);
-	printf( "%s [options] <address>[/<port>]\n", MAST_TOOL_NAME);
+	printf( "%s <address>[/<port>]\n", MAST_TOOL_NAME);
 //	printf( "    -s <ssrc>     Source identifier (otherwise use first recieved)\n");
 	
 	exit(1);
