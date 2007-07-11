@@ -5,7 +5,7 @@ AC_PREREQ(2.57)
 
 dnl ############# Initialisation
 
-AC_INIT([mast], [0.2.1], [njh@ecs.soton.ac.uk])
+AC_INIT([mast], [0.2.2], [njh@ecs.soton.ac.uk])
 
 AC_CONFIG_SRCDIR(src/mast.h)
 AC_CONFIG_AUX_DIR(build) 
@@ -71,6 +71,12 @@ dnl Check for libsndfile (it is optional)
 PKG_CHECK_MODULES(SNDFILE, sndfile >= 1.0.0,
 	[ HAVE_SNDFILE="Yes" ],
 	[ HAVE_SNDFILE="No" ]
+)
+
+dnl Check for twolame (it is optional)
+PKG_CHECK_MODULES(TWOLAME, twolame >= 0.3.10,
+	[ HAVE_TWOLAME="Yes" ],
+	[ HAVE_TWOLAME="No" ]
 )
 
 dnl Check for JACK (it is optional)
@@ -142,6 +148,7 @@ echo "
   Debugging ............. $Debugging
   Jack Support .......... $HAVE_JACK
   Libsndfile support .... $HAVE_SNDFILE
+  MPEG Audio Support .... $HAVE_TWOLAME
   
 Next type 'make' and then 'make install'."
 
