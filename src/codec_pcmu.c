@@ -136,7 +136,19 @@ static u_int8_t ulaw_int16tobyte(mast_pcmu_t* p, int16_t input)
 }
 
 
-static u_int32_t decode_pcmu(
+static int mast_set_param_pcmu( mast_codec_t* codec, const char* name, const char* value )
+{
+	// We don't support any parameters
+	return -1;
+}
+
+static const char* mast_get_param_pcmu( mast_codec_t* codec, const char* name )
+{
+	// We don't support any parameters
+	return NULL;
+}
+
+static u_int32_t mast_decode_pcmu(
 		mast_codec_t* codec,
 		u_int32_t inputsize,	/* input size in bytes */
 		u_int8_t  *input,
@@ -161,7 +173,7 @@ static u_int32_t decode_pcmu(
 
 
 
-static u_int32_t encode_pcmu(
+static u_int32_t mast_encode_pcmu(
 		mast_codec_t* codec,
 		u_int32_t inputsize, 	/* input size in samples */
 		int16_t *input,
@@ -186,7 +198,7 @@ static u_int32_t encode_pcmu(
 
 
 
-static int deinit_pcmu( mast_codec_t* codec )
+static int mast_deinit_pcmu( mast_codec_t* codec )
 {
 	mast_pcmu_t* p = (mast_pcmu_t*)codec->ptr;
 	
@@ -220,9 +232,11 @@ mast_codec_t* mast_init_pcmu() {
 
 	// Set the callbacks
 	memset( codec, 0, sizeof(mast_codec_t) );
-	codec->encode = encode_pcmu;
-	codec->decode = decode_pcmu;
-	codec->deinit = deinit_pcmu;
+	codec->set_param = mast_set_param_pcmu;
+	codec->get_param = mast_get_param_pcmu;
+	codec->encode = mast_encode_pcmu;
+	codec->decode = mast_decode_pcmu;
+	codec->deinit = mast_deinit_pcmu;
 
 
 
@@ -239,12 +253,12 @@ mast_codec_t* mast_init_pcmu() {
 	// Initialise the tables
 	if (ulaw_init_ulawtoint16( pcmu )) {
 		MAST_ERROR( "Failed to initialise ulaw decode table" );
-		deinit_pcmu( codec );
+		mast_deinit_pcmu( codec );
 		return NULL;
 	}
 	if (ulaw_init_int16toulaw( pcmu )) {
 		MAST_ERROR( "Failed to initialise ulaw encode table" );
-		deinit_pcmu( codec );
+		mast_deinit_pcmu( codec );
 		return NULL;
 	}
 	

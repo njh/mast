@@ -249,7 +249,19 @@ s2pcma_array (int16_t *ptr, u_int32_t index, u_int8_t *buffer, u_int32_t count)
 
 
 
-static u_int32_t decode_pcma(
+static int mast_set_param_pcma( mast_codec_t* codec, const char* name, const char* value )
+{
+	// We don't support any parameters
+	return -1;
+}
+
+static const char* mast_get_param_pcma( mast_codec_t* codec, const char* name )
+{
+	// We don't support any parameters
+	return NULL;
+}
+
+static u_int32_t mast_decode_pcma(
 		mast_codec_t* codec,
 		u_int32_t inputsize,		/* input size in bytes */
 		u_int8_t  *input,
@@ -270,7 +282,7 @@ static u_int32_t decode_pcma(
 
 
 
-static u_int32_t encode_pcma(
+static u_int32_t mast_encode_pcma(
 		mast_codec_t* codec,
 		u_int32_t inputsize, 	/* input size in samples */
 		int16_t *input,
@@ -290,7 +302,7 @@ static u_int32_t encode_pcma(
 
 
 
-static int deinit_pcma( mast_codec_t* codec )
+static int mast_deinit_pcma( mast_codec_t* codec )
 {
 	// Don't need to do anything else here
 	free( codec );
@@ -311,9 +323,11 @@ mast_codec_t* mast_init_pcma() {
 	
 	// Set the callbacks
 	memset( codec, 0, sizeof(mast_codec_t) );
-	codec->encode = encode_pcma;
-	codec->decode = decode_pcma;
-	codec->deinit = deinit_pcma;
+	codec->set_param = mast_set_param_pcma;
+	codec->get_param = mast_get_param_pcma;
+	codec->encode = mast_encode_pcma;
+	codec->decode = mast_decode_pcma;
+	codec->deinit = mast_deinit_pcma;
 	codec->ptr = NULL;
 	
 	return codec;

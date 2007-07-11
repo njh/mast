@@ -331,6 +331,18 @@ static void lpc_synthesize(lpcparams_t *input, int16_t *output, lpcstate_t* stat
 
 
 
+static int mast_set_param_lpc( mast_codec_t* codec, const char* name, const char* value )
+{
+	// We don't support any parameters
+	return -1;
+}
+
+static const char* mast_get_param_lpc( mast_codec_t* codec, const char* name )
+{
+	// We don't support any parameters
+	return NULL;
+}
+
 static u_int32_t mast_encode_lpc(
 		mast_codec_t* codec,
 		u_int32_t inputsize, 	// input size in samples
@@ -421,6 +433,8 @@ mast_codec_t* mast_init_lpc()
 	
 	// Set the callbacks
 	memset( codec, 0, sizeof(mast_codec_t) );
+	codec->set_param = mast_set_param_lpc;
+	codec->get_param = mast_get_param_lpc;
 	codec->encode = mast_encode_lpc;
 	codec->decode = mast_decode_lpc;
 	codec->deinit = mast_deinit_lpc;

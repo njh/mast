@@ -30,7 +30,19 @@
 
 
 
-static u_int32_t encode_gsm(
+static int mast_set_param_gsm( mast_codec_t* codec, const char* name, const char* value )
+{
+	// We don't support any parameters
+	return -1;
+}
+
+static const char* mast_get_param_gsm( mast_codec_t* codec, const char* name )
+{
+	// We don't support any parameters
+	return NULL;
+}
+
+static u_int32_t mast_encode_gsm(
 		mast_codec_t* codec,
 		u_int32_t inputsize, 	// input size in samples
 		int16_t *input,
@@ -61,7 +73,7 @@ static u_int32_t encode_gsm(
 }
 
 
-static u_int32_t decode_gsm(
+static u_int32_t mast_decode_gsm(
 		mast_codec_t* codec,
 		u_int32_t inputsize,		// input size in bytes
 		u_int8_t  *input,
@@ -88,7 +100,7 @@ static u_int32_t decode_gsm(
 }
 
 
-static int deinit_gsm( mast_codec_t* codec )
+static int mast_deinit_gsm( mast_codec_t* codec )
 {
 	gsm gsm_handle = codec->ptr;
 
@@ -122,16 +134,18 @@ mast_codec_t* mast_init_gsm()
 	
 	// Set the callbacks
 	memset( codec, 0, sizeof(mast_codec_t) );
-	codec->encode = encode_gsm;
-	codec->decode = decode_gsm;
-	codec->deinit = deinit_gsm;
+	codec->set_param = mast_set_param_gsm;
+	codec->get_param = mast_get_param_gsm;
+	codec->encode = mast_encode_gsm;
+	codec->decode = mast_decode_gsm;
+	codec->deinit = mast_deinit_gsm;
 	
 	// Create the GSM handle
 	gsm_handle = gsm_create();
 	codec->ptr = gsm_handle;
 	if (gsm_handle==NULL) {
 		MAST_ERROR( "Failed to initialise GSM library" );
-		deinit_gsm( codec );
+		mast_deinit_gsm( codec );
 		return NULL;
 	}
 	

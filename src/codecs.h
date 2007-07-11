@@ -24,6 +24,12 @@
 
 typedef struct mast_codec_s {
 
+	// Set a codec parameter - returns 0 on success, or errror number on failure
+	int (*set_param)(struct mast_codec_s *, const char* name, const char* value);
+
+	// Get a codec parameter - returns NULL if parameter doesn't exist
+	const char* (*get_param)(struct mast_codec_s *, const char* name);
+
 	// Encode callback - returns number of bytes encoded, or -1 on failure
 	u_int32_t (*encode)(struct mast_codec_s *, u_int32_t num_samples, int16_t *input, u_int32_t out_size, u_int8_t *output);
 	

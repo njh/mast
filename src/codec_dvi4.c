@@ -207,6 +207,18 @@ void adpcm_decode(
 
 
 
+static int mast_set_param_dvi4( mast_codec_t* codec, const char* name, const char* value )
+{
+	// We don't support any parameters
+	return -1;
+}
+
+static const char* mast_get_param_dvi4( mast_codec_t* codec, const char* name )
+{
+	// We don't support any parameters
+	return NULL;
+}
+
 static u_int32_t mast_encode_dvi4(
 		mast_codec_t* codec,
 		u_int32_t inputsize, 	// input size in samples
@@ -293,6 +305,8 @@ mast_codec_t* mast_init_dvi4()
 	
 	// Set the callbacks
 	memset( codec, 0, sizeof(mast_codec_t) );
+	codec->set_param = mast_set_param_dvi4;
+	codec->get_param = mast_get_param_dvi4;
 	codec->encode = mast_encode_dvi4;
 	codec->decode = mast_decode_dvi4;
 	codec->deinit = mast_deinit_dvi4;
