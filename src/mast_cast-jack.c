@@ -30,7 +30,7 @@
 #include <pthread.h>
 
 #include "config.h"
-#include "mastjack.h"
+#include "mast_cast-jack.h"
 #include "mast.h"
 
 

@@ -32,7 +32,7 @@
 
 #include "config.h"
 #include "codecs.h"
-#include "mastjack.h"
+#include "mast_cast-jack.h"
 #include "mast.h"
 
 
