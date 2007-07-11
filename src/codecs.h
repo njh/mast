@@ -54,6 +54,7 @@ mast_codec_t* mast_init_codec( char* mime_subtype );
 mast_codec_t* mast_init_gsm();		// codec_gsm.c
 mast_codec_t* mast_init_l16();		// codec_l16.c
 mast_codec_t* mast_init_lpc();		// codec_lpc.c
+mast_codec_t* mast_init_mpa();		// codec_mpa.c
 mast_codec_t* mast_init_pcma();		// codec_alaw.c
 mast_codec_t* mast_init_pcmu();		// codec_ulaw.c
 

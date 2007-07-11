@@ -46,6 +46,7 @@ static struct {
 	{ "LPC",	mast_init_lpc },
 	{ "PCMA",	mast_init_pcma },
 	{ "PCMU",	mast_init_pcmu },
+	{ "MPA",	mast_init_mpa },
 	{ NULL, 	NULL }
 };
 

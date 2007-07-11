@@ -17,11 +17,13 @@ libmastcodecs_a_SOURCES = \
 	codec_gsm.c \
 	codec_lpc.c \
 	codec_l16.c \
+	codec_mpa.c \
 	codec_pcma.c \
 	codec_pcmu.c
 
 MAST_CODEC_LIBS = \
 	libmastcodecs.a \
+	-ltwolame \
 	../libgsm/libgsm.a
 
 
