@@ -1,3 +1,10 @@
+2007-09-11  Nicholas J. Humfrey  <njh@ecs.soton.ac.uk>
+	* Released version 0.2.1 of MAST
+	* Now uses oRTP for all RTP type stuff
+	* Split into multiple tools
+	* Added support for GSM codec
+	* Addded support for LPC codec
+
 2005-01-29  Nicholas J. Humfrey  <njh@ecs.soton.ac.uk>
 	* pcm6cast is now MAST
 	* began moving code accross and renaming
