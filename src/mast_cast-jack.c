@@ -27,6 +27,7 @@
 #include <time.h>
 #include <getopt.h>
 #include <limits.h>
+#include <pthread.h>
 
 #include "config.h"
 #include "mastjack.h"
@@ -43,6 +44,9 @@ jack_ringbuffer_t *g_ringbuffer = NULL;
 int16_t *g_convbuffer = NULL;
 
 
+/* For signaling when there's room in the ringbuffer. */
+pthread_mutex_t g_ringbuffer_cond_mutex;
+pthread_cond_t g_ringbuffer_cond;
 
 
 
@@ -82,6 +86,9 @@ static int process_callback(jack_nframes_t nframes, void *arg)
 		MAST_FATAL("Failed to write to ring ruffer");
 		return 1;
 	}
+	
+	// Signal the other thread that audio is available
+	pthread_cond_signal(&g_ringbuffer_cond);
 
 	// Success
 	return 0;
@@ -156,6 +163,10 @@ jack_client_t* mast_init_jack( const char* client_name, jack_options_t jack_opt 
 	size_t ringbuffer_size = 0;
 	int i = 0;
 
+
+    pthread_mutex_init(&g_ringbuffer_cond_mutex, NULL);
+    pthread_cond_init(&g_ringbuffer_cond, NULL);
+
 	// Register with Jack
 	if ((client = jack_client_open(client_name, jack_opt, &status)) == 0) {
 		MAST_ERROR("Failed to start jack client: 0x%x", status);
@@ -227,6 +238,10 @@ void mast_deinit_jack( jack_client_t *client )
 		jack_ringbuffer_free( g_ringbuffer );
 		g_ringbuffer = NULL;
 	}
+
+    pthread_cond_destroy(&g_ringbuffer_cond);
+    pthread_mutex_destroy(&g_ringbuffer_cond_mutex);
+
 }
 
 

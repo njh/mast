@@ -222,13 +222,6 @@ int main(int argc, char **argv)
 	mast_setup_signals();
 
 
-	// Wait until the ring buffer is half full
-	//while( jack_ringbuffer_read_space( g_ringbuffer ) < (g_ringbuffer->size/2)) {
-	//
-	//	// Sleep for 1ms
-	//	usleep( 1000 );
-	//}
-	
 
 	// The main loop
 	while( mast_still_running() )
@@ -238,10 +231,12 @@ int main(int argc, char **argv)
 
 		// Wait for some audio
 		if (jack_ringbuffer_read_space(g_ringbuffer) < audio_buffer_size) {
-			//MAST_WARNING( "No audio available in ringbuffer; sleeping for a bit", microseconds );
+			//MAST_WARNING( "Not enough audio available in ringbuffer; waiting" );
 
-			// Sleep for the duration of a packet and then try again
-			usleep( (samples_per_packet*1000000) / samplerate );
+			// Wait for some more audio to become available
+			pthread_mutex_lock(&g_ringbuffer_cond_mutex);
+			pthread_cond_wait(&g_ringbuffer_cond, &g_ringbuffer_cond_mutex);
+			pthread_mutex_unlock(&g_ringbuffer_cond_mutex);
 			continue;
 		}
 

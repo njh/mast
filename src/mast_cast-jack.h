@@ -22,15 +22,18 @@
 #include <jack/ringbuffer.h>
 
 
-/* Functions in mastjack.c */
+/* Functions in mast_cast-jack.c */
 jack_client_t* mast_init_jack( const char* client_name, jack_options_t jack_opt );
 void mast_deinit_jack( jack_client_t *client );
 
 
-/* Globals in mastjack.c */
+/* Globals in mast_cast-jack.c */
 extern int g_channels;
 extern int g_do_autoconnect;
 extern int g_rb_duration;
 extern jack_port_t *g_jackport[2];
 extern jack_ringbuffer_t *g_ringbuffer;
 extern int16_t *g_convbuffer;
+
+extern pthread_mutex_t g_ringbuffer_cond_mutex;
+extern pthread_cond_t g_ringbuffer_cond;

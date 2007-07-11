@@ -53,8 +53,8 @@ mast_cast_CFLAGS = @JACK_CFLAGS@
 mast_cast_LDADD = $(MAST_CODEC_LIBS) @JACK_LIBS@
 mast_cast_SOURCES = \
 	mast_cast.c \
-	mastjack.c \
-	mastjack.h \
+	mast_cast-jack.c \
+	mast_cast-jack.h \
 	mpa_header.c \
 	mpa_header.h \
 	mast.h \
