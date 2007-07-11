@@ -170,10 +170,6 @@ int main(int argc, char **argv)
 	
 	// Create an RTP session
 	session = mast_init_ortp( MAST_TOOL_NAME, RTP_SESSION_SENDONLY, FALSE );
-	
-	// For this session we don't want blocking or scheduling
-	rtp_session_set_scheduling_mode(session, FALSE);
-	rtp_session_set_blocking_mode(session, FALSE);
 
 
 	// Parse the command line arguments 
@@ -229,7 +225,7 @@ int main(int argc, char **argv)
 		size_t payload_bytes = 0;
 		size_t bytes_read = 0;
 
-		// Wait for some audio
+		// Check that there is enough audio available
 		if (jack_ringbuffer_read_space(g_ringbuffer) < audio_buffer_size) {
 			//MAST_WARNING( "Not enough audio available in ringbuffer; waiting" );
 
