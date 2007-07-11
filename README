@@ -26,7 +26,7 @@ MAST is licenced under the GNU General Public License, see the file COPYING for 
 Tools in MAST
 -------------
 
-  mast_info        Display information about first packet received
+  mast_info        Display information about first RTP packet received
   mast_cast        Live Audio broadcaster that sources audio from JACK
   mast_filecast    Audio file broadcaster
   mast_record      Record/archive audio stream to audio file
