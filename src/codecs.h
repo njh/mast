@@ -80,10 +80,10 @@ int mast_codec_set_param( mast_codec_t* codec, const char* name, const char* val
 // Get a codec parameter - returns NULL if parameter doesn't exist
 const char* mast_codec_get_param( mast_codec_t* codec, const char* name );
 
-// Encode - returns number of bytes encoded, or -1 on failure
+// Encode a packet of audio - returns number of bytes encoded, or -1 on failure
 int mast_codec_encode( mast_codec_t* codec, u_int32_t num_samples, int16_t *input, u_int32_t out_size, u_int8_t *output );
 
-// Decode  - returns number of samples decoded, or -1 on failure
+// Decode a packet of audio - returns number of samples decoded, or -1 on failure
 int mast_codec_decode( mast_codec_t* codec, u_int32_t inputsize, u_int8_t *input, u_int32_t outputsize, int16_t *output );
 
 // De-initialise codec, returns 0 on success or error number
