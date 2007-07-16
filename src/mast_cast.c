@@ -163,6 +163,7 @@ int main(int argc, char **argv)
 	u_int8_t *payload_buffer = NULL;
 	int samples_per_packet = 0;
 	int audio_buffer_size = 0;
+	int payload_buffer_size = 0;
 	int samplerate = 0;
 	int ts = 0;
 
@@ -200,16 +201,17 @@ int main(int argc, char **argv)
 	if (codec == NULL) MAST_FATAL("Failed to get initialise codec" );
 
 	// Calculate the packet size
-	samples_per_packet = mast_calc_samples_per_packet( pt, g_payload_size_limit );
+	samples_per_packet = mast_codec_samples_per_packet( codec, g_payload_size_limit );
 	if (samples_per_packet<=0) MAST_FATAL( "Invalid number of samples per packet" );
 
 	// Allocate memory for audio buffer
-	audio_buffer_size = samples_per_packet * sizeof(int16_t) * pt->channels;
+	audio_buffer_size = samples_per_packet * sizeof(int16_t) * g_channels;
 	audio_buffer = (int16_t*)malloc( audio_buffer_size );
 	if (audio_buffer == NULL) MAST_FATAL("Failed to allocate memory for audio buffer");
 
 	// Allocate memory for the packet buffer
-	payload_buffer = (u_int8_t*)malloc( g_payload_size_limit );
+	payload_buffer_size = g_payload_size_limit;
+	payload_buffer = (u_int8_t*)malloc( payload_buffer_size );
 	if (payload_buffer == NULL) MAST_FATAL("Failed to allocate memory for payload buffer");
 
 
@@ -223,6 +225,7 @@ int main(int argc, char **argv)
 	{
 		size_t payload_bytes = 0;
 		size_t bytes_read = 0;
+		size_t samples_read = 0;
 
 		// Check that there is enough audio available
 		if (jack_ringbuffer_read_space(g_ringbuffer) < audio_buffer_size) {
@@ -240,13 +243,12 @@ int main(int argc, char **argv)
 		if (bytes_read<=0) MAST_FATAL( "Failed to read from ringbuffer" );
 		if (bytes_read!=audio_buffer_size) MAST_WARNING("Failed to read enough audio for a full packet");
 		
-
 		//MAST_DEBUG("Ring buffer is now %u%% full", (jack_ringbuffer_read_space(g_ringbuffer)*100) / g_ringbuffer->size);
 
 		// Encode audio
-		payload_bytes = codec->encode(codec,
-					(bytes_read / sizeof(int16_t)), audio_buffer, 
-					g_payload_size_limit, payload_buffer );
+		samples_read = (bytes_read / sizeof(int16_t)) / g_channels;
+		payload_bytes = mast_codec_encode(codec, samples_read, audio_buffer, 
+					payload_buffer_size, payload_buffer );
 		if (payload_bytes<0)
 		{
 			MAST_ERROR("Codec encode failed" );
@@ -256,7 +258,9 @@ int main(int argc, char **argv)
 		if (payload_bytes) {
 			// Send out an RTP packet
 			rtp_session_send_with_ts(session, payload_buffer, payload_bytes, ts);
-			ts+= (bytes_read / (sizeof(int16_t)*g_channels));
+
+			// Calculate the timestamp increment
+			ts+=((samples_read * pt->clock_rate) / samplerate);
 		}
 			
 	}
