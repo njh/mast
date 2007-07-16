@@ -226,6 +226,7 @@ int main(int argc, char **argv)
 	mast_codec_t *codec = NULL;
 	int16_t *audio_buffer = NULL;
 	u_int8_t *payload_buffer = NULL;
+	int audio_buffer_size = 0;
 	int samples_per_packet = 0;
 	int ts = 0;
 
@@ -266,7 +267,8 @@ int main(int argc, char **argv)
 	if (samples_per_packet<=0) MAST_FATAL( "Invalid number of samples per packet" );
 
 	// Allocate memory for audio buffer
-	audio_buffer = (int16_t*)malloc( samples_per_packet * sizeof(int16_t) * pt->channels );
+	audio_buffer_size = samples_per_packet * sizeof(int16_t) * pt->channels;
+	audio_buffer = (int16_t*)malloc( audio_buffer_size );
 	if (audio_buffer == NULL) MAST_FATAL("Failed to allocate memory for audio buffer");
 
 	// Allocate memory for the packet buffer
