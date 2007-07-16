@@ -30,9 +30,8 @@
 #include <sndfile.h>
 #include <ortp/ortp.h>
 
-#include "config.h"
-#include "codecs.h"
 #include "mast.h"
+#include "codecs.h"
 
 
 
@@ -274,7 +273,7 @@ int main(int argc, char **argv)
 
 
 	// Load the codec
-	codec = mast_init_codec( pt->mime_type );
+	codec = mast_codec_init( pt->mime_type, 0, 0 );
 	if (codec == NULL) MAST_FATAL("Failed to get initialise codec" );
 
 	// Allocate memory for audio buffer
@@ -348,10 +347,7 @@ int main(int argc, char **argv)
 	}
 
 	// De-initialise the codec
-	if (codec) {
-		codec->deinit( codec );
-		codec=NULL;
-	}
+	mast_codec_deinit( codec );
 	 
 	// Close output file
 	if (sf_close( output )) {

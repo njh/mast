@@ -29,7 +29,6 @@
 #include <limits.h>
 #include <pthread.h>
 
-#include "config.h"
 #include "mast_cast-jack.h"
 #include "mast.h"
 

@@ -22,22 +22,30 @@
 #define	_CODECS_H_
 
 
+/* this data structure shouldn't really be accessed from outside of codec subsystem */
 typedef struct mast_codec_s {
 
-	// Set a codec parameter - returns 0 on success, or errror number on failure
+	// Number of channels (for encoding)
+	int channels;
+	
+	// Sample rate (for encoding)
+	int samplerate;
+	
+	// Identifier for this codec
+	const char* subtype;
+
+	// Codec specific callbacks - can be NULL if unsupported
+	int (*samples_per_packet)(struct mast_codec_s *, int max_bytes);
 	int (*set_param)(struct mast_codec_s *, const char* name, const char* value);
-
-	// Get a codec parameter - returns NULL if parameter doesn't exist
 	const char* (*get_param)(struct mast_codec_s *, const char* name);
-
-	// Encode callback - returns number of bytes encoded, or -1 on failure
 	u_int32_t (*encode)(struct mast_codec_s *, u_int32_t num_samples, int16_t *input, u_int32_t out_size, u_int8_t *output);
-	
-	// Decode callback - returns number of samples decoded, or -1 on failure
 	u_int32_t (*decode)(struct mast_codec_s *, u_int32_t inputsize, u_int8_t *input, u_int32_t outputsize, int16_t *output);
-	
-	// De-initialise callback, returns 0 on success or error number
 	int (*deinit)(struct mast_codec_s *);
+	
+	// Called just before we start encoding/decoding
+	// - returns 0 on success, or error number on failure
+	int (*prepare)(struct mast_codec_s *);
+
 
 	// Pointer for internal use by codecs
 	void* ptr;
@@ -45,18 +53,43 @@ typedef struct mast_codec_s {
 } mast_codec_t;
 
 
-// codecs.c
-mast_codec_t* mast_init_codec( char* mime_subtype );
-
-
 // Specific codec Initialisers
-//mast_codec_t* mast_init_dvi4();		// codec_dvi4.c
-mast_codec_t* mast_init_gsm();		// codec_gsm.c
-mast_codec_t* mast_init_l16();		// codec_l16.c
-mast_codec_t* mast_init_lpc();		// codec_lpc.c
-mast_codec_t* mast_init_mpa();		// codec_mpa.c
-mast_codec_t* mast_init_pcma();		// codec_alaw.c
-mast_codec_t* mast_init_pcmu();		// codec_ulaw.c
+//int mast_init_dvi4(mast_codec_t*);	// codec_dvi4.c
+int mast_init_gsm(mast_codec_t*);		// codec_gsm.c
+int mast_init_l16(mast_codec_t*);		// codec_l16.c
+int mast_init_lpc(mast_codec_t*);		// codec_lpc.c
+int mast_init_mpa(mast_codec_t*);		// codec_mpa.c
+int mast_init_pcma(mast_codec_t*);		// codec_alaw.c
+int mast_init_pcmu(mast_codec_t*);		// codec_ulaw.c
+
+
+
+/*------- Public Functions --------*/
+
+// Find codec, initialise, configure and prepare
+// Parameters samplerate and channels SHOULD be given when encoding
+// and MUST be set to zero when decoding.
+mast_codec_t* mast_codec_init( char* mime_type, int samplerate, int channels );
+
+// Get the number of samples per packet for the current parameters
+int mast_codec_samples_per_packet( mast_codec_t* codec, int max_bytes );
+
+// Set a codec parameter - returns 0 on success, or error number on failure
+int mast_codec_set_param( mast_codec_t* codec, const char* name, const char* value );
+
+// Get a codec parameter - returns NULL if parameter doesn't exist
+const char* mast_codec_get_param( mast_codec_t* codec, const char* name );
+
+// Encode - returns number of bytes encoded, or -1 on failure
+int mast_codec_encode( mast_codec_t* codec, u_int32_t num_samples, int16_t *input, u_int32_t out_size, u_int8_t *output );
+
+// Decode  - returns number of samples decoded, or -1 on failure
+int mast_codec_decode( mast_codec_t* codec, u_int32_t inputsize, u_int8_t *input, u_int32_t outputsize, int16_t *output );
+
+// De-initialise codec, returns 0 on success or error number
+void mast_codec_deinit( mast_codec_t* codec );
+
+
 
 
 #endif

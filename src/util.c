@@ -30,7 +30,6 @@
 #include <ortp/ortp.h>
 
 
-#include "config.h"
 #include "mast.h"
 #include "mpa_header.h"
 
@@ -481,17 +480,24 @@ PayloadType* mast_choose_payloadtype( RtpSession * session, const char* payload_
 	PayloadType* pt = NULL;
 	int pt_idx = -1;
 
-	pt_idx = rtp_profile_find_payload_number( profile, payload_type, samplerate, channels );
-	if ( pt_idx<0 ) return NULL;
-	MAST_INFO( "Payload type index: %d", pt_idx );
-
-
-	// Get the PayloadType structure
-	pt = rtp_profile_get_payload( profile, pt_idx );
-	if (pt == NULL) return NULL;
-
+	// MPEG Audio is a special case
+	if (strcmp("MPA", payload_type)==0) {
+		pt = &payload_type_mpeg_audio;
+		pt->channels = channels;
+		pt_idx = RTP_MPEG_AUDIO_PT;
+	
+	} else {
+		// Ask oRTP for the index
+		pt_idx = rtp_profile_find_payload_number( profile, payload_type, samplerate, channels );
+		if ( pt_idx<0 ) return NULL;
+	
+		// Get the PayloadType structure
+		pt = rtp_profile_get_payload( profile, pt_idx );
+		if (pt == NULL) return NULL;
+	}
 
 	// Set the payload type in the session
+	MAST_INFO( "Payload type index: %d", pt_idx );
 	if (rtp_session_set_send_payload_type( session, pt_idx )) {
 		MAST_FATAL("Failed to set session payload type index");
 	}

@@ -31,7 +31,6 @@
 #include <ortp/ortp.h>
 #include <sndfile.h>
 
-#include "config.h"
 #include "codecs.h"
 #include "mast.h"
 
@@ -259,11 +258,11 @@ int main(int argc, char **argv)
 	if (pt == NULL) MAST_FATAL("Failed to get payload type information from oRTP");
 	
 	// Load the codec
-	codec = mast_init_codec( g_payload_type );
+	codec = mast_codec_init( g_payload_type, sfinfo.samplerate, sfinfo.channels );
 	if (codec == NULL) MAST_FATAL("Failed to get initialise codec" );
 
 	// Calculate the packet size
-	samples_per_packet = mast_calc_samples_per_packet( pt, g_payload_size_limit );
+	samples_per_packet = mast_codec_samples_per_packet( codec, g_payload_size_limit );
 	if (samples_per_packet<=0) MAST_FATAL( "Invalid number of samples per packet" );
 
 	// Allocate memory for audio buffer
@@ -293,8 +292,7 @@ int main(int argc, char **argv)
 		}
 		
 		// Encode audio
-		payload_bytes = codec->encode(codec,
-					samples_read*pt->channels, audio_buffer, 
+		payload_bytes = mast_codec_encode(codec, samples_read, audio_buffer,
 					g_payload_size_limit, payload_buffer );
 		if (payload_bytes<0)
 		{
@@ -306,13 +304,15 @@ int main(int argc, char **argv)
 		if (payload_bytes) {
 			// Send out an RTP packet
 			rtp_session_send_with_ts(session, payload_buffer, payload_bytes, ts);
-			ts+=samples_read;
+			
+			// Calculate the timestamp increment
+			ts+=((samples_read * pt->clock_rate) / sfinfo.samplerate);   //  * frames_per_packet;
 		}
 		
 
 		// Reached end of file?
 		if (samples_read < samples_per_packet) {
-			MAST_DEBUG("Reached end of file (samples_read=%d)", samples_read);
+			MAST_DEBUG("Reached end of file (wanted=%d, samples_read=%d)", samples_per_packet, samples_read);
 			if (g_loop_file) {
 				// Seek back to the beginning
 				if (sf_seek( input, 0, SEEK_SET )) {
@@ -338,10 +338,7 @@ int main(int argc, char **argv)
 	}
 	
 	// De-initialise the codec
-	if (codec) {
-		codec->deinit( codec );
-		codec=NULL;
-	}
+	mast_codec_deinit( codec );
 	 
 	// Close input file
 	if (sf_close( input )) {

@@ -249,18 +249,6 @@ s2pcma_array (int16_t *ptr, u_int32_t index, u_int8_t *buffer, u_int32_t count)
 
 
 
-static int mast_set_param_pcma( mast_codec_t* codec, const char* name, const char* value )
-{
-	// We don't support any parameters
-	return -1;
-}
-
-static const char* mast_get_param_pcma( mast_codec_t* codec, const char* name )
-{
-	// We don't support any parameters
-	return NULL;
-}
-
 static u_int32_t mast_decode_pcma(
 		mast_codec_t* codec,
 		u_int32_t inputsize,		/* input size in bytes */
@@ -302,34 +290,14 @@ static u_int32_t mast_encode_pcma(
 
 
 
-static int mast_deinit_pcma( mast_codec_t* codec )
-{
-	// Don't need to do anything else here
-	free( codec );
+// Initialise the PCMA codec
+int mast_init_pcma( mast_codec_t* codec ) {
+
+	// Set the callbacks
+	codec->encode = mast_encode_pcma;
+	codec->decode = mast_decode_pcma;
 	
 	// Success
 	return 0;
-}
-	
-
-
-// Initialise the PCMA codec
-mast_codec_t* mast_init_pcma() {
-	mast_codec_t* codec = malloc( sizeof(mast_codec_t) );
-	if (codec==NULL) {
-		MAST_ERROR( "Failed to allocate memory for mast_codec_t data structure" );
-		return NULL;
-	}
-	
-	// Set the callbacks
-	memset( codec, 0, sizeof(mast_codec_t) );
-	codec->set_param = mast_set_param_pcma;
-	codec->get_param = mast_get_param_pcma;
-	codec->encode = mast_encode_pcma;
-	codec->decode = mast_decode_pcma;
-	codec->deinit = mast_deinit_pcma;
-	codec->ptr = NULL;
-	
-	return codec;
 }
 

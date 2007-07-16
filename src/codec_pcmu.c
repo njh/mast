@@ -218,20 +218,10 @@ static int mast_deinit_pcmu( mast_codec_t* codec )
 
 
 // Initialise the PCMU codec
-mast_codec_t* mast_init_pcmu() {
+int mast_init_pcmu( mast_codec_t* codec ) {
 	mast_pcmu_t* pcmu = NULL;
-	mast_codec_t* codec = NULL;
-	
-	// Allocate memory for generic codec structure
-	codec = malloc( sizeof(mast_codec_t) );
-	if (codec==NULL) {
-		MAST_ERROR( "Failed to allocate memory for mast_codec_t data structure" );
-		return NULL;
-	}
-	
 
 	// Set the callbacks
-	memset( codec, 0, sizeof(mast_codec_t) );
 	codec->set_param = mast_set_param_pcmu;
 	codec->get_param = mast_get_param_pcmu;
 	codec->encode = mast_encode_pcmu;
@@ -239,13 +229,11 @@ mast_codec_t* mast_init_pcmu() {
 	codec->deinit = mast_deinit_pcmu;
 
 
-
 	// Allocate memory for codec's private data
 	pcmu = malloc( sizeof(mast_pcmu_t) );
 	if (pcmu==NULL) {
 		MAST_ERROR( "Failed to allocate memory for mast_pcmu_t data structure" );
-		free( codec );
-		return NULL;
+		return -1;
 	}
 	codec->ptr = pcmu;
 	memset( pcmu, 0, sizeof(mast_pcmu_t) );
@@ -253,17 +241,15 @@ mast_codec_t* mast_init_pcmu() {
 	// Initialise the tables
 	if (ulaw_init_ulawtoint16( pcmu )) {
 		MAST_ERROR( "Failed to initialise ulaw decode table" );
-		mast_deinit_pcmu( codec );
-		return NULL;
+		return -1;
 	}
 	if (ulaw_init_int16toulaw( pcmu )) {
 		MAST_ERROR( "Failed to initialise ulaw encode table" );
-		mast_deinit_pcmu( codec );
-		return NULL;
+		return -1;
 	}
 	
-	
-	return codec;
+	// Success
+	return 0;
 }
 
 

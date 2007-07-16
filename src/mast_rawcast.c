@@ -31,7 +31,6 @@
 #include <ortp/ortp.h>
 
 
-#include "config.h"
 #include "mast.h"
 #include "mpa_header.h"
 

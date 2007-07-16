@@ -331,17 +331,6 @@ static void lpc_synthesize(lpcparams_t *input, int16_t *output, lpcstate_t* stat
 
 
 
-static int mast_set_param_lpc( mast_codec_t* codec, const char* name, const char* value )
-{
-	// We don't support any parameters
-	return -1;
-}
-
-static const char* mast_get_param_lpc( mast_codec_t* codec, const char* name )
-{
-	// We don't support any parameters
-	return NULL;
-}
 
 static u_int32_t mast_encode_lpc(
 		mast_codec_t* codec,
@@ -410,9 +399,6 @@ static int mast_deinit_lpc( mast_codec_t* codec )
 	// Free the LPC state structure
 	if (state) free( state );
 
-	// Free the codec structure
-	free( codec );
-
 	// Success
 	return 0;
 }
@@ -420,21 +406,10 @@ static int mast_deinit_lpc( mast_codec_t* codec )
 
 
 // Initialise the LPC10 codec
-mast_codec_t* mast_init_lpc()
+int mast_init_lpc( mast_codec_t* codec )
 {
-	mast_codec_t* codec = NULL;
-	
-	// Allocate memory for generic codec structure
-	codec = malloc( sizeof(mast_codec_t) );
-	if (codec==NULL) {
-		MAST_ERROR( "Failed to allocate memory for mast_codec_t data structure" );
-		return NULL;
-	}
-	
+
 	// Set the callbacks
-	memset( codec, 0, sizeof(mast_codec_t) );
-	codec->set_param = mast_set_param_lpc;
-	codec->get_param = mast_get_param_lpc;
 	codec->encode = mast_encode_lpc;
 	codec->decode = mast_decode_lpc;
 	codec->deinit = mast_deinit_lpc;
@@ -443,10 +418,9 @@ mast_codec_t* mast_init_lpc()
 	codec->ptr = lpc_initialise();
 	if (codec->ptr==NULL) {
 		MAST_ERROR( "Failed to allocate memory for lpcstate_t data structure" );
-		free( codec );
-		return NULL;
+		return -1;
 	}
 
-
-	return codec;
+	// Success
+	return 0;
 }

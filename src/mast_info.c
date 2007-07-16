@@ -32,7 +32,6 @@
 #include <sndfile.h>
 #include <ortp/ortp.h>
 
-#include "config.h"
 #include "codecs.h"
 #include "mpa_header.h"
 #include "mast.h"

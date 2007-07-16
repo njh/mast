@@ -30,7 +30,6 @@
 
 #include <ortp/ortp.h>
 
-#include "config.h"
 #include "codecs.h"
 #include "mast_cast-jack.h"
 #include "mast.h"
@@ -197,7 +196,7 @@ int main(int argc, char **argv)
 	if (pt == NULL) MAST_FATAL("Failed to get payload type information from oRTP");
 	
 	// Load the codec
-	codec = mast_init_codec( g_payload_type );
+	codec = mast_codec_init( g_payload_type, samplerate, g_channels );
 	if (codec == NULL) MAST_FATAL("Failed to get initialise codec" );
 
 	// Calculate the packet size
@@ -273,10 +272,7 @@ int main(int argc, char **argv)
 	}
 	
 	// De-initialise the codec
-	if (codec) {
-		codec->deinit( codec );
-		codec=NULL;
-	}
+	mast_codec_deinit( codec );
 
 	// Close JACK client
 	mast_deinit_jack( client );

@@ -19,6 +19,7 @@
 
 
 #include <ortp/ortp.h>
+#include "config.h"
 
 
 #ifndef	_MAST_H_
@@ -85,7 +86,7 @@
 #ifdef DEBUGGING
 #define MAST_DEBUG(s ...)  mast_message_handler( MSG_LEVEL_DEBUG, __FILE__, __LINE__, s )
 #else
-#define MAST_DEBUG
+#define MAST_DEBUG(s ...)
 #endif
 
 #define MAST_INFO(s ...)  mast_message_handler( MSG_LEVEL_INFO, __FILE__, __LINE__, s )

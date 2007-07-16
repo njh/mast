@@ -27,12 +27,32 @@
 #include "codecs.h"
 #include "mast.h"
 
+
 typedef struct
 {
 	twolame_options *twolame;
 	int prepared;
 } mast_mpegaudio_t;
 
+
+// Calculate the number of samples per packet for MPEG Audio
+static int mast_spp_mpa( mast_codec_t *codec, int max_bytes)
+{
+	mast_mpegaudio_t* p = codec->ptr;
+	int frames_per_packet = max_bytes/twolame_get_framelength( p->twolame );
+	MAST_DEBUG("MPEG Audio Frames per Packet: %d", frames_per_packet );
+	
+	return frames_per_packet*TWOLAME_SAMPLES_PER_FRAME;
+}
+
+
+// Prepare to start encoding/decoding
+static int mast_prepare_mpa( mast_codec_t *codec )
+{
+	mast_mpegaudio_t* p = codec->ptr;
+
+	return twolame_init_params( p->twolame );
+}
 
 
 static int mast_set_param_mpa( mast_codec_t* codec, const char* name, const char* value )
@@ -48,21 +68,6 @@ static const char* mast_get_param_mpa( mast_codec_t* codec, const char* name )
 }
 
 
-static void prepare_encoder( mast_mpegaudio_t* p )
-{
-	int err;
-	
-	twolame_print_config( p->twolame );
-	
-	
-	err = twolame_init_params( p->twolame );
-	if (err) {
-	
-		MAST_WARNING( "Failed to prepare twolame encoder" );
-	}
-}
-
-
 static u_int32_t mast_encode_mpa(
 		mast_codec_t* codec,
 		u_int32_t inputsize, 	// input size in samples
@@ -71,38 +76,22 @@ static u_int32_t mast_encode_mpa(
 		u_int8_t *output)
 {
 	mast_mpegaudio_t* p = codec->ptr;
-	
-	
-	if (!p->prepared) {
-		prepare_encoder( p );
-		p->prepared=1;
-	}
-	
-/*
-	register int input_bytes = (inputsize*2);
+	int bytes_encoded = 0;
 
-	if (outputsize < input_bytes) {
-		MAST_ERROR("encode_mpa: output buffer isn't big enough");
-		return 0;
-	}
-*/
+	// MPEG Audio header at the start of the packet
+	output[0] = 0x00;
+	output[1] = 0x00;
+	output[2] = 0x00;
+	output[3] = 0x00;
 
-	return 0;
+	// Encode the audio using twolame
+	bytes_encoded = twolame_encode_buffer_interleaved( p->twolame, input, inputsize, output+4, outputsize-4 );
+	MAST_DEBUG( "mast_encode_mpa: twolame encoded %d samples to %d bytes (max %d bytes)", inputsize, bytes_encoded, outputsize );
+	
+	return bytes_encoded+4;
 }
 
 
-static u_int32_t mast_decode_mpa(
-		mast_codec_t* codec,
-		u_int32_t inputsize,	// input size in bytes
-		u_int8_t  *input,
-		u_int32_t outputsize, 	// output size in samples
-		int16_t  *output)
-{
-	MAST_ERROR("MAST doesn't currently support decoding of MPEG Audio.");
-	
-	// Error
-	return 0;
-}
 
 
 static int mast_deinit_mpa( mast_codec_t* codec )
@@ -116,8 +105,6 @@ static int mast_deinit_mpa( mast_codec_t* codec )
 		free( p );
 	}
 	
-	free( codec );
-	
 	// Success
 	return 0;
 }
@@ -125,32 +112,23 @@ static int mast_deinit_mpa( mast_codec_t* codec )
 
 
 // Initialise the codec
-mast_codec_t* mast_init_mpa() {
+int mast_init_mpa( mast_codec_t* codec ) {
 	mast_mpegaudio_t *mpa = NULL;
 
-	mast_codec_t* codec = malloc( sizeof(mast_codec_t) );
-	if (codec==NULL) {
-		MAST_ERROR( "Failed to allocate memory for mast_codec_t data structure" );
-		return NULL;
-	}
-	
-
 	// Set the callbacks
-	memset( codec, 0, sizeof(mast_codec_t) );
+	codec->samples_per_packet = mast_spp_mpa;
+	codec->prepare = mast_prepare_mpa;
 	codec->set_param = mast_set_param_mpa;
 	codec->get_param = mast_get_param_mpa;
 	codec->encode = mast_encode_mpa;
-	codec->decode = mast_decode_mpa;
 	codec->deinit = mast_deinit_mpa;
-	codec->ptr = NULL;
 
 
 	// Allocate memory for codec's private data
 	mpa = malloc( sizeof(mast_mpegaudio_t) );
 	if (mpa==NULL) {
 		MAST_ERROR( "Failed to allocate memory for mast_mpa_t data structure" );
-		free( codec );
-		return NULL;
+		return -1;
 	}
 	codec->ptr = mpa;
 	memset( mpa, 0, sizeof(mast_mpegaudio_t) );
@@ -160,12 +138,21 @@ mast_codec_t* mast_init_mpa() {
 	mpa->twolame = twolame_init();
 	if (mpa->twolame==NULL) {
 		MAST_ERROR( "Failed to initialise TwoLame" );
-		free( codec );
-		return NULL;
+		return -1;
 	}
 
+	// Configure twolame
+	if (twolame_set_num_channels( mpa->twolame, codec->channels )) {
+		MAST_ERROR( "Failed to set number of input channels" );
+		return -1;
+	}
+	if (twolame_set_in_samplerate( mpa->twolame, codec->samplerate )) {
+		MAST_ERROR( "Failed to set number of input samplerate" );
+		return -1;
+	}
 	
-	return codec;
+	// Success
+	return 0;
 }
 
 

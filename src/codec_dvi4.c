@@ -22,10 +22,8 @@
 #include <string.h>
 #include <sys/types.h>
 
-#include "config.h"
-#include "codecs.h"
 #include "mast.h"
-
+#include "codecs.h"
 
 
 
@@ -282,9 +280,6 @@ static int mast_deinit_dvi4( mast_codec_t* codec )
 	// Free the ADPCM state
 	if (state) free( state );
 
-	// Free the codec structure
-	free( codec );
-	
 	// Success
 	return 0;
 }
@@ -292,19 +287,10 @@ static int mast_deinit_dvi4( mast_codec_t* codec )
 
 
 // Initialise the GSM codec
-mast_codec_t* mast_init_dvi4()
+int mast_init_dvi4(mast_codec_t* codec)
 {
-	mast_codec_t* codec = NULL;
 
-	// Allocate memory for generic codec structure
-	codec = malloc( sizeof(mast_codec_t) );
-	if (codec==NULL) {
-		MAST_ERROR( "Failed to allocate memory for mast_codec_t data structure" );
-		return NULL;
-	}
-	
 	// Set the callbacks
-	memset( codec, 0, sizeof(mast_codec_t) );
 	codec->set_param = mast_set_param_dvi4;
 	codec->get_param = mast_get_param_dvi4;
 	codec->encode = mast_encode_dvi4;
@@ -315,13 +301,13 @@ mast_codec_t* mast_init_dvi4()
 	codec->ptr = malloc( sizeof(adpcm_state_t) );
 	if (codec->ptr==NULL) {
 		MAST_ERROR( "Failed to allocate memory for ADPCM state" );
-		mast_deinit_dvi4( codec );
-		return NULL;
+		return -1;
 	} else {
 		// Zero the memory
 		memset( codec->ptr, 0, sizeof(adpcm_state_t) );
 	}
 
-	return codec;
+	// Success
+	return 0;
 }
 

@@ -32,8 +32,6 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 
-
-#include "config.h"
 #include "mast.h"
 
 

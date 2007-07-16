@@ -110,9 +110,6 @@ static int mast_deinit_gsm( mast_codec_t* codec )
 		gsm_handle = NULL;
 	}
 
-	// Free the codec structure
-	free( codec );
-	
 	// Success
 	return 0;
 }
@@ -120,20 +117,11 @@ static int mast_deinit_gsm( mast_codec_t* codec )
 
 
 // Initialise the GSM codec
-mast_codec_t* mast_init_gsm()
+int mast_init_gsm(mast_codec_t* codec)
 {
-	mast_codec_t* codec = NULL;
 	gsm gsm_handle = NULL;
-
-	// Allocate memory for generic codec structure
-	codec = malloc( sizeof(mast_codec_t) );
-	if (codec==NULL) {
-		MAST_ERROR( "Failed to allocate memory for mast_codec_t data structure" );
-		return NULL;
-	}
 	
 	// Set the callbacks
-	memset( codec, 0, sizeof(mast_codec_t) );
 	codec->set_param = mast_set_param_gsm;
 	codec->get_param = mast_get_param_gsm;
 	codec->encode = mast_encode_gsm;
@@ -146,8 +134,9 @@ mast_codec_t* mast_init_gsm()
 	if (gsm_handle==NULL) {
 		MAST_ERROR( "Failed to initialise GSM library" );
 		mast_deinit_gsm( codec );
-		return NULL;
+		return -1;
 	}
-	
-	return codec;
+
+	// Success
+	return 0;
 }
