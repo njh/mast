@@ -57,14 +57,57 @@ static int mast_prepare_mpa( mast_codec_t *codec )
 
 static int mast_set_param_mpa( mast_codec_t* codec, const char* name, const char* value )
 {
-	// We don't support any parameters
-	return -1;
+	mast_mpegaudio_t* p = codec->ptr;
+
+	/*	Parameters listed in RFC3555 for audio/MPA:
+	
+		layer: 1,2,3
+		samplerate: 
+		mode: "stereo", "joint_stereo", "single_channel", "dual_channel"
+		bitrate: the data rate for the audio bit stream
+		ptime: duration of each packet in milliseconds
+		maxptime: maximum duration of each packet in milliseconds
+		
+		Example:
+		audio/MPA;layer=2;mode=stereo;bitrate=160;
+	*/
+	
+	if (strcmp(name, "layer")==0) {
+		int layer = atoi(value);
+		if (layer!=2) return -2;
+	} else if (strcmp(name, "mode")==0) {
+		int mode;
+		if (strcmp(value, "stereo")==0) mode = TWOLAME_STEREO;
+		else if (strcmp(value, "joint_stereo")==0) mode = TWOLAME_JOINT_STEREO;
+		else if (strcmp(value, "single_channel")==0) mode = TWOLAME_MONO;
+		else if (strcmp(value, "dual_channel")==0) mode = TWOLAME_DUAL_CHANNEL;
+		else return -2;
+		
+		if (twolame_set_mode( p->twolame, mode )) {
+			MAST_WARNING("Failed to set mode");
+		}
+	} else if (strcmp(name, "bitrate")==0) {
+		int bitrate = atoi(value);
+		if (twolame_set_bitrate( p->twolame, bitrate )) {
+			MAST_WARNING("Failed to set bitrate");
+		}
+	} else {
+		// Unsupported parameter
+		return -1;
+	}
 }
 
 static const char* mast_get_param_mpa( mast_codec_t* codec, const char* name )
 {
-	// We don't support any parameters
-	return NULL;
+
+	if (strcmp(name, "layer")==0) {
+		// We only support layer 2
+		return "2";
+	} else {
+		// Unsupported
+		return NULL;
+	}
+
 }
 
 
