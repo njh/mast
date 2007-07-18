@@ -189,16 +189,17 @@ int main(int argc, char **argv)
 
 	// Display some information about the chosen payload type
 	MAST_INFO( "Sending SSRC: 0x%x", session->snd.ssrc );
-	MAST_INFO( "Payload type: %s/%d/%d", g_payload_type, samplerate, g_channels );
+	MAST_INFO( "Payload MIME type: %s", g_payload_type );
+	MAST_INFO( "Input Format: %d Hz, %s", samplerate, g_channels==2 ? "Stereo" : "Mono");
 
-
-	// Work out the payload type index to use
-	pt = mast_choose_payloadtype( session, g_payload_type, samplerate, g_channels );
-	if (pt == NULL) MAST_FATAL("Failed to get payload type information from oRTP");
 	
 	// Load the codec
 	codec = mast_codec_init( g_payload_type, samplerate, g_channels );
 	if (codec == NULL) MAST_FATAL("Failed to get initialise codec" );
+
+	// Work out the payload type index to use
+	pt = mast_choose_payloadtype( session, codec->subtype, samplerate, g_channels );
+	if (pt == NULL) MAST_FATAL("Failed to get payload type information from oRTP");
 
 	// Calculate the packet size
 	samples_per_packet = mast_codec_samples_per_packet( codec, g_payload_size_limit );

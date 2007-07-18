@@ -26,6 +26,7 @@
 #include <errno.h>
 #include <string.h>
 #include <strings.h>
+#include <ctype.h>
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -51,23 +52,66 @@ static struct {
 };
 
 
+static int istoken( char chr )
+{
+	if (isalnum(chr)) return TRUE;
+	if (chr=='.') return TRUE;
+	if (chr=='-') return TRUE;
+	if (chr=='+') return TRUE;
+	return FALSE;
+}
+
+
+static char* parse_mime_subtype( const char* mime_type )
+{
+	const char* foundslash=NULL;
+	char* subtype = NULL;
+	int i=0;
+
+	// Look for a slash from the start of the string	
+	for(i=0; i<strlen(mime_type); i++) {
+		if (istoken(mime_type[i])) continue;
+		if (mime_type[i]=='/') foundslash = &mime_type[i+1];
+		break;
+	}
+	
+	// If we found a slash, check the major type is 'audio'
+	if (foundslash && strncmp( "audio/", mime_type, 6 )!=0) {
+		MAST_FATAL("MIME Type is not audio/*");
+	}
+	
+	// Copy the subtype from the position we think is the start
+	if (foundslash) subtype = strdup( foundslash );
+	else subtype = strdup( mime_type );
+	
+	// Now find the end of the subtype
+	for(i=0; i<strlen(subtype); i++) {
+		if (istoken(subtype[i])) continue;
+		subtype[i] = 0;
+		break;
+	}
+
+	return subtype;
+}
+
 
 // Find a codec and initialise it
 mast_codec_t* mast_codec_init( char* mime_type, int samplerate, int channels )
 {
 	mast_codec_t* codec = NULL;
-	char* mime_subtype = mime_type;
+	char* mime_subtype = NULL;
 	int found_codec = FALSE;
 	int i;
 
-	// FIXME: parse mime_type
+	// Extract just the subtype from the MIME type string
+	mime_subtype = parse_mime_subtype(mime_type);
+	MAST_DEBUG("mime_subtype=%s", mime_subtype);
 
 	
 	// Allocate memory for the codec
 	codec = malloc( sizeof(mast_codec_t) );
 	if (codec==NULL) {
-		MAST_ERROR( "Failed to allocate memory for mast_codec_t data structure" );
-		return NULL;
+		MAST_FATAL("Failed to allocate memory for mast_codec_t data structure");
 	}
 	
 	// Zero the memory and fill in
@@ -76,7 +120,6 @@ mast_codec_t* mast_codec_init( char* mime_type, int samplerate, int channels )
 	codec->samplerate = samplerate;
 	codec->subtype = mime_subtype;
 
-	
 	
 	// Search for a matching codec
 	for(i=0; mast_codecs[i].mime_subtype; i++) {
@@ -94,7 +137,8 @@ mast_codec_t* mast_codec_init( char* mime_type, int samplerate, int channels )
 	
 	// Didn't find match
 	if(!found_codec) {
-		MAST_WARNING( "Failed to find codec for MIME type audio/%s", mime_subtype );
+		MAST_ERROR( "Failed to find codec for MIME type audio/%s", mime_subtype );
+		free(codec);
 		return NULL;
 	}
 	
