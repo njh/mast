@@ -57,6 +57,7 @@ mast_cast_SOURCES = \
 	mast_cast.c \
 	mast_cast-jack.c \
 	mast_cast-jack.h \
+	mime_type.c \
 	mpa_header.c \
 	mpa_header.h \
 	mast.h \
@@ -67,6 +68,7 @@ mast_filecast_CFLAGS = @SNDFILE_CFLAGS@
 mast_filecast_LDADD = $(MAST_CODEC_LIBS) @SNDFILE_LIBS@
 mast_filecast_SOURCES = \
 	mast_filecast.c \
+	mime_type.c \
 	mpa_header.c \
 	mpa_header.h \
 	mast.h \

@@ -94,7 +94,8 @@
 #define MAST_ERROR(s ...)  mast_message_handler( MSG_LEVEL_ERROR, __FILE__, __LINE__, s )
 #define MAST_FATAL(s ...)  mast_message_handler( MSG_LEVEL_FATAL, __FILE__, __LINE__, s )
 
-// In util.c
+
+// ------- util.c -------
 RtpSession *mast_init_ortp( char* tool_name, int mode, int scheduling );
 char* mast_get_tool_name();
 void mast_deinit_ortp( RtpSession *session );
@@ -113,5 +114,36 @@ int mast_calc_samples_per_packet( PayloadType *pt, int max_packet_size );
 PayloadType* mast_choose_payloadtype( RtpSession * session, const char* payload_type, int samplerate, int channels );
 void mast_update_mpa_pt( mblk_t* packet );
 
+
+
+// ------ mime_type.c ------
+#define		MAX_MIME_TYPE_PARAMS	(16)
+
+typedef struct mime_type_param {
+
+	char* name;
+	char* value;
+
+} mime_type_param_t;
+
+typedef struct mime_type {
+
+	// Pointer to start of allocated memory
+	char * ptr;
+
+	// Format: major/major;name1=value1;name2=value2
+	char* major;
+	char* minor;
+
+	// Parameters
+	mime_type_param_t params[ MAX_MIME_TYPE_PARAMS ];
+
+} mime_type_t;
+
+
+void mime_type_parse( mime_type_t *type, const char* string );
+void mime_type_set_param( mime_type_t *type, char* name, char* value );
+void mime_type_print( mime_type_t *type );
+void mime_type_free( mime_type_t *type );
 
 #endif

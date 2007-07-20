@@ -62,37 +62,6 @@ static int istoken( char chr )
 }
 
 
-static char* parse_mime_subtype( const char* mime_type )
-{
-	const char* foundslash=NULL;
-	char* subtype = NULL;
-	int i=0;
-
-	// Look for a slash from the start of the string	
-	for(i=0; i<strlen(mime_type); i++) {
-		if (istoken(mime_type[i])) continue;
-		if (mime_type[i]=='/') foundslash = &mime_type[i+1];
-		break;
-	}
-	
-	// If we found a slash, check the major type is 'audio'
-	if (foundslash && strncmp( "audio/", mime_type, 6 )!=0) {
-		MAST_FATAL("MIME Type is not audio/*");
-	}
-	
-	// Copy the subtype from the position we think is the start
-	if (foundslash) subtype = strdup( foundslash );
-	else subtype = strdup( mime_type );
-	
-	// Now find the end of the subtype
-	for(i=0; i<strlen(subtype); i++) {
-		if (istoken(subtype[i])) continue;
-		subtype[i] = 0;
-		break;
-	}
-
-	return subtype;
-}
 
 
 // Find a codec and initialise it
