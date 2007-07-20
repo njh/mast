@@ -30,7 +30,7 @@
 #define DEFAULT_RTP_SSRC			(0)
 #define DEFAULT_MULTICAST_TTL		(5)
 #define DEFAULT_PAYLOAD_LIMIT		(1450)
-#define DEFAULT_PAYLOAD_TYPE		"L16"
+#define DEFAULT_PAYLOAD_TYPE		"audio/L16"
 #define DEFAULT_RTP_PORT			(5004)
 #define DEFAULT_TIMEOUT				(10)
 #define DEFAULT_RINGBUFFER_DURATION	(100)
@@ -116,34 +116,5 @@ void mast_update_mpa_pt( mblk_t* packet );
 
 
 
-// ------ mime_type.c ------
-#define		MAX_MIME_TYPE_PARAMS	(16)
-
-typedef struct mime_type_param {
-
-	char* name;
-	char* value;
-
-} mime_type_param_t;
-
-typedef struct mime_type {
-
-	// Pointer to start of allocated memory
-	char * ptr;
-
-	// Format: major/major;name1=value1;name2=value2
-	char* major;
-	char* minor;
-
-	// Parameters
-	mime_type_param_t params[ MAX_MIME_TYPE_PARAMS ];
-
-} mime_type_t;
-
-
-void mime_type_parse( mime_type_t *type, const char* string );
-void mime_type_set_param( mime_type_t *type, char* name, char* value );
-void mime_type_print( mime_type_t *type );
-void mime_type_free( mime_type_t *type );
 
 #endif

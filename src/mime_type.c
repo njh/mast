@@ -27,46 +27,109 @@
 #include <strings.h>
 #include <ctype.h>
 
-#include "config.h"
-#include "codecs.h"
+#include "mime_type.h"
 #include "mast.h"
 
 
-void parse_mime_type( mime_type_t *type, const char* string )
+mast_mime_type_t * mast_mime_type_init()
 {
-	char* str = st
+	mast_mime_type_t *type = NULL;
+	int i;
+	
+	// Allocate memory for the mast_mime_type structure
+	type = malloc( sizeof(mast_mime_type_t) );
+	if (type==NULL) {
+		MAST_FATAL("Failed to allocate memory for mast_mime_type_t");
+	}
+
+	type->str = NULL;
+	type->major = "audio";
+	type->minor = NULL;
+	
+	for(i=0; i<MAX_MIME_TYPE_PARAMS; i++) {
+		type->param[i].name = NULL;
+		type->param[i].value = NULL;
+	}
+
+	return type;
+}
+
+
+
+static int istoken( char chr )
+{
+	if (isalnum(chr)) return TRUE;
+	if (chr=='.') return TRUE;
+	if (chr=='-') return TRUE;
+	if (chr=='+') return TRUE;
+	return FALSE;
+}
+
+
+int mast_mime_type_parse( mast_mime_type_t *type, const char* string )
+{
 	char* foundslash=NULL;
 	int i=0;
+	
+	
+	// Duplicate the string so that we can play with it
+	type->str = strdup( string );
 
 	// Look for a slash from the start of the string	
-	for(i=0; i<strlen(string); i++) {
-		if (istoken(string[i])) continue;
-		if (string[i]=='/') foundslash = &string[i+1];
+	for(i=0; i<strlen(type->str); i++) {
+		if (istoken(type->str[i])) continue;
+		if (type->str[i]=='/') {
+			type->str[i]=0x00;
+			foundslash = &type->str[i];
+		}
 		break;
 	}
 	
 	// If we found a slash, check the major type is 'audio'
-	if (foundslash && strncmp( "audio/", string, 6 )!=0) {
+	if (foundslash && strcmp( "audio", type->str )!=0) {
 		MAST_FATAL("MIME Type is not audio/*");
 	}
 	
 	// Copy the subtype from the position we think is the start
 	if (foundslash) {
-		type.major = malloc( foundslash-string )
-		type.minor = strdup( foundslash );
+		type->minor = foundslash+1;
 	} else {
-		type.major = strdup( "audio" );
-		type.minor = strdup( string );
+		type->minor = type->str;
 	}
 	
 	// Now find the end of the subtype
-	for(i=0; i<strlen(subtype); i++) {
-		if (istoken(subtype[i])) continue;
-		subtype[i] = 0;
+	for(i=0; i<strlen(type->minor); i++) {
+		if (istoken(type->minor[i])) continue;
+		type->minor[i] = 0x00;
 		break;
 	}
 
+	// Success
+	return 0;
+}
 
+
+
+void mast_mime_type_set_param( mast_mime_type_t *type, char* name, char* value )
+{
+
+}
+
+
+void mast_mime_type_print( mast_mime_type_t *type )
+{
+	MAST_INFO("Mime Type: %s/%s", type->major, type->minor);
+}
+
+
+void mast_mime_type_free( mast_mime_type_t *type )
+{
+	if (type) {
+	
+		if (type->str) free( type->str );
+		free( type );
+	}
+	
 }
 
 

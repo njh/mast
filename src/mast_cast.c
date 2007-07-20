@@ -31,6 +31,7 @@
 #include <ortp/ortp.h>
 
 #include "codecs.h"
+#include "mime_type.h"
 #include "mast_cast-jack.h"
 #include "mast.h"
 
@@ -42,7 +43,7 @@
 char* g_client_name = MAST_TOOL_NAME;
 jack_options_t g_client_opt = JackNullOption;
 int g_payload_size_limit = DEFAULT_PAYLOAD_LIMIT;
-char* g_payload_type = DEFAULT_PAYLOAD_TYPE;
+mast_mime_type_t *g_mime_type = NULL;
 
 
 
@@ -53,15 +54,16 @@ static int usage() {
 	
 	printf( "Multicast Audio Streaming Toolkit (version %s)\n", PACKAGE_VERSION);
 	printf( "%s [options] <address>[/<port>]\n", MAST_TOOL_NAME);
-	printf( "    -s <ssrc>     Source identifier in hex (default is random)\n");
-	printf( "    -t <ttl>      Time to live\n");
-	printf( "    -p <payload>  The payload type to send\n");
-	printf( "    -z <size>     Set the per-packet payload size\n");
-	printf( "    -d <dscp>     DSCP Quality of Service value\n");
-	printf( "    -r <msec>     Ring-buffer duration in milliseconds\n");
-	printf( "    -c <channels> Number of audio channels\n");
-	printf( "    -n <name>     Name for this JACK client\n");
-	printf( "    -a            Auto-connect jack input ports\n");
+	printf( "    -s <ssrc>       Source identifier in hex (default is random)\n");
+	printf( "    -t <ttl>        Time to live\n");
+	printf( "    -p <payload>    The payload mime type to send\n");
+	printf( "    -o <name=value> Set codec parameter / option\n");
+	printf( "    -z <size>       Set the per-packet payload size\n");
+	printf( "    -d <dscp>       DSCP Quality of Service value\n");
+	printf( "    -r <msec>       Ring-buffer duration in milliseconds\n");
+	printf( "    -c <channels>   Number of audio channels\n");
+	printf( "    -n <name>       Name for this JACK client\n");
+	printf( "    -a              Auto-connect jack input ports\n");
 	
 	exit(1);
 	
@@ -70,6 +72,7 @@ static int usage() {
 
 static void parse_cmd_line(int argc, char **argv, RtpSession* session)
 {
+	char* payload_type = DEFAULT_PAYLOAD_TYPE;
 	char* remote_address = NULL;
 	int remote_port = DEFAULT_RTP_PORT;
 	int ch;
@@ -93,7 +96,7 @@ static void parse_cmd_line(int argc, char **argv, RtpSession* session)
 		break;
 		
 		case 'p':
-			g_payload_type = optarg;
+			payload_type = optarg;
 		break;
 
 		case 'z':
@@ -139,6 +142,11 @@ static void parse_cmd_line(int argc, char **argv, RtpSession* session)
 		usage();
 	}
 	
+	// Parse the payload type
+	if (mast_mime_type_parse( g_mime_type, payload_type )) {
+		usage();
+	}
+	
 	// Make sure the port number is even
 	if (remote_port%2 == 1) remote_port--;
 	
@@ -171,6 +179,8 @@ int main(int argc, char **argv)
 	// Create an RTP session
 	session = mast_init_ortp( MAST_TOOL_NAME, RTP_SESSION_SENDONLY, FALSE );
 
+	// Initialise the MIME type
+	g_mime_type = mast_mime_type_init();
 
 	// Parse the command line arguments 
 	// and configure the session
@@ -189,12 +199,13 @@ int main(int argc, char **argv)
 
 	// Display some information about the chosen payload type
 	MAST_INFO( "Sending SSRC: 0x%x", session->snd.ssrc );
-	MAST_INFO( "Payload MIME type: %s", g_payload_type );
+	//MAST_INFO( "Payload MIME type: %s", g_payload_type );
 	MAST_INFO( "Input Format: %d Hz, %s", samplerate, g_channels==2 ? "Stereo" : "Mono");
+	mast_mime_type_print( g_mime_type );
 
 	
 	// Load the codec
-	codec = mast_codec_init( g_payload_type, samplerate, g_channels );
+	codec = mast_codec_init( g_mime_type, samplerate, g_channels );
 	if (codec == NULL) MAST_FATAL("Failed to get initialise codec" );
 
 	// Work out the payload type index to use

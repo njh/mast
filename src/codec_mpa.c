@@ -95,6 +95,9 @@ static int mast_set_param_mpa( mast_codec_t* codec, const char* name, const char
 		// Unsupported parameter
 		return -1;
 	}
+	
+	// Success
+	return 0;
 }
 
 static const char* mast_get_param_mpa( mast_codec_t* codec, const char* name )

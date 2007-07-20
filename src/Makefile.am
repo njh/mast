@@ -58,6 +58,7 @@ mast_cast_SOURCES = \
 	mast_cast-jack.c \
 	mast_cast-jack.h \
 	mime_type.c \
+	mime_type.h \
 	mpa_header.c \
 	mpa_header.h \
 	mast.h \

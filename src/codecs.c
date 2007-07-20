@@ -33,6 +33,7 @@
 
 #include "config.h"
 #include "codecs.h"
+#include "mime_type.h"
 #include "mast.h"
 
 
@@ -52,31 +53,17 @@ static struct {
 };
 
 
-static int istoken( char chr )
-{
-	if (isalnum(chr)) return TRUE;
-	if (chr=='.') return TRUE;
-	if (chr=='-') return TRUE;
-	if (chr=='+') return TRUE;
-	return FALSE;
-}
-
 
 
 
 // Find a codec and initialise it
-mast_codec_t* mast_codec_init( char* mime_type, int samplerate, int channels )
+mast_codec_t* mast_codec_init( mast_mime_type_t *mime_type, int samplerate, int channels )
 {
 	mast_codec_t* codec = NULL;
-	char* mime_subtype = NULL;
 	int found_codec = FALSE;
 	int i;
 
-	// Extract just the subtype from the MIME type string
-	mime_subtype = parse_mime_subtype(mime_type);
-	MAST_DEBUG("mime_subtype=%s", mime_subtype);
 
-	
 	// Allocate memory for the codec
 	codec = malloc( sizeof(mast_codec_t) );
 	if (codec==NULL) {
@@ -87,12 +74,12 @@ mast_codec_t* mast_codec_init( char* mime_type, int samplerate, int channels )
 	memset( codec, 0, sizeof(mast_codec_t) );
 	codec->channels = channels;
 	codec->samplerate = samplerate;
-	codec->subtype = mime_subtype;
+	//codec->subtype = mime_type;
 
 	
 	// Search for a matching codec
 	for(i=0; mast_codecs[i].mime_subtype; i++) {
-		if (strcasecmp( mime_subtype, mast_codecs[i].mime_subtype ) == 0) {
+		if (strcasecmp( mime_type->minor, mast_codecs[i].mime_subtype ) == 0) {
 			// Found a matching codec
 			if (mast_codecs[i].init( codec )) {
 				MAST_DEBUG( "Failed to initialise codec" );
@@ -106,7 +93,7 @@ mast_codec_t* mast_codec_init( char* mime_type, int samplerate, int channels )
 	
 	// Didn't find match
 	if(!found_codec) {
-		MAST_ERROR( "Failed to find codec for MIME type audio/%s", mime_subtype );
+		MAST_ERROR( "Failed to find codec for MIME type %s/%s", mime_type->major, mime_type->minor );
 		free(codec);
 		return NULL;
 	}
