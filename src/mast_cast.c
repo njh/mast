@@ -205,7 +205,7 @@ int main(int argc, char **argv)
 
 	
 	// Load the codec
-	codec = mast_codec_init( g_mime_type, samplerate, g_channels );
+	codec = mast_codec_init( g_mime_type->minor, samplerate, g_channels );
 	if (codec == NULL) MAST_FATAL("Failed to get initialise codec" );
 
 	// Work out the payload type index to use

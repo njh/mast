@@ -33,7 +33,6 @@
 
 #include "config.h"
 #include "codecs.h"
-#include "mime_type.h"
 #include "mast.h"
 
 
@@ -57,7 +56,7 @@ static struct {
 
 
 // Find a codec and initialise it
-mast_codec_t* mast_codec_init( mast_mime_type_t *mime_type, int samplerate, int channels )
+mast_codec_t* mast_codec_init( const char* subtype, int samplerate, int channels )
 {
 	mast_codec_t* codec = NULL;
 	int found_codec = FALSE;
@@ -79,7 +78,7 @@ mast_codec_t* mast_codec_init( mast_mime_type_t *mime_type, int samplerate, int 
 	
 	// Search for a matching codec
 	for(i=0; mast_codecs[i].mime_subtype; i++) {
-		if (strcasecmp( mime_type->minor, mast_codecs[i].mime_subtype ) == 0) {
+		if (strcasecmp( subtype, mast_codecs[i].mime_subtype ) == 0) {
 			// Found a matching codec
 			if (mast_codecs[i].init( codec )) {
 				MAST_DEBUG( "Failed to initialise codec" );
@@ -93,7 +92,7 @@ mast_codec_t* mast_codec_init( mast_mime_type_t *mime_type, int samplerate, int 
 	
 	// Didn't find match
 	if(!found_codec) {
-		MAST_ERROR( "Failed to find codec for MIME type %s/%s", mime_type->major, mime_type->minor );
+		MAST_ERROR( "Failed to find codec for MIME type audio/%s", subtype );
 		free(codec);
 		return NULL;
 	}

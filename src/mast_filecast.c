@@ -32,6 +32,7 @@
 #include <sndfile.h>
 
 #include "codecs.h"
+#include "mime_type.h"
 #include "mast.h"
 
 
@@ -266,7 +267,7 @@ int main(int argc, char **argv)
 
 	
 	// Load the codec
-	codec = mast_codec_init( g_mime_type, sfinfo.samplerate, sfinfo.channels );
+	codec = mast_codec_init( g_mime_type->minor, sfinfo.samplerate, sfinfo.channels );
 	if (codec == NULL) MAST_FATAL("Failed to get initialise codec" );
 
 	// Work out the payload type index to use
