@@ -73,7 +73,7 @@ mast_codec_t* mast_codec_init( const char* subtype, int samplerate, int channels
 	memset( codec, 0, sizeof(mast_codec_t) );
 	codec->channels = channels;
 	codec->samplerate = samplerate;
-	//codec->subtype = mime_type;
+	codec->subtype = subtype;
 
 	
 	// Search for a matching codec
@@ -117,7 +117,30 @@ mast_codec_t* mast_codec_init( const char* subtype, int samplerate, int channels
 // Get the number of samples per packet for the current parameters
 int mast_codec_samples_per_packet( mast_codec_t* codec, int max_bytes )
 {
-	return codec->samples_per_packet( codec, max_bytes );
+	int samples_per_packet = 0;
+
+	if (codec->samples_per_packet) {
+		samples_per_packet = codec->samples_per_packet( codec, max_bytes );
+	} else {
+	/*
+		int bits_per_sample = (pt->normal_bitrate / pt->clock_rate);
+		int bytes_per_unit = (pt->normal_bitrate*SAMPLES_PER_UNIT)/(pt->clock_rate*8);
+		int units_per_packet = max_packet_size / bytes_per_unit;
+		int samples_per_packet = units_per_packet * SAMPLES_PER_UNIT;
+	
+		// Display packet size information
+		MAST_DEBUG( "Bits per sample: %d", bits_per_sample );
+		MAST_DEBUG( "Bytes per Unit: %d", bytes_per_unit );
+		MAST_DEBUG( "Samples per Unit: %d", SAMPLES_PER_UNIT );
+		MAST_DEBUG( "Units per packet: %d", units_per_packet );
+		MAST_INFO( "Packet size: %d bytes", (samples_per_packet * bits_per_sample)/8 );
+		MAST_INFO( "Packet duration: %d ms", (samples_per_packet*1000 / pt->clock_rate));
+	*/
+	}
+	
+	MAST_DEBUG("samples_per_packet=%d", samples_per_packet );
+	
+	return samples_per_packet;
 }
 
 // Set a codec parameter - returns 0 on success, or error number on failure

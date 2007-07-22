@@ -141,7 +141,7 @@ static void parse_cmd_line(int argc, char **argv, RtpSession* session)
 
 
 	// Parse the options/switches
-	while ((ch = getopt(argc, argv, "s:t:p:z:d:lh?")) != -1)
+	while ((ch = getopt(argc, argv, "s:t:p:o:z:d:lh?")) != -1)
 	switch (ch) {
 		case 's':
 			mast_set_session_ssrc( session, optarg );
@@ -154,6 +154,10 @@ static void parse_cmd_line(int argc, char **argv, RtpSession* session)
 		break;
 		
 		case 'p':
+			payload_type = optarg;
+		break;
+		
+		case 'o':
 			payload_type = optarg;
 		break;
 
@@ -261,7 +265,6 @@ int main(int argc, char **argv)
 	
 	// Display some information about the chosen payload type
 	MAST_INFO( "Sending SSRC: 0x%x", session->snd.ssrc );
-//	MAST_INFO( "Payload MIME type: %s", g_payload_type );
 	MAST_INFO( "Input Format: %d Hz, %s", sfinfo.samplerate, sfinfo.channels==2 ? "Stereo" : "Mono");
 	mast_mime_type_print( g_mime_type );
 
@@ -270,7 +273,10 @@ int main(int argc, char **argv)
 	codec = mast_codec_init( g_mime_type->minor, sfinfo.samplerate, sfinfo.channels );
 	if (codec == NULL) MAST_FATAL("Failed to get initialise codec" );
 
-	// Work out the payload type index to use
+	// Configure the codec
+	mast_mime_type_param_apply_codec( g_mime_type, codec );
+
+	// Work out the payload type to use
 	pt = mast_choose_payloadtype( session, codec->subtype, sfinfo.samplerate, sfinfo.channels );
 	if (pt == NULL) MAST_FATAL("Failed to get payload type information from oRTP");
 
@@ -359,6 +365,10 @@ int main(int argc, char **argv)
 		MAST_ERROR("Failed to close input file:\n%s", sf_strerror(input));
 	}
 	
+	
+	mast_mime_type_deinit( g_mime_type );
+	
+
 	// Close RTP session
 	mast_deinit_ortp( session );
 	
