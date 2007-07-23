@@ -264,16 +264,18 @@ int main(int argc, char **argv)
 	ts_diff = mast_rtp_packet_duration( packet );
 	MAST_DEBUG("ts_diff = %d", ts_diff);
 	
-	// Open the output file
-	output = open_output_file( g_filename, pt );
-	if (output==NULL) MAST_FATAL( "failed to open output file" );
-	
 	// We can free the packet now
 	freemsg( packet );
 
 
+
+	
+	// Open the output file
+	output = open_output_file( g_filename, pt );
+	if (output==NULL) MAST_FATAL( "failed to open output file" );
+
 	// Load the codec
-	codec = mast_codec_init( pt->mime_type, 0, 0 );
+	codec = mast_codec_init( pt->mime_type, pt->clock_rate, pt->channels );
 	if (codec == NULL) MAST_FATAL("Failed to get initialise codec" );
 
 	// Allocate memory for audio buffer
@@ -306,7 +308,7 @@ int main(int argc, char **argv)
 				int samples_written = 0;
 
 				// Decode the audio
-				samples_decoded = codec->decode(codec, data_len, data_ptr, 
+				samples_decoded = codec->decode_packet(codec, data_len, data_ptr, 
 							audio_buffer_len, audio_buffer );
 				if (samples_decoded<0)
 				{
