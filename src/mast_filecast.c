@@ -312,7 +312,7 @@ int main(int argc, char **argv)
 		}
 		
 		// Encode audio
-		payload_bytes = mast_codec_encode(codec, samples_read, audio_buffer,
+		payload_bytes = mast_codec_encode_packet(codec, samples_read, audio_buffer,
 					g_payload_size_limit, payload_buffer );
 		if (payload_bytes<0)
 		{

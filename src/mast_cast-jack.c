@@ -82,7 +82,7 @@ static int process_callback(jack_nframes_t nframes, void *arg)
 	written = jack_ringbuffer_write(g_ringbuffer, (char*)g_convbuffer, to_write);
 	if (to_write > written) {
 		// If this goes wrong, then the buffer goes out of sync and we get static
-		MAST_FATAL("Failed to write to ring ruffer");
+		MAST_FATAL("Failed to write to ring ruffer, try increading the ring-buffer size");
 		return 1;
 	}
 	

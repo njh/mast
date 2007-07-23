@@ -330,8 +330,16 @@ static void lpc_synthesize(lpcparams_t *input, int16_t *output, lpcstate_t* stat
 }
 
 
+// Calculate the number of samples per packet
+static int mast_samples_per_packet_lpc( mast_codec_t *codec, int max_bytes)
+{
+	int frames_per_packet = max_bytes/LPC_BYTES_PER_FRAME;
+	MAST_DEBUG("LPC frames per packet = %d",frames_per_packet);
+	return frames_per_packet * LPC_FRAMESIZE;
+}
 
 
+// Encode a packet's payload
 static u_int32_t mast_encode_lpc(
 		mast_codec_t* codec,
 		u_int32_t inputsize, 	// input size in samples
@@ -364,6 +372,7 @@ static u_int32_t mast_encode_lpc(
 }
 
 
+// Decode a packet's payload
 static u_int32_t mast_decode_lpc(
 		mast_codec_t* codec,
 		u_int32_t inputsize,		// input size in bytes
@@ -409,9 +418,15 @@ static int mast_deinit_lpc( mast_codec_t* codec )
 int mast_init_lpc( mast_codec_t* codec )
 {
 
+	if (codec->channels!=1) {
+		MAST_ERROR("The LPC codec is mono only");
+		return -1;
+	}
+
 	// Set the callbacks
-	codec->encode = mast_encode_lpc;
-	codec->decode = mast_decode_lpc;
+	codec->samples_per_packet = mast_samples_per_packet_lpc;
+	codec->encode_packet = mast_encode_lpc;
+	codec->decode_packet = mast_decode_lpc;
 	codec->deinit = mast_deinit_lpc;
 	
 	// Initialise the codec state

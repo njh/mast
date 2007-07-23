@@ -205,18 +205,13 @@ void adpcm_decode(
 
 
 
-static int mast_set_param_dvi4( mast_codec_t* codec, const char* name, const char* value )
+// Calculate the number of samples per packet
+static int mast_samples_per_packet_dvi4( mast_codec_t *codec, int max_bytes)
 {
-	// We don't support any parameters
-	return -1;
+	return 0;
 }
 
-static const char* mast_get_param_dvi4( mast_codec_t* codec, const char* name )
-{
-	// We don't support any parameters
-	return NULL;
-}
-
+// Encode a packet's payload
 static u_int32_t mast_encode_dvi4(
 		mast_codec_t* codec,
 		u_int32_t inputsize, 	// input size in samples
@@ -244,6 +239,7 @@ static u_int32_t mast_encode_dvi4(
 }
 
 
+// Decode a packet's payload
 static u_int32_t mast_decode_dvi4(
 		mast_codec_t* codec,
 		u_int32_t inputsize,		// input size in bytes
@@ -290,11 +286,14 @@ static int mast_deinit_dvi4( mast_codec_t* codec )
 int mast_init_dvi4(mast_codec_t* codec)
 {
 
+	if (codec->channels!=1) {
+		MAST_ERROR("The DVI4 codec is mono only");
+		return -1;
+	}
+
 	// Set the callbacks
-	codec->set_param = mast_set_param_dvi4;
-	codec->get_param = mast_get_param_dvi4;
-	codec->encode = mast_encode_dvi4;
-	codec->decode = mast_decode_dvi4;
+	codec->encode_packet = mast_encode_dvi4;
+	codec->decode_packet = mast_decode_dvi4;
 	codec->deinit = mast_deinit_dvi4;
 	
 	// Create the state record

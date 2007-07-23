@@ -35,8 +35,8 @@ typedef struct
 } mast_mpegaudio_t;
 
 
-// Calculate the number of samples per packet for MPEG Audio
-static int mast_spp_mpa( mast_codec_t *codec, int max_bytes)
+// Calculate the number of samples per packet
+static int mast_samples_per_packet_mpa( mast_codec_t *codec, int max_bytes)
 {
 	mast_mpegaudio_t* p = codec->ptr;
 	int frames_per_packet = max_bytes/twolame_get_framelength( p->twolame );
@@ -114,6 +114,7 @@ static const char* mast_get_param_mpa( mast_codec_t* codec, const char* name )
 }
 
 
+// Encode a packet's payload
 static u_int32_t mast_encode_mpa(
 		mast_codec_t* codec,
 		u_int32_t inputsize, 	// input size in samples
@@ -124,7 +125,7 @@ static u_int32_t mast_encode_mpa(
 	mast_mpegaudio_t* p = codec->ptr;
 	int bytes_encoded = 0;
 
-	// MPEG Audio header at the start of the packet
+	// MPEG Audio header is 4 bytes at the start of the packet
 	output[0] = 0x00;
 	output[1] = 0x00;
 	output[2] = 0x00;
@@ -132,7 +133,7 @@ static u_int32_t mast_encode_mpa(
 
 	// Encode the audio using twolame
 	bytes_encoded = twolame_encode_buffer_interleaved( p->twolame, input, inputsize, output+4, outputsize-4 );
-	MAST_DEBUG( "mast_encode_mpa: twolame encoded %d samples to %d bytes (max %d bytes)", inputsize, bytes_encoded, outputsize );
+	//MAST_DEBUG( "mast_encode_mpa: encoded %d samples to %d bytes (max %d bytes)", inputsize, bytes_encoded, outputsize );
 	
 	return bytes_encoded+4;
 }
@@ -162,11 +163,11 @@ int mast_init_mpa( mast_codec_t* codec ) {
 	mast_mpegaudio_t *mpa = NULL;
 
 	// Set the callbacks
-	codec->samples_per_packet = mast_spp_mpa;
+	codec->samples_per_packet = mast_samples_per_packet_mpa;
 	codec->prepare = mast_prepare_mpa;
 	codec->set_param = mast_set_param_mpa;
 	codec->get_param = mast_get_param_mpa;
-	codec->encode = mast_encode_mpa;
+	codec->encode_packet = mast_encode_mpa;
 	codec->deinit = mast_deinit_mpa;
 
 

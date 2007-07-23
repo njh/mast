@@ -208,6 +208,9 @@ int main(int argc, char **argv)
 	codec = mast_codec_init( g_mime_type->minor, samplerate, g_channels );
 	if (codec == NULL) MAST_FATAL("Failed to get initialise codec" );
 
+	// Configure the codec
+	mast_mime_type_param_apply_codec( g_mime_type, codec );
+
 	// Work out the payload type index to use
 	pt = mast_choose_payloadtype( session, codec->subtype, samplerate, g_channels );
 	if (pt == NULL) MAST_FATAL("Failed to get payload type information from oRTP");
@@ -259,7 +262,7 @@ int main(int argc, char **argv)
 
 		// Encode audio
 		samples_read = (bytes_read / sizeof(int16_t)) / g_channels;
-		payload_bytes = mast_codec_encode(codec, samples_read, audio_buffer, 
+		payload_bytes = mast_codec_encode_packet(codec, samples_read, audio_buffer, 
 					payload_buffer_size, payload_buffer );
 		if (payload_bytes<0)
 		{

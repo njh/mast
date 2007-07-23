@@ -136,18 +136,42 @@ static u_int8_t ulaw_int16tobyte(mast_pcmu_t* p, int16_t input)
 }
 
 
-static int mast_set_param_pcmu( mast_codec_t* codec, const char* name, const char* value )
+// Calculate the number of samples per packet
+static int mast_samples_per_packet_pcmu( mast_codec_t *codec, int max_bytes)
 {
-	// We don't support any parameters
-	return -1;
+	int bytes_per_unit = SAMPLES_PER_UNIT * codec->channels;
+	MAST_DEBUG("PCMU bytes per unit = %d", bytes_per_unit);
+	return (max_bytes / bytes_per_unit) * SAMPLES_PER_UNIT;
 }
 
-static const char* mast_get_param_pcmu( mast_codec_t* codec, const char* name )
+
+
+// Encode a packet's payload
+static u_int32_t mast_encode_pcmu(
+		mast_codec_t* codec,
+		u_int32_t inputsize, 	/* input size in samples */
+		int16_t *input,
+		u_int32_t outputsize,	/* output size in bytes */
+		u_int8_t *output)
 {
-	// We don't support any parameters
-	return NULL;
+	mast_pcmu_t* p = (mast_pcmu_t*)codec->ptr;
+	register int i;
+	
+	if (outputsize < inputsize) {
+		MAST_ERROR("encode_ulaw: output buffer isn't big enough");
+		return 0;
+	}
+
+	for(i=0;i<inputsize;i++) {
+		output[i] = ulaw_int16tobyte(p, input[i]);
+	}	
+	
+	return inputsize;
 }
 
+
+
+// Decode a packet's payload
 static u_int32_t mast_decode_pcmu(
 		mast_codec_t* codec,
 		u_int32_t inputsize,	/* input size in bytes */
@@ -171,29 +195,6 @@ static u_int32_t mast_decode_pcmu(
 	return inputsize;
 }
 
-
-
-static u_int32_t mast_encode_pcmu(
-		mast_codec_t* codec,
-		u_int32_t inputsize, 	/* input size in samples */
-		int16_t *input,
-		u_int32_t outputsize,	/* output size in bytes */
-		u_int8_t *output)
-{
-	mast_pcmu_t* p = (mast_pcmu_t*)codec->ptr;
-	register int i;
-	
-	if (outputsize < inputsize) {
-		MAST_ERROR("encode_ulaw: output buffer isn't big enough");
-		return 0;
-	}
-
-	for(i=0;i<inputsize;i++) {
-		output[i] = ulaw_int16tobyte(p, input[i]);
-	}	
-	
-	return inputsize;
-}
 
 
 
@@ -221,11 +222,15 @@ static int mast_deinit_pcmu( mast_codec_t* codec )
 int mast_init_pcmu( mast_codec_t* codec ) {
 	mast_pcmu_t* pcmu = NULL;
 
+	if (codec->channels!=1) {
+		MAST_ERROR("The PCMU codec is mono only");
+		return -1;
+	}
+
 	// Set the callbacks
-	codec->set_param = mast_set_param_pcmu;
-	codec->get_param = mast_get_param_pcmu;
-	codec->encode = mast_encode_pcmu;
-	codec->decode = mast_decode_pcmu;
+	codec->samples_per_packet = mast_samples_per_packet_pcmu;
+	codec->encode_packet = mast_encode_pcmu;
+	codec->decode_packet = mast_decode_pcmu;
 	codec->deinit = mast_deinit_pcmu;
 
 

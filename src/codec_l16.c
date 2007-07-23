@@ -28,23 +28,36 @@
 
 
 
+// Calculate the number of samples per packet
+static int mast_samples_per_packet_l16( mast_codec_t *codec, int max_bytes)
+{
+	int bytes_per_frame = sizeof(int16_t) * codec->channels;
+	int bytes_per_unit = SAMPLES_PER_UNIT * bytes_per_frame;
+	MAST_DEBUG("L16 bytes per frame = %d", bytes_per_frame);
+	MAST_DEBUG("L16 bytes per unit = %d", bytes_per_unit);
+	return (max_bytes / bytes_per_unit) * SAMPLES_PER_UNIT;
+}
+
+
+// Encode a packet's payload
 static u_int32_t mast_encode_l16(
 		mast_codec_t* codec,
-		u_int32_t inputsize, 	// input size in samples
+		u_int32_t inputsize, 	// input size in frames
 		int16_t *input,
 		u_int32_t outputsize,	// output size in bytes
 		u_int8_t *output)
 {
-	register int i;
-	register int input_bytes = (inputsize*2);
+	int input_samples = inputsize * codec->channels;
+	int input_bytes = (input_samples * sizeof(int16_t));
 	int16_t *output16 = (int16_t*)output;
+	register int i;
 
 	if (outputsize < input_bytes) {
 		MAST_ERROR("encode_l16: output buffer isn't big enough");
 		return 0;
 	}
 
-	for(i=0; i< inputsize; i++) {
+	for(i=0; i< input_samples; i++) {
 		output16[i] = htons(input[i]);
 	}
 
@@ -52,6 +65,7 @@ static u_int32_t mast_encode_l16(
 }
 
 
+// Decode a packet's payload
 static u_int32_t mast_decode_l16(
 		mast_codec_t* codec,
 		u_int32_t inputsize,		// input size in bytes
@@ -59,9 +73,9 @@ static u_int32_t mast_decode_l16(
 		u_int32_t outputsize, 	// output size in samples
 		int16_t  *output)
 {
-	register int i;
 	register int num_samples = (inputsize/2);
 	int16_t *input16 = (int16_t*)input;
+	register int i;
 
 	if (outputsize < inputsize) {
 		MAST_ERROR("decode_l16: output buffer isn't big enough");
@@ -73,7 +87,7 @@ static u_int32_t mast_decode_l16(
 		output[i] = ntohs(input16[i]);
 	}
 
-	return num_samples;
+	return num_samples/codec->channels;
 }
 
 
@@ -81,8 +95,9 @@ static u_int32_t mast_decode_l16(
 int mast_init_l16( mast_codec_t* codec ) {
 
 	// Set the callbacks
-	codec->encode = mast_encode_l16;
-	codec->decode = mast_decode_l16;
+	codec->samples_per_packet = mast_samples_per_packet_l16;
+	codec->encode_packet = mast_encode_l16;
+	codec->decode_packet = mast_decode_l16;
 
 	// Success
 	return 0;

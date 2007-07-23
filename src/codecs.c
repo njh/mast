@@ -103,12 +103,13 @@ mast_codec_t* mast_codec_init( const char* subtype, int samplerate, int channels
 	
 	
 	// Prepare to start encoding/decoding
-	if (codec->prepare( codec )) {
-		MAST_WARNING( "Codec failed to prepare to encode/decode." );
-		mast_codec_deinit(codec);
-		return NULL;
-	}
-	
+	if (codec->prepare) {
+		if (codec->prepare( codec )) {
+			MAST_WARNING( "Codec failed to prepare to encode/decode." );
+			mast_codec_deinit(codec);
+			return NULL;
+		}
+	}	
 	
 	return codec;
 }
@@ -122,20 +123,10 @@ int mast_codec_samples_per_packet( mast_codec_t* codec, int max_bytes )
 	if (codec->samples_per_packet) {
 		samples_per_packet = codec->samples_per_packet( codec, max_bytes );
 	} else {
-	/*
-		int bits_per_sample = (pt->normal_bitrate / pt->clock_rate);
-		int bytes_per_unit = (pt->normal_bitrate*SAMPLES_PER_UNIT)/(pt->clock_rate*8);
-		int units_per_packet = max_packet_size / bytes_per_unit;
-		int samples_per_packet = units_per_packet * SAMPLES_PER_UNIT;
 	
-		// Display packet size information
-		MAST_DEBUG( "Bits per sample: %d", bits_per_sample );
-		MAST_DEBUG( "Bytes per Unit: %d", bytes_per_unit );
-		MAST_DEBUG( "Samples per Unit: %d", SAMPLES_PER_UNIT );
-		MAST_DEBUG( "Units per packet: %d", units_per_packet );
-		MAST_INFO( "Packet size: %d bytes", (samples_per_packet * bits_per_sample)/8 );
-		MAST_INFO( "Packet duration: %d ms", (samples_per_packet*1000 / pt->clock_rate));
-	*/
+		// Assume worst case (4 bytes per sample)
+		samples_per_packet = ( max_bytes / (4*SAMPLES_PER_UNIT*codec->channels));
+
 	}
 	
 	MAST_DEBUG("samples_per_packet=%d", samples_per_packet );
@@ -166,10 +157,10 @@ const char* mast_codec_get_param( mast_codec_t* codec, const char* name )
 }
 
 // Encode - returns number of bytes encoded, or -1 on failure
-int mast_codec_encode( mast_codec_t* codec, u_int32_t num_samples, int16_t *input, u_int32_t out_size, u_int8_t *output )
+int mast_codec_encode_packet( mast_codec_t* codec, u_int32_t num_samples, int16_t *input, u_int32_t out_size, u_int8_t *output )
 {
-	if (codec->encode) {
-		return codec->encode( codec, num_samples, input, out_size, output );
+	if (codec->encode_packet) {
+		return codec->encode_packet( codec, num_samples, input, out_size, output );
 	} else {
 		MAST_ERROR("Codec does not support encoding");
 		return -1;
@@ -177,10 +168,10 @@ int mast_codec_encode( mast_codec_t* codec, u_int32_t num_samples, int16_t *inpu
 }
 
 // Decode  - returns number of samples decoded, or -1 on failure
-int mast_codec_decode( mast_codec_t* codec, u_int32_t inputsize, u_int8_t *input, u_int32_t outputsize, int16_t *output )
+int mast_codec_decode_packet( mast_codec_t* codec, u_int32_t inputsize, u_int8_t *input, u_int32_t outputsize, int16_t *output )
 {
-	if (codec->decode) {
-		return codec->decode( codec, inputsize, input, outputsize, output );
+	if (codec->decode_packet) {
+		return codec->decode_packet( codec, inputsize, input, outputsize, output );
 	} else {
 		MAST_ERROR("Codec does not support decoding");
 		return -1;

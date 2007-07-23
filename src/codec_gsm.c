@@ -30,18 +30,16 @@
 
 
 
-static int mast_set_param_gsm( mast_codec_t* codec, const char* name, const char* value )
+// Calculate the number of samples per packet
+static int mast_samples_per_packet_gsm( mast_codec_t *codec, int max_bytes)
 {
-	// We don't support any parameters
-	return -1;
+	int frames_per_packet = max_bytes/GSM_FRAME_BYTES;
+	MAST_DEBUG("GSM frames per packet = %d",frames_per_packet);
+	return frames_per_packet * GSM_FRAME_SAMPLES;
 }
 
-static const char* mast_get_param_gsm( mast_codec_t* codec, const char* name )
-{
-	// We don't support any parameters
-	return NULL;
-}
 
+// Encode a packet's payload
 static u_int32_t mast_encode_gsm(
 		mast_codec_t* codec,
 		u_int32_t inputsize, 	// input size in samples
@@ -73,6 +71,7 @@ static u_int32_t mast_encode_gsm(
 }
 
 
+// Decode a packet's payload
 static u_int32_t mast_decode_gsm(
 		mast_codec_t* codec,
 		u_int32_t inputsize,		// input size in bytes
@@ -121,11 +120,15 @@ int mast_init_gsm(mast_codec_t* codec)
 {
 	gsm gsm_handle = NULL;
 	
+	if (codec->channels!=1) {
+		MAST_ERROR("The GSM codec is mono only");
+		return -1;
+	}
+	
 	// Set the callbacks
-	codec->set_param = mast_set_param_gsm;
-	codec->get_param = mast_get_param_gsm;
-	codec->encode = mast_encode_gsm;
-	codec->decode = mast_decode_gsm;
+	codec->samples_per_packet = mast_samples_per_packet_gsm;
+	codec->encode_packet = mast_encode_gsm;
+	codec->decode_packet = mast_decode_gsm;
 	codec->deinit = mast_deinit_gsm;
 	
 	// Create the GSM handle

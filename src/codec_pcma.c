@@ -249,6 +249,36 @@ s2pcma_array (int16_t *ptr, u_int32_t index, u_int8_t *buffer, u_int32_t count)
 
 
 
+// Calculate the number of samples per packet
+static int mast_samples_per_packet_pcma( mast_codec_t *codec, int max_bytes)
+{
+	int bytes_per_unit = SAMPLES_PER_UNIT * codec->channels;
+	MAST_DEBUG("PCMA bytes per unit = %d", bytes_per_unit);
+	return (max_bytes / bytes_per_unit) * SAMPLES_PER_UNIT;
+}
+
+
+// Encode a packet's payload
+static u_int32_t mast_encode_pcma(
+		mast_codec_t* codec,
+		u_int32_t inputsize, 	/* input size in samples */
+		int16_t *input,
+		u_int32_t outputsize,	/* output size in bytes */
+		u_int8_t *output)
+{
+
+	if (outputsize < inputsize) {
+		MAST_ERROR("encode_pcma: output buffer isn't big enough");
+		return 0;
+	}
+
+	s2pcma_array(input, 0, output, inputsize);
+	
+	return inputsize;
+}
+
+
+// Decode a packet's payload
 static u_int32_t mast_decode_pcma(
 		mast_codec_t* codec,
 		u_int32_t inputsize,		/* input size in bytes */
@@ -270,32 +300,19 @@ static u_int32_t mast_decode_pcma(
 
 
 
-static u_int32_t mast_encode_pcma(
-		mast_codec_t* codec,
-		u_int32_t inputsize, 	/* input size in samples */
-		int16_t *input,
-		u_int32_t outputsize,	/* output size in bytes */
-		u_int8_t *output)
-{
-
-	if (outputsize < inputsize) {
-		MAST_ERROR("encode_pcma: output buffer isn't big enough");
-		return 0;
-	}
-
-	s2pcma_array(input, 0, output, inputsize);
-	
-	return inputsize;
-}
-
-
 
 // Initialise the PCMA codec
 int mast_init_pcma( mast_codec_t* codec ) {
 
+	if (codec->channels!=1) {
+		MAST_ERROR("The PCMA codec is mono only");
+		return -1;
+	}
+
 	// Set the callbacks
-	codec->encode = mast_encode_pcma;
-	codec->decode = mast_decode_pcma;
+	codec->samples_per_packet = mast_samples_per_packet_pcma;
+	codec->encode_packet = mast_encode_pcma;
+	codec->decode_packet = mast_decode_pcma;
 	
 	// Success
 	return 0;
