@@ -123,10 +123,8 @@ int mast_codec_samples_per_packet( mast_codec_t* codec, int max_bytes )
 	if (codec->samples_per_packet) {
 		samples_per_packet = codec->samples_per_packet( codec, max_bytes );
 	} else {
-	
-		// Assume worst case (4 bytes per sample)
-		samples_per_packet = ( max_bytes / (4*SAMPLES_PER_UNIT*codec->channels));
-
+		MAST_ERROR("Codec does not support calculating the number of samples per packet");
+		return -1;
 	}
 	
 	MAST_DEBUG("samples_per_packet=%d", samples_per_packet );
