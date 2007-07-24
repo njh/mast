@@ -18,8 +18,8 @@
  */
 
 
-#ifndef	_CODECS_H_
-#define	_CODECS_H_
+#ifndef	_MAST_CODECS_H_
+#define	_MAST_CODECS_H_
 
 
 /* this data structure shouldn't really be accessed from outside of codec subsystem */
@@ -92,4 +92,4 @@ void mast_codec_deinit( mast_codec_t* codec );
 
 
 
-#endif
+#endif	// _MAST_CODECS_H_

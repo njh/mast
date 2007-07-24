@@ -19,8 +19,12 @@
 
 #include "codecs.h"
 
+#ifndef	_MAST_MIME_TYPE_H_
+#define	_MAST_MIME_TYPE_H_
 
-#define MAX_MIME_TYPE_PARAMS	(32)
+
+// Maximum number of mime type parameters
+#define	MAX_MIME_TYPE_PARAMS	(16)
 
 
 typedef struct mast_mime_type_param {
@@ -53,3 +57,6 @@ void mast_mime_type_print( mast_mime_type_t *type );
 void mast_mime_type_param_apply_codec( mast_mime_type_t *type, mast_codec_t *codec );
 void mast_mime_type_deinit( mast_mime_type_t *type );
 
+
+
+#endif	//_MAST_MIME_TYPE_H_
