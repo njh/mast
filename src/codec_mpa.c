@@ -90,6 +90,8 @@ static int mast_set_param_mpa( mast_codec_t* codec, const char* name, const char
 		int bitrate = atoi(value);
 		if (twolame_set_bitrate( p->twolame, bitrate )) {
 			MAST_WARNING("Failed to set bitrate");
+		} else {
+			MAST_DEBUG("Set bitrate to %d", bitrate);
 		}
 	} else {
 		// Unsupported parameter
