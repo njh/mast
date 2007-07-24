@@ -17,8 +17,6 @@
  *
  */
 
-#include "codecs.h"
-
 #ifndef	_MAST_MIME_TYPE_H_
 #define	_MAST_MIME_TYPE_H_
 
@@ -50,11 +48,11 @@ typedef struct mast_mime_type {
 
 
 // Prototypes of functions in mime_type.c
-mast_mime_type_t * mast_mime_type_init();
+mast_mime_type_t * mast_mime_type_init( const char* string );
 int mast_mime_type_parse( mast_mime_type_t *type, const char* string );
 void mast_mime_type_set_param( mast_mime_type_t *type, char* name, char* value );
+void mast_mime_type_set_param_pair( mast_mime_type_t *type, char* pair );
 void mast_mime_type_print( mast_mime_type_t *type );
-void mast_mime_type_param_apply_codec( mast_mime_type_t *type, mast_codec_t *codec );
 void mast_mime_type_deinit( mast_mime_type_t *type );
 
 

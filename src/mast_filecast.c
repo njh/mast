@@ -158,7 +158,7 @@ static void parse_cmd_line(int argc, char **argv, RtpSession* session)
 		break;
 		
 		case 'o':
-			payload_type = optarg;
+			mast_mime_type_set_param_pair( g_mime_type, optarg );
 		break;
 
 		case 'z':
@@ -204,7 +204,7 @@ static void parse_cmd_line(int argc, char **argv, RtpSession* session)
 	if (mast_mime_type_parse( g_mime_type, payload_type )) {
 		usage();
 	}
-	
+
 	// Make sure the port number is even
 	if (remote_port%2 == 1) remote_port--;
 	
@@ -247,7 +247,7 @@ int main(int argc, char **argv)
 	session = mast_init_ortp( MAST_TOOL_NAME, RTP_SESSION_SENDONLY, TRUE );
 
 	// Initialise the MIME type
-	g_mime_type = mast_mime_type_init();
+	g_mime_type = mast_mime_type_init(NULL);
 
 	// Parse the command line arguments 
 	// and configure the session
@@ -270,11 +270,8 @@ int main(int argc, char **argv)
 
 	
 	// Load the codec
-	codec = mast_codec_init( g_mime_type->minor, sfinfo.samplerate, sfinfo.channels );
+	codec = mast_codec_init( g_mime_type, sfinfo.samplerate, sfinfo.channels );
 	if (codec == NULL) MAST_FATAL("Failed to get initialise codec" );
-
-	// Configure the codec
-	mast_mime_type_param_apply_codec( g_mime_type, codec );
 
 	// Work out the payload type to use
 	pt = mast_choose_payloadtype( session, codec->subtype, sfinfo.samplerate, sfinfo.channels );
@@ -365,9 +362,9 @@ int main(int argc, char **argv)
 		MAST_ERROR("Failed to close input file:\n%s", sf_strerror(input));
 	}
 	
-	
+
+	// Free up the mime type memory	
 	mast_mime_type_deinit( g_mime_type );
-	
 
 	// Close RTP session
 	mast_deinit_ortp( session );

@@ -31,7 +31,9 @@
 #include "mast.h"
 
 
-mast_mime_type_t * mast_mime_type_init()
+
+
+mast_mime_type_t * mast_mime_type_init( const char* string )
 {
 	mast_mime_type_t *type = NULL;
 	int i;
@@ -50,10 +52,14 @@ mast_mime_type_t * mast_mime_type_init()
 		type->param[i].name = NULL;
 		type->param[i].value = NULL;
 	}
-
+	
+	// Now parse the string passed
+	if (string) {
+		mast_mime_type_parse( type, string );
+	}
+	
 	return type;
 }
-
 
 
 static int istoken( char chr )
@@ -61,6 +67,7 @@ static int istoken( char chr )
 	if (isalnum(chr)) return TRUE;
 	if (chr=='.') return TRUE;
 	if (chr=='-') return TRUE;
+	if (chr=='_') return TRUE;
 	if (chr=='+') return TRUE;
 	return FALSE;
 }
@@ -112,39 +119,23 @@ int mast_mime_type_parse( mast_mime_type_t *type, const char* string )
 		
 		// Loop through the following name=value pairs
 		while( ptr && strlen( ptr ) ) {
-			char* name = ptr;
-			char* value = NULL;
-			char* found = NULL;
+			char* pair = ptr;
+			char* end = NULL;
 			
-			// Find the end of name
-			found=NULL;
-			for(i=0; i<strlen(name); i++) {
-				if (istoken(name[i])) continue;
-				if (name[i] == '=') found = &name[i];
-				else MAST_WARNING("Was expecting '=' but found '%c'", name[i]);
-				name[i] = 0x00;
-				break;
+			// Find the end of the pair
+			for(i=0; i<strlen(pair); i++) {
+				if (!istoken(pair[i]) && pair[i]!='=') {
+					pair[i] = 0x00;
+					end = &pair[i];
+					break;
+				}
 			}
 			
-			// Found equals sign?
-			if (found) value = found+1;
-			else break;
-		
-			// Now look for the end of value
-			found = NULL;
-			for(i=0; i<strlen(value); i++) {
-				if (istoken(value[i])) continue;
-				if (value[i] == ';') found = &value[i];
-				else MAST_WARNING("Was expecting ';' but found '%c'", value[i]);
-				value[i] = 0x00;
-				break;
-			}
-
 			// Store it
-			mast_mime_type_set_param( type, name, value );
+			mast_mime_type_set_param_pair( type, pair );
 
 			// Another pair after this one?			
-			if (found) ptr = found+1;
+			if (end) ptr = end+1;
 			else break;
 		}
 
@@ -155,6 +146,25 @@ int mast_mime_type_parse( mast_mime_type_t *type, const char* string )
 	return 0;
 }
 
+
+void mast_mime_type_set_param_pair( mast_mime_type_t *type, char* pair )
+{
+	char* name = pair;
+	char* value = NULL;
+	int i;
+	
+	// Search for the equals sign
+	for(i=0; i<strlen(name); i++) {
+		if (name[i] == '=') {
+			value = &name[i+1];
+			name[i] = 0x00;
+			break;
+		}
+	}
+	
+	// Set the parameter
+	mast_mime_type_set_param( type, name, value );
+}
 
 
 void mast_mime_type_set_param( mast_mime_type_t *type, char* name, char* value )
@@ -200,22 +210,6 @@ void mast_mime_type_print( mast_mime_type_t *type )
 	}
 }
 
-void mast_mime_type_param_apply_codec( mast_mime_type_t *type, mast_codec_t *codec )
-{
-	int i;
-
-	for(i=0; i<MAX_MIME_TYPE_PARAMS; i++) {
-		if (type->param[i].name) {
-			int err = mast_codec_set_param( codec, type->param[i].name, type->param[i].value );
-			if (err==-1) {
-				MAST_FATAL("Parameter '%s' is not supported by codec", type->param[i].name);
-			} else if (err==-2) {
-				MAST_FATAL("Value '%s' is not supported by paramter", type->param[i].value);
-			}
-		}
-	}
-
-}
 
 void mast_mime_type_deinit( mast_mime_type_t *type )
 {

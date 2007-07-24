@@ -79,7 +79,7 @@ static void parse_cmd_line(int argc, char **argv, RtpSession* session)
 
 
 	// Parse the options/switches
-	while ((ch = getopt(argc, argv, "as:t:p:z:d:c:r:h?")) != -1)
+	while ((ch = getopt(argc, argv, "as:t:p:o:z:d:c:r:h?")) != -1)
 	switch (ch) {
 		case 'a':
 			g_do_autoconnect = TRUE;
@@ -97,6 +97,10 @@ static void parse_cmd_line(int argc, char **argv, RtpSession* session)
 		
 		case 'p':
 			payload_type = optarg;
+		break;
+		
+		case 'o':
+			mast_mime_type_set_param_pair( g_mime_type, optarg );
 		break;
 
 		case 'z':
@@ -146,7 +150,7 @@ static void parse_cmd_line(int argc, char **argv, RtpSession* session)
 	if (mast_mime_type_parse( g_mime_type, payload_type )) {
 		usage();
 	}
-	
+
 	// Make sure the port number is even
 	if (remote_port%2 == 1) remote_port--;
 	
@@ -180,7 +184,7 @@ int main(int argc, char **argv)
 	session = mast_init_ortp( MAST_TOOL_NAME, RTP_SESSION_SENDONLY, FALSE );
 
 	// Initialise the MIME type
-	g_mime_type = mast_mime_type_init();
+	g_mime_type = mast_mime_type_init(NULL);
 
 	// Parse the command line arguments 
 	// and configure the session
@@ -205,11 +209,8 @@ int main(int argc, char **argv)
 
 	
 	// Load the codec
-	codec = mast_codec_init( g_mime_type->minor, samplerate, g_channels );
+	codec = mast_codec_init( g_mime_type, samplerate, g_channels );
 	if (codec == NULL) MAST_FATAL("Failed to get initialise codec" );
-
-	// Configure the codec
-	mast_mime_type_param_apply_codec( g_mime_type, codec );
 
 	// Work out the payload type index to use
 	pt = mast_choose_payloadtype( session, codec->subtype, samplerate, g_channels );

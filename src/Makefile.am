@@ -70,6 +70,7 @@ mast_filecast_LDADD = $(MAST_CODEC_LIBS) @SNDFILE_LIBS@
 mast_filecast_SOURCES = \
 	mast_filecast.c \
 	mime_type.c \
+	mime_type.h \
 	mpa_header.c \
 	mpa_header.h \
 	mast.h \
@@ -80,6 +81,8 @@ mast_record_CFLAGS = @SNDFILE_CFLAGS@
 mast_record_LDADD = $(MAST_CODEC_LIBS) @SNDFILE_LIBS@
 mast_record_SOURCES = \
 	mast_record.c \
+	mime_type.c \
+	mime_type.h \
 	mpa_header.c \
 	mpa_header.h \
 	mast.h \

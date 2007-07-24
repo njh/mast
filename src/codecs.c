@@ -52,11 +52,27 @@ static struct {
 };
 
 
+static void apply_mime_type_params( mast_mime_type_t *type, mast_codec_t *codec )
+{
+	int i;
+
+	for(i=0; i<MAX_MIME_TYPE_PARAMS; i++) {
+		if (type->param[i].name) {
+			int err = mast_codec_set_param( codec, type->param[i].name, type->param[i].value );
+			if (err==-1) {
+				MAST_FATAL("Parameter '%s' is not supported by codec", type->param[i].name);
+			} else if (err==-2) {
+				MAST_FATAL("Value '%s' is not supported by paramter", type->param[i].value);
+			}
+		}
+	}
+
+}
 
 
 
 // Find a codec and initialise it
-mast_codec_t* mast_codec_init( const char* subtype, int samplerate, int channels )
+mast_codec_t* mast_codec_init( mast_mime_type_t* type, int samplerate, int channels )
 {
 	mast_codec_t* codec = NULL;
 	int found_codec = FALSE;
@@ -73,12 +89,12 @@ mast_codec_t* mast_codec_init( const char* subtype, int samplerate, int channels
 	memset( codec, 0, sizeof(mast_codec_t) );
 	codec->channels = channels;
 	codec->samplerate = samplerate;
-	codec->subtype = subtype;
+	codec->subtype = type->minor;
 
 	
 	// Search for a matching codec
 	for(i=0; mast_codecs[i].mime_subtype; i++) {
-		if (strcasecmp( subtype, mast_codecs[i].mime_subtype ) == 0) {
+		if (strcasecmp( type->minor, mast_codecs[i].mime_subtype ) == 0) {
 			// Found a matching codec
 			if (mast_codecs[i].init( codec )) {
 				MAST_DEBUG( "Failed to initialise codec" );
@@ -92,14 +108,15 @@ mast_codec_t* mast_codec_init( const char* subtype, int samplerate, int channels
 	
 	// Didn't find match
 	if(!found_codec) {
-		MAST_ERROR( "Failed to find codec for MIME type audio/%s", subtype );
+		MAST_ERROR( "Failed to find codec for MIME type %s/%s", type->major, type->minor );
 		free(codec);
 		return NULL;
 	}
 	
 	
 	
-	// FIXME: set parameters
+	// Apply MIME type parameters to the codec
+	apply_mime_type_params( type, codec );
 	
 	
 	// Prepare to start encoding/decoding

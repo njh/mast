@@ -22,6 +22,9 @@
 #define	_MAST_CODECS_H_
 
 
+#include "mime_type.h"
+
+
 /* this data structure shouldn't really be accessed from outside of codec subsystem */
 typedef struct mast_codec_s {
 
@@ -69,7 +72,7 @@ int mast_init_pcmu(mast_codec_t*);		// codec_ulaw.c
 // Find codec, initialise, configure and prepare
 // Parameters samplerate and channels SHOULD be given when encoding
 // and MUST be set to zero when decoding.
-mast_codec_t* mast_codec_init( const char* subtype, int samplerate, int channels );
+mast_codec_t* mast_codec_init( mast_mime_type_t* type, int samplerate, int channels );
 
 // Get the number of samples per packet for the current parameters
 int mast_codec_samples_per_packet( mast_codec_t* codec, int max_bytes );

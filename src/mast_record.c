@@ -31,6 +31,7 @@
 #include <ortp/ortp.h>
 
 #include "mast.h"
+#include "mime_type.h"
 #include "codecs.h"
 
 
@@ -40,6 +41,7 @@
 
 /* Global Variables */
 char *g_filename = NULL;			// filename of output file
+mast_mime_type_t *g_mime_type = NULL;
 
 
 
@@ -274,8 +276,12 @@ int main(int argc, char **argv)
 	output = open_output_file( g_filename, pt );
 	if (output==NULL) MAST_FATAL( "failed to open output file" );
 
+	// Parse the payload type
+	g_mime_type = mast_mime_type_init( pt->mime_type );
+	if (g_mime_type==NULL) MAST_FATAL("Failed to initise MIME type");
+
 	// Load the codec
-	codec = mast_codec_init( pt->mime_type, pt->clock_rate, pt->channels );
+	codec = mast_codec_init( g_mime_type, pt->clock_rate, pt->channels );
 	if (codec == NULL) MAST_FATAL("Failed to get initialise codec" );
 
 	// Allocate memory for audio buffer
@@ -356,6 +362,9 @@ int main(int argc, char **argv)
 		MAST_ERROR("Failed to close output file:\n%s", sf_strerror(output));
 	}
 	
+	// Free up the mime type memory	
+	mast_mime_type_deinit( g_mime_type );
+
 	// Close RTP session
 	mast_deinit_ortp( session );
 	
