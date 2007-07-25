@@ -87,6 +87,7 @@ PKG_CHECK_MODULES(TWOLAME, twolame >= 0.3.10,
 	],
 	[ HAVE_TWOLAME="No" ]
 )
+AM_CONDITIONAL([HAVE_TWOLAME], [test x$HAVE_TWOLAME = xYes])
 
 
 

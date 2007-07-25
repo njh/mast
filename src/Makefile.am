@@ -23,8 +23,11 @@ libmastcodecs_a_SOURCES = \
 
 MAST_CODEC_LIBS = \
 	libmastcodecs.a \
-	-ltwolame \
 	../libgsm/libgsm.a
+
+if HAVE_TWOLAME
+MAST_CODEC_LIBS += -ltwolame
+endif
 
 
 mast_info_SOURCES = \
