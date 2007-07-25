@@ -79,7 +79,7 @@ Static Types that could be added
     12  audio/QCELP     8000    1       MPlayer source code?
     13  audio/CN        8000    1       (Comfort Noise) N/A
     
-    14  audio/MPA       *       *       mpg123 / toolame
+    14  audio/MPA       *       *       libmpg123 mpg123 decoder still needed
     15  audio/G728      8000    1       ?
     
     16  audio/DVI4      11025   1       Borrow from asterisk source?
