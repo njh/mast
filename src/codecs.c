@@ -146,7 +146,8 @@ int mast_codec_samples_per_packet( mast_codec_t* codec, int max_bytes )
 		return -1;
 	}
 	
-	MAST_DEBUG("samples_per_packet=%d", samples_per_packet );
+	MAST_DEBUG("Samples Per Packet: %d", samples_per_packet );
+	MAST_INFO("Packet duration (ptime): %d ms", (samples_per_packet*1000)/codec->samplerate );
 	
 	return samples_per_packet;
 }
