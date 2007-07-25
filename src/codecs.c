@@ -31,7 +31,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 
-#include "config.h"
+#include "mime_type.h"
 #include "codecs.h"
 #include "mast.h"
 
@@ -47,7 +47,9 @@ static struct {
 	{ "LPC",	mast_init_lpc },
 	{ "PCMA",	mast_init_pcma },
 	{ "PCMU",	mast_init_pcmu },
+#ifdef HAVE_TWOLAME
 	{ "MPA",	mast_init_mpa },
+#endif
 	{ NULL, 	NULL }
 };
 

@@ -22,10 +22,15 @@
 #include <string.h>
 #include <sys/types.h>
 #include <netinet/in.h>
-#include <twolame.h>
 
 #include "codecs.h"
 #include "mast.h"
+
+
+// Only compile this code if TwoLAME is available
+#ifdef HAVE_TWOLAME
+
+#include <twolame.h>
 
 
 typedef struct
@@ -205,4 +210,5 @@ int mast_init_mpa( mast_codec_t* codec ) {
 }
 
 
+#endif	// HAVE_TWOLAMNE
 

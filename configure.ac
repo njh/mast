@@ -73,17 +73,21 @@ PKG_CHECK_MODULES(SNDFILE, sndfile >= 1.0.0,
 	[ HAVE_SNDFILE="No" ]
 )
 
-dnl Check for twolame (it is optional)
-PKG_CHECK_MODULES(TWOLAME, twolame >= 0.3.10,
-	[ HAVE_TWOLAME="Yes" ],
-	[ HAVE_TWOLAME="No" ]
-)
-
 dnl Check for JACK (it is optional)
 PKG_CHECK_MODULES(JACK, jack,
 	[ HAVE_JACK="Yes" ],
 	[ HAVE_JACK="No" ]
 )
+
+dnl Check for twolame (it is optional)
+PKG_CHECK_MODULES(TWOLAME, twolame >= 0.3.10,
+	[
+		HAVE_TWOLAME="Yes"
+		AC_DEFINE_UNQUOTED( HAVE_TWOLAME, 1, [ Define if libtwolame is available ] )
+	],
+	[ HAVE_TWOLAME="No" ]
+)
+
 
 
 
