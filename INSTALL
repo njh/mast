@@ -32,6 +32,9 @@ mast_cast requires Jack for audio capture.
 
 mast_record and mast_filecast require libsndfile.
 
+The MPEG Audio codec requires TwoLAME.
+
 
 - libsndfile <http://www.mega-nerd.com/libsndfile/[]>
 - JACK <http://www.jackaudio.org/[]>
+- TwoLAME <http://www.twolame.org/[]>
