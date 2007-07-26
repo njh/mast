@@ -43,6 +43,7 @@ Supported Payloads
    8     8000Hz   Mono     A-law encoded
    10    44.1kHz  Stereo   Raw 16-bit linear audio
    11    44.1kHz  Mono     Raw 16-bit linear audio
+   14    -        -        MPEG Audio (encoder only)
 
 
 Details are here:
