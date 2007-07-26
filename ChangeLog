@@ -1,3 +1,8 @@
+2007-09-26  Nicholas J. Humfrey  <njh@ecs.soton.ac.uk>
+	* Released version 0.2.2 of MAST
+	* Added support for MPEG Audio encoding (using TwoLAME)
+	* Codec parameter setting/getting support
+	
 2007-09-11  Nicholas J. Humfrey  <njh@ecs.soton.ac.uk>
 	* Released version 0.2.1 of MAST
 	* Now uses oRTP for all RTP type stuff
