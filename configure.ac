@@ -59,21 +59,21 @@ AM_CONDITIONAL(BUILD_DOC, test x$BUILD_DOC = xYes)
 dnl ############## Library Checks
 
 dnl Check for ortp (required)
-PKG_CHECK_MODULES(oRTP, ortp >= 0.13.1, ,
+PKG_CHECK_MODULES(ORTP, ortp >= 0.13.2, ,
 	[ AC_MSG_ERROR(
-		[ Version 0.13.1 or greater of the oRTP library is required to build MAST.
+		[ Version 0.13.2 or greater of the oRTP library is required to build MAST.
 		It can be downloaded from http://www.linphone.org/ortp/ ])
 	]
 )
 
 dnl Check for Secret Rabbit Code (it is optional)
-PKG_CHECK_MODULES(libsamplerate, samplerate >= 0.1.2,
+PKG_CHECK_MODULES(SAMPLERATE, samplerate >= 0.1.2,
 	[ HAVE_LIBSRC="Yes" ],
 	[ HAVE_LIBSRC="No" ]
 )
 
 dnl Check for libsndfile (it is optional)
-PKG_CHECK_MODULES(sndfile, sndfile >= 1.0.0,
+PKG_CHECK_MODULES(SNDFILE, sndfile >= 1.0.0,
 	[ HAVE_SNDFILE="Yes" ],
 	[ HAVE_SNDFILE="No" ]
 )
