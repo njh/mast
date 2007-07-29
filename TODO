@@ -11,18 +11,23 @@ MAST To-Do list
   * mast_transcast  Reflect and transcode RTP streams
 
 
-
 - Support streaming of multiple files in mast_filecast and mast_rawcast
 - Support multiple frames per packet in mast_rawcast
+
 - Support for taking HTTP stream as input using libcurl?
+
 - Choose number of blocks/units per packet instead of maximum packet size?
+  * Or choose the packet duration instead
+
+- Add RTCP/SDES display of remote stream in recievers
 
 - Built-in audio resampling (using Secret Rabbit Code)
   * use dynamic resampling to cope with unsynced clocks
 
+
 - Seperate out more of the common code in each of the tools source files
   * Address / port parsing
-    
+  
 
 
 - Properly implement change sources if one drops out?
