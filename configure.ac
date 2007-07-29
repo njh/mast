@@ -5,7 +5,7 @@ AC_PREREQ(2.57)
 
 dnl ############# Initialisation
 
-AC_INIT([mast], [0.2.2], [njh@ecs.soton.ac.uk])
+AC_INIT([mast], [0.2.3], [njh@ecs.soton.ac.uk])
 
 AC_CONFIG_SRCDIR(src/mast.h)
 AC_CONFIG_AUX_DIR(build) 
@@ -58,17 +58,22 @@ AM_CONDITIONAL(BUILD_DOC, test x$BUILD_DOC = xYes)
 
 dnl ############## Library Checks
 
-dnl Check for ortp
-PKG_CHECK_MODULES(ORTP, ortp >= 0.13.1, ,
+dnl Check for ortp (required)
+PKG_CHECK_MODULES(oRTP, ortp >= 0.13.1, ,
 	[ AC_MSG_ERROR(
 		[ Version 0.13.1 or greater of the oRTP library is required to build MAST.
 		It can be downloaded from http://www.linphone.org/ortp/ ])
 	]
 )
 
+dnl Check for Secret Rabbit Code (it is optional)
+PKG_CHECK_MODULES(libsamplerate, samplerate >= 0.1.2,
+	[ HAVE_LIBSRC="Yes" ],
+	[ HAVE_LIBSRC="No" ]
+)
 
 dnl Check for libsndfile (it is optional)
-PKG_CHECK_MODULES(SNDFILE, sndfile >= 1.0.0,
+PKG_CHECK_MODULES(sndfile, sndfile >= 1.0.0,
 	[ HAVE_SNDFILE="Yes" ],
 	[ HAVE_SNDFILE="No" ]
 )
@@ -80,7 +85,7 @@ PKG_CHECK_MODULES(JACK, jack,
 )
 
 dnl Check for twolame (it is optional)
-PKG_CHECK_MODULES(TWOLAME, twolame >= 0.3.10,
+PKG_CHECK_MODULES(TwoLAME, twolame >= 0.3.10,
 	[
 		HAVE_TWOLAME="Yes"
 		AC_DEFINE_UNQUOTED( HAVE_TWOLAME, 1, [ Define if libtwolame is available ] )
@@ -123,11 +128,11 @@ dnl ############## Decide what to build
 
 BUILD_PROGRAMS="mast_info mast_rawcast mast_rawrecord"
 
-if test x$HAVE_JACK = "xYes"; then
+if test x$HAVE_JACK = "xYes" -a x$HAVE_LIBSRC = "xYes"; then
 	BUILD_PROGRAMS="$BUILD_PROGRAMS mast_cast"
 fi
 
-if test x$HAVE_SNDFILE = "xYes"; then
+if test x$HAVE_SNDFILE = "xYes" -a x$HAVE_LIBSRC = "xYes"; then
 	BUILD_PROGRAMS="$BUILD_PROGRAMS mast_filecast mast_record"
 fi
 
@@ -148,12 +153,13 @@ dnl ############## Display Message
 echo "
   Multicast Audio Streaming Toolkit $VERSION
 
-  Install path .......... $prefix
-  Rebuilding Docs ....... $BUILD_DOC
-  Debugging ............. $Debugging
-  Jack Support .......... $HAVE_JACK
-  Libsndfile support .... $HAVE_SNDFILE
-  MPEG Audio Support .... $HAVE_TWOLAME
+  Install path ........... $prefix
+  Rebuilding Docs ........ $BUILD_DOC
+  Debugging .............. $Debugging
+  Jack Support ........... $HAVE_JACK
+  Libsamplerate support .. $HAVE_LIBSRC
+  Libsndfile support ..... $HAVE_SNDFILE
+  MPEG Audio Support ..... $HAVE_TWOLAME
   
 Next type 'make' and then 'make install'."
 
