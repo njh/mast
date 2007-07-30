@@ -125,7 +125,7 @@ static const char* mast_get_param_mpa( mast_codec_t* codec, const char* name )
 static u_int32_t mast_encode_mpa(
 		mast_codec_t* codec,
 		u_int32_t inputsize, 	// input size in samples
-		int16_t *input,
+		float *input,
 		u_int32_t outputsize,	// output size in bytes
 		u_int8_t *output)
 {
@@ -139,7 +139,7 @@ static u_int32_t mast_encode_mpa(
 	output[3] = 0x00;
 
 	// Encode the audio using twolame
-	bytes_encoded = twolame_encode_buffer_interleaved( p->twolame, input, inputsize, output+4, outputsize-4 );
+	bytes_encoded = twolame_encode_buffer_float32_interleaved( p->twolame, input, inputsize, output+4, outputsize-4 );
 	//MAST_DEBUG( "mast_encode_mpa: encoded %d samples to %d bytes (max %d bytes)", inputsize, bytes_encoded, outputsize );
 	
 	return bytes_encoded+4;

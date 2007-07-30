@@ -227,14 +227,14 @@ static lpcstate_t* lpc_initialise()
 }
 
 
-static void lpc_analyze(const int16_t *input, lpcparams_t *output, lpcstate_t* state)
+static void lpc_analyze(const float *input, lpcparams_t *output, lpcstate_t* state)
 {
 	int     i, j;
 	float   w[MAXWINDOW], r[LPC_FILTORDER + 1];
 	float   per, G, k[LPC_FILTORDER + 1];
 
 	for (i = 0, j = LPC_BUFLEN - LPC_FRAMESIZE; i < LPC_FRAMESIZE; i++, j++) {
-		s[j] = (float)*input++ / 32768.;
+		s[j] = *input++;
 		u = fa[2] * s[j] - fa[1] * u1;
 		y[j] = fa[5] * u1 - fa[3] * yp1 - fa[4] * yp2;
 		u1 = u;
@@ -259,7 +259,7 @@ static void lpc_analyze(const int16_t *input, lpcparams_t *output, lpcstate_t* s
 }
 
 
-static void lpc_synthesize(lpcparams_t *input, int16_t *output, lpcstate_t* state)
+static void lpc_synthesize(lpcparams_t *input, float *output, lpcstate_t* state)
 {
 	int i, j;
 	register double u, f, per, G, NewG, Ginc, Newper, perinc;
@@ -317,7 +317,7 @@ static void lpc_synthesize(lpcparams_t *input, int16_t *output, lpcstate_t* stat
 		}
 		state->bp[0] = f;
 
-		*output++ = (int)(f * 32768.0) & 0xffff;
+		*output++ = f;
 
 		Newper += perinc;
 		NewG += Ginc;
@@ -343,7 +343,7 @@ static int mast_samples_per_packet_lpc( mast_codec_t *codec, int max_bytes)
 static u_int32_t mast_encode_lpc(
 		mast_codec_t* codec,
 		u_int32_t inputsize, 	// input size in samples
-		int16_t *input,
+		float *input,
 		u_int32_t outputsize,	// output size in bytes
 		u_int8_t *output)
 {
@@ -362,7 +362,7 @@ static u_int32_t mast_encode_lpc(
 
 	// Encode frame by frame
 	for(f=0; f<frames; f++) {
-		int16_t* in = &input[LPC_FRAMESIZE*f];
+		float* in = &input[LPC_FRAMESIZE*f];
 		lpcparams_t* out = (lpcparams_t*)output+(LPC_BYTES_PER_FRAME*f);
 		lpc_analyze( in, out, state );
 		out->period = htons( out->period );
@@ -378,7 +378,7 @@ static u_int32_t mast_decode_lpc(
 		u_int32_t inputsize,		// input size in bytes
 		u_int8_t  *input,
 		u_int32_t outputsize, 		// output size in samples
-		int16_t  *output)
+		float  *output)
 {
 	lpcstate_t* state = codec->ptr;
 	int frames = (inputsize/LPC_BYTES_PER_FRAME);
@@ -392,7 +392,7 @@ static u_int32_t mast_decode_lpc(
 	// Decode frame by frame
 	for(f=0; f<frames; f++) {
 		lpcparams_t* in = (lpcparams_t*)input+(LPC_BYTES_PER_FRAME*f);
-		int16_t* out = &output[LPC_FRAMESIZE*f];
+		float* out = &output[LPC_FRAMESIZE*f];
 		in->period = ntohs( in->period );
 		lpc_synthesize(in, out, state);
 	}

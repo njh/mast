@@ -21,7 +21,7 @@
 #ifndef	_MAST_CODECS_H_
 #define	_MAST_CODECS_H_
 
-
+#include <samplerate.h>
 #include "mime_type.h"
 
 
@@ -41,8 +41,8 @@ typedef struct mast_codec_s {
 	int (*samples_per_packet)(struct mast_codec_s *, int max_bytes);
 	int (*set_param)(struct mast_codec_s *, const char* name, const char* value);
 	const char* (*get_param)(struct mast_codec_s *, const char* name);
-	u_int32_t (*encode_packet)(struct mast_codec_s *, u_int32_t num_samples, int16_t *input, u_int32_t out_size, u_int8_t *output);
-	u_int32_t (*decode_packet)(struct mast_codec_s *, u_int32_t inputsize, u_int8_t *input, u_int32_t outputsize, int16_t *output);
+	u_int32_t (*encode_packet)(struct mast_codec_s *, u_int32_t num_samples, float *input, u_int32_t out_size, u_int8_t *output);
+	u_int32_t (*decode_packet)(struct mast_codec_s *, u_int32_t inputsize, u_int8_t *input, u_int32_t outputsize, float *output);
 	int (*deinit)(struct mast_codec_s *);
 	
 	// Called just before we start encoding/decoding
@@ -84,10 +84,10 @@ int mast_codec_set_param( mast_codec_t* codec, const char* name, const char* val
 const char* mast_codec_get_param( mast_codec_t* codec, const char* name );
 
 // Encode a packet of audio - returns number of bytes encoded, or -1 on failure
-int mast_codec_encode_packet( mast_codec_t* codec, u_int32_t num_samples, int16_t *input, u_int32_t out_size, u_int8_t *output );
+int mast_codec_encode_packet( mast_codec_t* codec, u_int32_t num_samples, float *input, u_int32_t out_size, u_int8_t *output );
 
 // Decode a packet of audio - returns number of samples decoded, or -1 on failure
-int mast_codec_decode_packet( mast_codec_t* codec, u_int32_t inputsize, u_int8_t *input, u_int32_t outputsize, int16_t *output );
+int mast_codec_decode_packet( mast_codec_t* codec, u_int32_t inputsize, u_int8_t *input, u_int32_t outputsize, float *output );
 
 // De-initialise codec, returns 0 on success or error number
 void mast_codec_deinit( mast_codec_t* codec );

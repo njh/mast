@@ -23,6 +23,7 @@ libmastcodecs_a_SOURCES = \
 
 MAST_CODEC_LIBS = \
 	libmastcodecs.a \
+	-lsamplerate \
 	../libgsm/libgsm.a
 
 if HAVE_TWOLAME

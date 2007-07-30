@@ -40,7 +40,7 @@ int g_do_autoconnect = FALSE;
 int g_rb_duration = DEFAULT_RINGBUFFER_DURATION;
 jack_port_t *g_jackport[2] = {NULL, NULL};
 jack_ringbuffer_t *g_ringbuffer = NULL;
-int16_t *g_convbuffer = NULL;
+float *g_interleavebuf = NULL;
 
 
 /* For signaling when there's room in the ringbuffer. */
@@ -63,23 +63,15 @@ static int process_callback(jack_nframes_t nframes, void *arg)
 	{	
         jack_default_audio_sample_t *buf = jack_port_get_buffer(g_jackport[c], nframes);
  
-		// Convert the audio to signed 16-bit
+		// Interleave the left and right channels
 		for(n=0; n<nframes; n++) {
-			//int tmp = lrintf(buf[n] * 32768.0f);	FIXME: can't get this to compile on Linux
-			int tmp = (buf[n] * 32768.0f);
-			if (tmp > SHRT_MAX) {
-				g_convbuffer[(n*g_channels)+c] = SHRT_MAX;
-			} else if (tmp < SHRT_MIN) {
-				g_convbuffer[(n*g_channels)+c] = SHRT_MIN;
-			} else {
-				g_convbuffer[(n*g_channels)+c] = (int16_t) tmp;
-			}
+			g_interleavebuf[(n*g_channels)+c] = buf[n];
 		}
 	}
 
-	// Now write the converted audio to the ring buffer
-	to_write = sizeof(int16_t) * nframes * g_channels;
-	written = jack_ringbuffer_write(g_ringbuffer, (char*)g_convbuffer, to_write);
+	// Now write the interleaved audio to the ring buffer
+	to_write = sizeof(float) * nframes * g_channels;
+	written = jack_ringbuffer_write(g_ringbuffer, (char*)g_interleavebuf, to_write);
 	if (to_write > written) {
 		// If this goes wrong, then the buffer goes out of sync and we get static
 		MAST_FATAL("Failed to write to ring ruffer, try increading the ring-buffer size");
@@ -100,8 +92,8 @@ static int buffersize_callback(jack_nframes_t nframes, void *arg)
 	MAST_DEBUG("JACK buffer size is %d samples long", nframes);
 
 	// (re-)allocate conversion buffer
-	g_convbuffer = realloc( g_convbuffer, nframes * sizeof(int16_t) * g_channels );
-	if (g_convbuffer == NULL) {
+	g_interleavebuf = realloc( g_interleavebuf, nframes * sizeof(float) * g_channels );
+	if (g_interleavebuf == NULL) {
 		MAST_FATAL("Failed to (re-)allocate the convertion buffer");
 	}
 
@@ -227,9 +219,9 @@ void mast_deinit_jack( jack_client_t *client )
 	}
 	
 	// Free the coversion buffer
-	if (g_convbuffer) {
-		free( g_convbuffer );
-		g_convbuffer = NULL;
+	if (g_interleavebuf) {
+		free( g_interleavebuf );
+		g_interleavebuf = NULL;
 	}
 	
 	// Free up the ring buffer

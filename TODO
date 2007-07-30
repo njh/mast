@@ -48,9 +48,6 @@ MAST To-Do list
   * Simple SAP client too ?
 
 
-- Use 32-bit floats for audio internally (instead of 16-bit ints)
-
-
 
 
 Changes to make to oRTP

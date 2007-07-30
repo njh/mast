@@ -26,6 +26,7 @@
 #include "codecs.h"
 #include "mast.h"
 
+#include <samplerate.h>
 #include "../libgsm/gsm.h"
 
 
@@ -43,7 +44,7 @@ static int mast_samples_per_packet_gsm( mast_codec_t *codec, int max_bytes)
 static u_int32_t mast_encode_gsm(
 		mast_codec_t* codec,
 		u_int32_t inputsize, 	// input size in samples
-		int16_t *input,
+		float *input,
 		u_int32_t outputsize,	// output size in bytes
 		u_int8_t *output)
 {
@@ -62,9 +63,15 @@ static u_int32_t mast_encode_gsm(
 
 	// Encode frame by frame
 	for(f=0; f<frames; f++) {
-		gsm_signal* signal = &input[GSM_FRAME_SAMPLES*f];
+		gsm_signal signal_l16[GSM_FRAME_SAMPLES];
+		float *signal_float = &input[GSM_FRAME_SAMPLES*f];
 		gsm_byte* byte = output+(GSM_FRAME_BYTES*f);
-		gsm_encode(gsm_handle, signal, byte);
+		
+		// Convert from float to 16-bit integer
+		src_float_to_short_array( signal_float, signal_l16, GSM_FRAME_SAMPLES);
+		
+		// Encode to GSM
+		gsm_encode(gsm_handle, signal_l16, byte);
 	}
 
 	return frames*GSM_FRAME_BYTES;
@@ -77,7 +84,7 @@ static u_int32_t mast_decode_gsm(
 		u_int32_t inputsize,		// input size in bytes
 		u_int8_t  *input,
 		u_int32_t outputsize, 	// output size in samples
-		int16_t  *output)
+		float  *output)
 {
 	gsm gsm_handle = codec->ptr;
 	int frames = (inputsize/GSM_FRAME_BYTES);
@@ -90,9 +97,15 @@ static u_int32_t mast_decode_gsm(
 
 	// Decode frame by frame
 	for(f=0; f<frames; f++) {
+		gsm_signal signal_l16[GSM_FRAME_SAMPLES];
 		gsm_byte* byte = input+(GSM_FRAME_BYTES*f);
-		gsm_signal* signal = &output[GSM_FRAME_SAMPLES*f];
-		gsm_decode(gsm_handle, byte, signal);
+		float *signal_float = &output[GSM_FRAME_SAMPLES*f];
+		
+		// Decode from GSM
+		gsm_decode(gsm_handle, byte, signal_l16);
+		
+		// Convert from 16-bit integer to float
+		src_short_to_float_array( signal_l16, signal_float, GSM_FRAME_SAMPLES);
 	}
 
 	return frames*GSM_FRAME_SAMPLES;

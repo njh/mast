@@ -171,7 +171,7 @@ int main(int argc, char **argv)
 	PayloadType* pt = NULL;
 	jack_client_t* client = NULL;
 	mast_codec_t *codec = NULL;
-	int16_t *audio_buffer = NULL;
+	float *audio_buffer = NULL;
 	u_int8_t *payload_buffer = NULL;
 	int samples_per_packet = 0;
 	int audio_buffer_size = 0;
@@ -221,8 +221,8 @@ int main(int argc, char **argv)
 	if (samples_per_packet<=0) MAST_FATAL( "Invalid number of samples per packet" );
 
 	// Allocate memory for audio buffer
-	audio_buffer_size = samples_per_packet * sizeof(int16_t) * g_channels;
-	audio_buffer = (int16_t*)malloc( audio_buffer_size );
+	audio_buffer_size = samples_per_packet * sizeof(float) * g_channels;
+	audio_buffer = (float*)malloc( audio_buffer_size );
 	if (audio_buffer == NULL) MAST_FATAL("Failed to allocate memory for audio buffer");
 
 	// Allocate memory for the packet buffer
@@ -262,7 +262,7 @@ int main(int argc, char **argv)
 		//MAST_DEBUG("Ring buffer is now %u%% full", (jack_ringbuffer_read_space(g_ringbuffer)*100) / g_ringbuffer->size);
 
 		// Encode audio
-		samples_read = (bytes_read / sizeof(int16_t)) / g_channels;
+		samples_read = (bytes_read / sizeof(float)) / g_channels;
 		payload_bytes = mast_codec_encode_packet(codec, samples_read, audio_buffer, 
 					payload_buffer_size, payload_buffer );
 		if (payload_bytes<0)

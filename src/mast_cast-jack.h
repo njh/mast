@@ -33,7 +33,6 @@ extern int g_do_autoconnect;
 extern int g_rb_duration;
 extern jack_port_t *g_jackport[2];
 extern jack_ringbuffer_t *g_ringbuffer;
-extern int16_t *g_convbuffer;
 
 extern pthread_mutex_t g_ringbuffer_cond_mutex;
 extern pthread_cond_t g_ringbuffer_cond;

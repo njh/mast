@@ -236,7 +236,7 @@ int main(int argc, char **argv)
 	SNDFILE* input = NULL;
 	SF_INFO sfinfo;
 	mast_codec_t *codec = NULL;
-	int16_t *audio_buffer = NULL;
+	float *audio_buffer = NULL;
 	u_int8_t *payload_buffer = NULL;
 	int audio_buffer_size = 0;
 	int samples_per_packet = 0;
@@ -282,8 +282,8 @@ int main(int argc, char **argv)
 	if (samples_per_packet<=0) MAST_FATAL( "Invalid number of samples per packet" );
 
 	// Allocate memory for audio buffer
-	audio_buffer_size = samples_per_packet * sizeof(int16_t) * pt->channels;
-	audio_buffer = (int16_t*)malloc( audio_buffer_size );
+	audio_buffer_size = samples_per_packet * sizeof(float) * pt->channels;
+	audio_buffer = (float*)malloc( audio_buffer_size );
 	if (audio_buffer == NULL) MAST_FATAL("Failed to allocate memory for audio buffer");
 
 	// Allocate memory for the packet buffer
@@ -299,7 +299,7 @@ int main(int argc, char **argv)
 	// The main loop
 	while( mast_still_running() )
 	{
-		int samples_read = sf_readf_short( input, audio_buffer, samples_per_packet );
+		int samples_read = sf_readf_float( input, audio_buffer, samples_per_packet );
 		int payload_bytes = 0;
 		
 		// Was there an error?

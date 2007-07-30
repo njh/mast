@@ -236,7 +236,7 @@ int main(int argc, char **argv)
 	SNDFILE* output = NULL;
 	mblk_t* packet = NULL;
 	mast_codec_t *codec = NULL;
-	int16_t *audio_buffer = NULL;
+	float *audio_buffer = NULL;
 	int audio_buffer_len = 0;
 	unsigned long total_samples_written = 0;
 	int ts_diff = 0;
@@ -285,8 +285,8 @@ int main(int argc, char **argv)
 	if (codec == NULL) MAST_FATAL("Failed to get initialise codec" );
 
 	// Allocate memory for audio buffer
-	audio_buffer_len = ts_diff * sizeof(int16_t) * pt->channels;
-	audio_buffer = (int16_t*)malloc( audio_buffer_len );
+	audio_buffer_len = ts_diff * sizeof(float) * pt->channels;
+	audio_buffer = (float*)malloc( audio_buffer_len );
 	if (audio_buffer == NULL) MAST_FATAL("Failed to allocate memory for audio buffer");
 	
 
@@ -327,7 +327,7 @@ int main(int argc, char **argv)
 				//MAST_DEBUG("ts_diff = %d", ts_diff);
 				
 				// Write to disk
-				samples_written = sf_write_short( output, audio_buffer, samples_decoded );
+				samples_written = sf_write_float( output, audio_buffer, samples_decoded );
 				if (samples_written<0) {
 					MAST_ERROR("Failed to write audio samples to disk: %s", sf_strerror( output ));
 					break;

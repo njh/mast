@@ -26,113 +26,99 @@
 #include "mast.h"
 
 
-// ==================================== private for ulaw 
+static float pcmu_decode[128] =
+{
+        -0.980347, -0.949097, -0.917847, -0.886597, -0.855347, -0.824097, -0.792847, -0.761597, 
+        -0.730347, -0.699097, -0.667847, -0.636597, -0.605347, -0.574097, -0.542847, -0.511597, 
+        -0.488159, -0.472534, -0.456909, -0.441284, -0.425659, -0.410034, -0.394409, -0.378784, 
+        -0.363159, -0.347534, -0.331909, -0.316284, -0.300659, -0.285034, -0.269409, -0.253784, 
+        -0.242065, -0.234253, -0.226440, -0.218628, -0.210815, -0.203003, -0.195190, -0.187378, 
+        -0.179565, -0.171753, -0.163940, -0.156128, -0.148315, -0.140503, -0.132690, -0.124878, 
+        -0.119019, -0.115112, -0.111206, -0.107300, -0.103394, -0.099487, -0.095581, -0.091675, 
+        -0.087769, -0.083862, -0.079956, -0.076050, -0.072144, -0.068237, -0.064331, -0.060425, 
+        -0.057495, -0.055542, -0.053589, -0.051636, -0.049683, -0.047729, -0.045776, -0.043823, 
+        -0.041870, -0.039917, -0.037964, -0.036011, -0.034058, -0.032104, -0.030151, -0.028198, 
+        -0.026733, -0.025757, -0.024780, -0.023804, -0.022827, -0.021851, -0.020874, -0.019897, 
+        -0.018921, -0.017944, -0.016968, -0.015991, -0.015015, -0.014038, -0.013062, -0.012085, 
+        -0.011353, -0.010864, -0.010376, -0.009888, -0.009399, -0.008911, -0.008423, -0.007935, 
+        -0.007446, -0.006958, -0.006470, -0.005981, -0.005493, -0.005005, -0.004517, -0.004028, 
+        -0.003662, -0.003418, -0.003174, -0.002930, -0.002686, -0.002441, -0.002197, -0.001953, 
+        -0.001709, -0.001465, -0.001221, -0.000977, -0.000732, -0.000488, -0.000244, 0.000000
+};
+
 
 #define uBIAS 0x84
 #define uCLIP 32635
 
-typedef struct
+/*
+static inline float ulaw_to_float( char ulawbyte )
 {
-	int16_t *ulawtoint16_table;
-	int16_t *ulawtoint16_ptr;
-	unsigned char *int16toulaw_table;
-	unsigned char *int16toulaw_ptr;
-} mast_pcmu_t;
+	int sign, exponent, mantissa;
+	float sample;
 
-
-
-static int ulaw_init_ulawtoint16( mast_pcmu_t* p )
-{
-	int i;
-
-	if(!p->ulawtoint16_table)
-	{
-    	static int exp_lut[8] = { 0, 132, 396, 924, 1980, 4092, 8316, 16764 };
-    	int sign, exponent, mantissa, sample;
-		unsigned char ulawbyte;
-
-		p->ulawtoint16_table = malloc(sizeof(int16_t) * 256);
-		if (!p->ulawtoint16_table) return 1;
-		
-		p->ulawtoint16_ptr = p->ulawtoint16_table;
-		for(i = 0; i < 256; i++)
-		{
-			ulawbyte = (unsigned char)i;
-    		ulawbyte = ~ulawbyte;
-    		sign = (ulawbyte & 0x80);
-    		exponent = (ulawbyte >> 4) & 0x07;
-    		mantissa = ulawbyte & 0x0F;
-    		sample = exp_lut[exponent] + (mantissa << (exponent + 3));
-    		if(sign != 0) sample = -sample;
-			p->ulawtoint16_ptr[i] = sample;
-		}
-	}
+	ulawbyte = ~ulawbyte;
+	sign = (ulawbyte & 0x80);
+	exponent = (ulawbyte >> 4) & 0x07;
+	mantissa = ulawbyte & 0x0F;
+	sample = exp_lut[exponent] + (mantissa << (exponent + 3));
+	if(sign != 0) sample = -sample;
 	
-	return 0;
+	return sample;
+}
+*/
+
+
+static inline float ulaw_to_float( int ulawbyte )
+{
+	float sample = 0.0;
+
+	if (ulawbyte & 0x80) {
+		sample = -1.0f * pcmu_decode[ulawbyte & 0x7F];
+	} else {
+		sample = pcmu_decode[ulawbyte & 0x7F];
+	}
+		
+	return sample;
 }
 
-static int ulaw_init_int16toulaw( mast_pcmu_t* p )
+static inline char float_to_ulaw( float sample_f32 )
 {
+	int sign, exponent, mantissa;
+	int sample_s16 = sample_f32 * 0x8000;
+	unsigned char ulawbyte;
+	int exp_lut[256] =
+		{0,0,1,1,2,2,2,2,3,3,3,3,3,3,3,3,
+		4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,
+		5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,
+		5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,
+		6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,
+		6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,
+		6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,
+		6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,
+		7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,
+		7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,
+		7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,
+		7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,
+		7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,
+		7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,
+		7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,
+		7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7};
 
-	if(!p->int16toulaw_table)
-	{
-    	int sign, exponent, mantissa;
-    	unsigned char ulawbyte;
-		int sample;
-		int i;
-    	int exp_lut[256] = {0,0,1,1,2,2,2,2,3,3,3,3,3,3,3,3,
-                               4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,
-                               5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,
-                               5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,
-                               6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,
-                               6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,
-                               6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,
-                               6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,
-                               7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,
-                               7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,
-                               7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,
-                               7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,
-                               7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,
-                               7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,
-                               7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,
-                               7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7};
-
- 		p->int16toulaw_table = malloc(65536);
-		if (!p->int16toulaw_table) return 1;
-
-		p->int16toulaw_ptr = p->int16toulaw_table + 32768;
-
-		for(i = -32768; i < 32768; i++)
-		{
-			sample = i;
 // Get the sample into sign-magnitude. 
-    		sign = (sample >> 8) & 0x80;		// set aside the sign 
-    		if(sign != 0) sample = -sample;		// get magnitude 
-    		if(sample > uCLIP) sample = uCLIP;		// clip the magnitude 
+	sign = (sample_s16 >> 8) & 0x80;		// set aside the sign 
+	if(sign != 0) sample_s16 = -sample_s16;		// get magnitude 
+	if(sample_s16 > uCLIP) sample_s16 = uCLIP;		// clip the magnitude 
 
 // Convert from 16 bit linear to ulaw. 
-    		sample = sample + uBIAS;
-		    exponent = exp_lut[(sample >> 7) & 0xFF];
-		    mantissa = (sample >> (exponent + 3)) & 0x0F;
-		    ulawbyte = ~(sign | (exponent << 4) | mantissa);
+	sample_s16 = sample_s16 + uBIAS;
+	exponent = exp_lut[(sample_s16 >> 7) & 0xFF];
+	mantissa = (sample_s16 >> (exponent + 3)) & 0x0F;
+	ulawbyte = ~(sign | (exponent << 4) | mantissa);
 #ifdef ZEROTRAP
-		    if (ulawbyte == 0) ulawbyte = 0x02;	    // optional CCITT trap 
+	if (ulawbyte == 0) ulawbyte = 0x02;	    // optional CCITT trap 
 #endif
 
-		    p->int16toulaw_ptr[i] = ulawbyte;
-		}
-	}
-	return 0;
-}
-
-static int16_t ulaw_bytetoint16(mast_pcmu_t* p, u_int8_t input)
-{
-	return p->ulawtoint16_ptr[input];
-}
-
-static u_int8_t ulaw_int16tobyte(mast_pcmu_t* p, int16_t input)
-{
-	return p->int16toulaw_ptr[input];
+	return ulawbyte;
 }
 
 
@@ -150,11 +136,10 @@ static int mast_samples_per_packet_pcmu( mast_codec_t *codec, int max_bytes)
 static u_int32_t mast_encode_pcmu(
 		mast_codec_t* codec,
 		u_int32_t inputsize, 	/* input size in samples */
-		int16_t *input,
+		float *input,
 		u_int32_t outputsize,	/* output size in bytes */
 		u_int8_t *output)
 {
-	mast_pcmu_t* p = (mast_pcmu_t*)codec->ptr;
 	register int i;
 	
 	if (outputsize < inputsize) {
@@ -163,7 +148,7 @@ static u_int32_t mast_encode_pcmu(
 	}
 
 	for(i=0;i<inputsize;i++) {
-		output[i] = ulaw_int16tobyte(p, input[i]);
+		output[i] = float_to_ulaw( input[i] );
 	}	
 	
 	return inputsize;
@@ -177,9 +162,8 @@ static u_int32_t mast_decode_pcmu(
 		u_int32_t inputsize,	/* input size in bytes */
 		u_int8_t  *input,
 		u_int32_t outputsize, 	/* output size in samples */
-		int16_t  *output)
+		float  *output)
 {
-	mast_pcmu_t* p = (mast_pcmu_t*)codec->ptr;
 	int i;
 	
 	if (outputsize < inputsize) {
@@ -188,39 +172,16 @@ static u_int32_t mast_decode_pcmu(
 	}
 	
 	for(i=0;i<inputsize;i++) {
-		output[i] = ulaw_bytetoint16(p, input[i]);
+		output[i] = ulaw_to_float( input[i] );
 	}		
 	
-	// outputsize == inputsize * 2
 	return inputsize;
-}
-
-
-
-
-
-static int mast_deinit_pcmu( mast_codec_t* codec )
-{
-	mast_pcmu_t* p = (mast_pcmu_t*)codec->ptr;
-	
-	if (p) {
-		if(p->ulawtoint16_table)	free(p->ulawtoint16_table); 
-		if(p->int16toulaw_table)	free(p->int16toulaw_table); 
-		free(p);
-		codec->ptr = NULL;
-	}
-
-	free( codec );
-	
-	// Success
-	return 0;
 }
 	
 
 
 // Initialise the PCMU codec
 int mast_init_pcmu( mast_codec_t* codec ) {
-	mast_pcmu_t* pcmu = NULL;
 
 	if (codec->channels!=1) {
 		MAST_ERROR("The PCMU codec is mono only");
@@ -231,28 +192,7 @@ int mast_init_pcmu( mast_codec_t* codec ) {
 	codec->samples_per_packet = mast_samples_per_packet_pcmu;
 	codec->encode_packet = mast_encode_pcmu;
 	codec->decode_packet = mast_decode_pcmu;
-	codec->deinit = mast_deinit_pcmu;
 
-
-	// Allocate memory for codec's private data
-	pcmu = malloc( sizeof(mast_pcmu_t) );
-	if (pcmu==NULL) {
-		MAST_ERROR( "Failed to allocate memory for mast_pcmu_t data structure" );
-		return -1;
-	}
-	codec->ptr = pcmu;
-	memset( pcmu, 0, sizeof(mast_pcmu_t) );
-
-	// Initialise the tables
-	if (ulaw_init_ulawtoint16( pcmu )) {
-		MAST_ERROR( "Failed to initialise ulaw decode table" );
-		return -1;
-	}
-	if (ulaw_init_int16toulaw( pcmu )) {
-		MAST_ERROR( "Failed to initialise ulaw encode table" );
-		return -1;
-	}
-	
 	// Success
 	return 0;
 }

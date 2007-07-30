@@ -175,7 +175,7 @@ const char* mast_codec_get_param( mast_codec_t* codec, const char* name )
 }
 
 // Encode - returns number of bytes encoded, or -1 on failure
-int mast_codec_encode_packet( mast_codec_t* codec, u_int32_t num_samples, int16_t *input, u_int32_t out_size, u_int8_t *output )
+int mast_codec_encode_packet( mast_codec_t* codec, u_int32_t num_samples, float *input, u_int32_t out_size, u_int8_t *output )
 {
 	if (codec->encode_packet) {
 		return codec->encode_packet( codec, num_samples, input, out_size, output );
@@ -186,7 +186,7 @@ int mast_codec_encode_packet( mast_codec_t* codec, u_int32_t num_samples, int16_
 }
 
 // Decode  - returns number of samples decoded, or -1 on failure
-int mast_codec_decode_packet( mast_codec_t* codec, u_int32_t inputsize, u_int8_t *input, u_int32_t outputsize, int16_t *output )
+int mast_codec_decode_packet( mast_codec_t* codec, u_int32_t inputsize, u_int8_t *input, u_int32_t outputsize, float *output )
 {
 	if (codec->decode_packet) {
 		return codec->decode_packet( codec, inputsize, input, outputsize, output );
