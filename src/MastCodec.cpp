@@ -31,8 +31,6 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 
-#include "MimeType.h"
-//#include "MastMimeType.h"
 #include "MastCodec.h"
 #include "MastCodec_GSM.h"
 #include "MastCodec_L16.h"
@@ -40,6 +38,7 @@
 #include "MastCodec_MPA.h"
 #include "MastCodec_PCMA.h"
 #include "MastCodec_PCMU.h"
+#include "MastMimeType.h"
 #include "mast.h"
 
 

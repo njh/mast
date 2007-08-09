@@ -23,7 +23,7 @@
 
 #include <samplerate.h>
 #include "MastAudioBuffer.h"
-#include "MimeType.h"
+#include "MastMimeType.h"
 #include "mast.h"
 
 

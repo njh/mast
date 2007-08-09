@@ -14,8 +14,8 @@ noinst_LIBRARIES = libmastcodecs.a
 libmastcodecs_a_SOURCES = \
 	MastAudioBuffer.cpp \
 	MastAudioBuffer.h \
-	MimeType.cpp \
-	MimeType.h \
+	MastMimeType.cpp \
+	MastMimeType.h \
 	MastCodec.cpp \
 	MastCodec.h \
 	MastCodec_GSM.cpp \

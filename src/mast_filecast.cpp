@@ -33,7 +33,7 @@
 
 #include "MastAudioBuffer.h"
 #include "MastCodec.h"
-#include "MimeType.h"
+#include "MastMimeType.h"
 #include "mast.h"
 
 

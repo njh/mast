@@ -30,8 +30,7 @@
 #include <sndfile.h>
 #include <ortp/ortp.h>
 
-//#include "MastMimeType.h"
-#include "MimeType.h"
+#include "MastMimeType.h"
 #include "MastCodec.h"
 #include "mast.h"
 

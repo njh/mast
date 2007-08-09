@@ -27,7 +27,7 @@
 #include <strings.h>
 #include <ctype.h>
 
-#include "MimeType.h"
+#include "MastMimeType.h"
 #include "mast.h"
 
 
