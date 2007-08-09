@@ -29,8 +29,8 @@
 
 #include <ortp/ortp.h>
 
+#include "MPA_Header.h"
 #include "mast.h"
-#include "mpa_header.h"
 
 
 
@@ -210,7 +210,7 @@ int main(int argc, char **argv)
 			MAST_DEBUG( "packet is NULL" );
 
 		} else {
-			unsigned int data_len = mast_rtp_packet_size( packet );
+			int data_len = mast_rtp_packet_size( packet );
 			if (data_len==0) {
 				MAST_WARNING("Failed to get size of packet's payload");
 			} else {

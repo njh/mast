@@ -30,8 +30,8 @@
 #include <ortp/ortp.h>
 
 
+#include "MPA_Header.h"
 #include "mast.h"
-#include "mpa_header.h"
 
 
 /* Globals */
@@ -172,7 +172,7 @@ char* mast_gethostname()
 	     && strlen( domainname ) )
 	{
 		int fqdn_len = strlen( hostname ) + strlen( domainname ) + 2;
-		char *fqdn = malloc( fqdn_len );
+		char *fqdn = (char*)malloc( fqdn_len );
 		snprintf( fqdn, fqdn_len, "%s.%s", hostname, domainname );
 		return fqdn;
 	}
@@ -351,8 +351,9 @@ void mast_set_session_ssrc( RtpSession * session, char* ssrc_str )
 
 
 /* This isn't part of the public/publish oRTP API */
-int rtp_session_rtp_recv (RtpSession * session, uint32_t user_ts);
-
+extern "C" {
+	int rtp_session_rtp_recv (RtpSession * session, uint32_t user_ts);
+};
 
 mblk_t *mast_wait_for_rtp_packet( RtpSession * session, int seconds )
 {
@@ -408,14 +409,14 @@ void mast_update_mpa_pt( mblk_t* packet )
 
 	if (packet && packet->b_cont) {
 		unsigned char* mpa_ptr = packet->b_cont->b_rptr + 4;
-		mpa_header_t mh;
+		MPA_Header mh;
 		
-		if (!mpa_header_parse( mpa_ptr, &mh)) {
+		if (!mh.parse( mpa_ptr )) {
 			MAST_FATAL("Failed to parse MPEG Audio header");
 		}
 	
 		// Adjust the normal bitrate
-		payload_type_mpeg_audio.normal_bitrate = mh.bitrate * 1000;
+		payload_type_mpeg_audio.normal_bitrate = mh.get_bitrate() * 1000;
 	}
 	
 }

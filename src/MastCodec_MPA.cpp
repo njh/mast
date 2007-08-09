@@ -23,46 +23,32 @@
 #include <sys/types.h>
 #include <netinet/in.h>
 
-#include "codecs.h"
+#include "MastCodec_MPA.h"
 #include "mast.h"
+
+#define	MPA_DEFAULT_CHANNELS		(2)
+#define MPA_DEFAULT_SAMPLERATE		(44100)
+
 
 
 // Only compile this code if TwoLAME is available
 #ifdef HAVE_TWOLAME
 
-#include <twolame.h>
-
-
-typedef struct
-{
-	twolame_options *twolame;
-	int prepared;
-} mast_mpegaudio_t;
 
 
 // Calculate the number of samples per packet
-static int mast_samples_per_packet_mpa( mast_codec_t *codec, int max_bytes)
+size_t MastCodec_MPA::frames_per_packet_internal( size_t max_bytes )
 {
-	mast_mpegaudio_t* p = codec->ptr;
-	int frames_per_packet = max_bytes/twolame_get_framelength( p->twolame );
+	int frames_per_packet = max_bytes/twolame_get_framelength( this->twolame );
 	MAST_DEBUG("MPEG Audio Frames per Packet: %d", frames_per_packet );
 	
 	return frames_per_packet*TWOLAME_SAMPLES_PER_FRAME;
 }
 
 
-// Prepare to start encoding/decoding
-static int mast_prepare_mpa( mast_codec_t *codec )
+
+int MastCodec_MPA::set_param_internal( const char* name, const char* value )
 {
-	mast_mpegaudio_t* p = codec->ptr;
-
-	return twolame_init_params( p->twolame );
-}
-
-
-static int mast_set_param_mpa( mast_codec_t* codec, const char* name, const char* value )
-{
-	mast_mpegaudio_t* p = codec->ptr;
 
 	/*	Parameters listed in RFC3555 for audio/MPA:
 	
@@ -81,19 +67,19 @@ static int mast_set_param_mpa( mast_codec_t* codec, const char* name, const char
 		int layer = atoi(value);
 		if (layer!=2) return -2;
 	} else if (strcmp(name, "mode")==0) {
-		int mode;
+		TWOLAME_MPEG_mode mode;
 		if (strcmp(value, "stereo")==0) mode = TWOLAME_STEREO;
 		else if (strcmp(value, "joint_stereo")==0) mode = TWOLAME_JOINT_STEREO;
 		else if (strcmp(value, "single_channel")==0) mode = TWOLAME_MONO;
 		else if (strcmp(value, "dual_channel")==0) mode = TWOLAME_DUAL_CHANNEL;
 		else return -2;
 		
-		if (twolame_set_mode( p->twolame, mode )) {
+		if (twolame_set_mode( this->twolame, mode )) {
 			MAST_WARNING("Failed to set mode");
 		}
 	} else if (strcmp(name, "bitrate")==0) {
 		int bitrate = atoi(value);
-		if (twolame_set_bitrate( p->twolame, bitrate )) {
+		if (twolame_set_bitrate( this->twolame, bitrate )) {
 			MAST_WARNING("Failed to set bitrate");
 		} else {
 			MAST_DEBUG("Set bitrate to %d", bitrate);
@@ -107,7 +93,8 @@ static int mast_set_param_mpa( mast_codec_t* codec, const char* name, const char
 	return 0;
 }
 
-static const char* mast_get_param_mpa( mast_codec_t* codec, const char* name )
+
+const char* MastCodec_MPA::get_param_internal( const char* name )
 {
 
 	if (strcmp(name, "layer")==0) {
@@ -122,14 +109,12 @@ static const char* mast_get_param_mpa( mast_codec_t* codec, const char* name )
 
 
 // Encode a packet's payload
-static u_int32_t mast_encode_mpa(
-		mast_codec_t* codec,
-		u_int32_t inputsize, 	// input size in samples
-		float *input,
-		u_int32_t outputsize,	// output size in bytes
+size_t MastCodec_MPA::encode_packet_internal(
+		size_t inputsize, 	/* input size in frames */
+		mast_sample_t *input,
+		size_t outputsize,	/* output size in bytes */
 		u_int8_t *output)
 {
-	mast_mpegaudio_t* p = codec->ptr;
 	int bytes_encoded = 0;
 
 	// MPEG Audio header is 4 bytes at the start of the packet
@@ -139,7 +124,7 @@ static u_int32_t mast_encode_mpa(
 	output[3] = 0x00;
 
 	// Encode the audio using twolame
-	bytes_encoded = twolame_encode_buffer_float32_interleaved( p->twolame, input, inputsize, output+4, outputsize-4 );
+	bytes_encoded = twolame_encode_buffer_float32_interleaved( this->twolame, input, inputsize, output+4, outputsize-4 );
 	//MAST_DEBUG( "mast_encode_mpa: encoded %d samples to %d bytes (max %d bytes)", inputsize, bytes_encoded, outputsize );
 	
 	return bytes_encoded+4;
@@ -148,67 +133,51 @@ static u_int32_t mast_encode_mpa(
 
 
 
-static int mast_deinit_mpa( mast_codec_t* codec )
+MastCodec_MPA::~MastCodec_MPA()
 {
-	mast_mpegaudio_t* p = codec->ptr;
-	
-	if (p) {
+	if (twolame) {
 		// De-initialise twolame
-		if (p->twolame) twolame_close( &p->twolame );
-
-		free( p );
+		twolame_close( &twolame );
 	}
 	
-	// Success
-	return 0;
 }
 	
 
 
 // Initialise the codec
-int mast_init_mpa( mast_codec_t* codec ) {
-	mast_mpegaudio_t *mpa = NULL;
+MastCodec_MPA::MastCodec_MPA( MastMimeType *type)
+	: MastCodec(type)
+{
 
-	// Set the callbacks
-	codec->samples_per_packet = mast_samples_per_packet_mpa;
-	codec->prepare = mast_prepare_mpa;
-	codec->set_param = mast_set_param_mpa;
-	codec->get_param = mast_get_param_mpa;
-	codec->encode_packet = mast_encode_mpa;
-	codec->deinit = mast_deinit_mpa;
-
-
-	// Allocate memory for codec's private data
-	mpa = malloc( sizeof(mast_mpegaudio_t) );
-	if (mpa==NULL) {
-		MAST_ERROR( "Failed to allocate memory for mast_mpa_t data structure" );
-		return -1;
-	}
-	codec->ptr = mpa;
-	memset( mpa, 0, sizeof(mast_mpegaudio_t) );
+	// Set default values
+	this->samplerate = MPA_DEFAULT_SAMPLERATE;
+	this->channels = MPA_DEFAULT_CHANNELS;
 
 
 	// Initialise twolame
-	mpa->twolame = twolame_init();
-	if (mpa->twolame==NULL) {
-		MAST_ERROR( "Failed to initialise TwoLame" );
-		return -1;
+	this->twolame = twolame_init();
+	if (this->twolame==NULL) {
+		MAST_FATAL( "Failed to initialise TwoLame" );
 	}
 
 	// Configure twolame
-	if (twolame_set_num_channels( mpa->twolame, codec->channels )) {
-		MAST_ERROR( "Failed to set number of input channels" );
-		return -1;
+	if (twolame_set_num_channels( this->twolame, this->channels )) {
+		MAST_WARNING( "Failed to set number of input channels" );
 	}
-	if (twolame_set_in_samplerate( mpa->twolame, codec->samplerate )) {
-		MAST_ERROR( "Failed to set number of input samplerate" );
-		return -1;
+	if (twolame_set_in_samplerate( this->twolame, this->samplerate )) {
+		MAST_WARNING( "Failed to set number of input samplerate" );
 	}
 	
-	// Success
-	return 0;
+	
+	// Apply MIME type parameters to the codec
+	this->apply_mime_type_params( type );
+
+	
+	// Get TwoLAME ready to go...
+	twolame_init_params( this->twolame );
+
 }
 
 
-#endif	// HAVE_TWOLAMNE
+#endif	// HAVE_TWOLAME
 

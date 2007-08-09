@@ -20,40 +20,40 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/types.h>
 
-#include "config.h"
-#include "codecs.h"
+
+#include "MastCodec_GSM.h"
 #include "mast.h"
 
 #include <samplerate.h>
 #include "../libgsm/gsm.h"
 
+#define	GSM_DEFAULT_CHANNELS		(1)
+#define	GSM_DEFAULT_SAMPLERATE		(8000)
+
 
 
 // Calculate the number of samples per packet
-static int mast_samples_per_packet_gsm( mast_codec_t *codec, int max_bytes)
+size_t MastCodec_GSM::frames_per_packet_internal( size_t max_bytes )
 {
 	int frames_per_packet = max_bytes/GSM_FRAME_BYTES;
-	MAST_DEBUG("GSM frames per packet = %d",frames_per_packet);
+	MAST_DEBUG("GSM frames per packet = %d", frames_per_packet);
 	return frames_per_packet * GSM_FRAME_SAMPLES;
 }
 
 
 // Encode a packet's payload
-static u_int32_t mast_encode_gsm(
-		mast_codec_t* codec,
-		u_int32_t inputsize, 	// input size in samples
-		float *input,
-		u_int32_t outputsize,	// output size in bytes
+size_t MastCodec_GSM::encode_packet_internal(
+		size_t inputsize, 	/* input size in frames */
+		mast_sample_t *input,
+		size_t outputsize,	/* output size in bytes */
 		u_int8_t *output)
 {
-	gsm gsm_handle = codec->ptr;
-	int frames = (inputsize/GSM_FRAME_SAMPLES);
-	int f = 0;
-	
+	size_t frames = (inputsize/GSM_FRAME_SAMPLES);
+	size_t f = 0;
+
 	if (inputsize % GSM_FRAME_SAMPLES) {
-		MAST_DEBUG("encode_gsm: number of input samples (%d) isn't a multiple of %d", inputsize, GSM_FRAME_SAMPLES);
+		MAST_DEBUG("decode_gsm: number of input samples (%d) isn't a multiple of %d", inputsize, GSM_FRAME_SAMPLES);
 	}
 
 	if (outputsize < (frames*GSM_FRAME_BYTES)) {
@@ -74,22 +74,25 @@ static u_int32_t mast_encode_gsm(
 		gsm_encode(gsm_handle, signal_l16, byte);
 	}
 
+	// Return the length of the encoded audio
 	return frames*GSM_FRAME_BYTES;
 }
 
 
 // Decode a packet's payload
-static u_int32_t mast_decode_gsm(
-		mast_codec_t* codec,
-		u_int32_t inputsize,		// input size in bytes
+size_t MastCodec_GSM::decode_packet_internal(
+		size_t inputsize,	/* input size in bytes */
 		u_int8_t  *input,
-		u_int32_t outputsize, 	// output size in samples
-		float  *output)
+		size_t outputsize, 	/* output size in frames */
+		mast_sample_t  *output)
 {
-	gsm gsm_handle = codec->ptr;
-	int frames = (inputsize/GSM_FRAME_BYTES);
-	int f = 0;
+	size_t frames = (inputsize/GSM_FRAME_BYTES);
+	size_t f = 0;
 	
+	if (inputsize % GSM_FRAME_BYTES) {
+		MAST_DEBUG("decode_gsm: number of input bytes (%d) isn't a multiple of %d", inputsize, GSM_FRAME_BYTES);
+	}
+
 	if (outputsize < (frames*GSM_FRAME_SAMPLES)) {
 		MAST_ERROR("decode_gsm: output buffer isn't big enough");
 		return -1;
@@ -99,22 +102,22 @@ static u_int32_t mast_decode_gsm(
 	for(f=0; f<frames; f++) {
 		gsm_signal signal_l16[GSM_FRAME_SAMPLES];
 		gsm_byte* byte = input+(GSM_FRAME_BYTES*f);
-		float *signal_float = &output[GSM_FRAME_SAMPLES*f];
+		mast_sample_t *signal_float = output+(GSM_FRAME_SAMPLES*f);
 		
 		// Decode from GSM
 		gsm_decode(gsm_handle, byte, signal_l16);
 		
 		// Convert from 16-bit integer to float
 		src_short_to_float_array( signal_l16, signal_float, GSM_FRAME_SAMPLES);
+
 	}
 
 	return frames*GSM_FRAME_SAMPLES;
 }
 
 
-static int mast_deinit_gsm( mast_codec_t* codec )
+MastCodec_GSM::~MastCodec_GSM()
 {
-	gsm gsm_handle = codec->ptr;
 
 	// Free the GSM handle
 	if (gsm_handle) {
@@ -122,37 +125,28 @@ static int mast_deinit_gsm( mast_codec_t* codec )
 		gsm_handle = NULL;
 	}
 
-	// Success
-	return 0;
 }
 	
 
 
 // Initialise the GSM codec
-int mast_init_gsm(mast_codec_t* codec)
+MastCodec_GSM::MastCodec_GSM( MastMimeType *type)
+	: MastCodec(type)
 {
-	gsm gsm_handle = NULL;
 	
-	if (codec->channels!=1) {
-		MAST_ERROR("The GSM codec is mono only");
-		return -1;
-	}
-	
-	// Set the callbacks
-	codec->samples_per_packet = mast_samples_per_packet_gsm;
-	codec->encode_packet = mast_encode_gsm;
-	codec->decode_packet = mast_decode_gsm;
-	codec->deinit = mast_deinit_gsm;
+	// Set default values
+	this->samplerate = GSM_DEFAULT_SAMPLERATE;
+	this->channels = GSM_DEFAULT_CHANNELS;
+
 	
 	// Create the GSM handle
 	gsm_handle = gsm_create();
-	codec->ptr = gsm_handle;
 	if (gsm_handle==NULL) {
-		MAST_ERROR( "Failed to initialise GSM library" );
-		mast_deinit_gsm( codec );
-		return -1;
+		MAST_FATAL( "Failed to initialise GSM library" );
 	}
+	
 
-	// Success
-	return 0;
+	// Apply MIME type parameters to the codec
+	this->apply_mime_type_params( type );
+
 }

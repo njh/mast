@@ -31,17 +31,17 @@
 #include <ortp/ortp.h>
 
 
+#include "MPA_Header.h"
 #include "mast.h"
-#include "mpa_header.h"
 
 
-#define MAST_TOOL_NAME		"mast_mpacast"
+#define MAST_TOOL_NAME		"mast_rawcast"
 #define READ_BUFFER_SIZE	(8196)
 
 
 /* Global Variables */
 int g_loop_file = FALSE;
-int g_payload_size_limit = DEFAULT_PAYLOAD_LIMIT;
+unsigned int g_payload_size_limit = DEFAULT_PAYLOAD_LIMIT;
 char* g_chosen_payload_type = "MPA";
 char* g_filename = NULL;
 
@@ -265,7 +265,7 @@ static void main_loop_gsm( RtpSession *session, FILE* input, u_int8_t* buffer )
 
 static void main_loop_mpa( RtpSession *session, FILE* input, u_int8_t* buffer )
 {
-	mpa_header_t mh;
+	MPA_Header mh;
 	u_int8_t* mpabuf = buffer+4;
 	int timestamp = 0;
 	int ever_synced = 0;
@@ -328,33 +328,33 @@ static void main_loop_mpa( RtpSession *session, FILE* input, u_int8_t* buffer )
 
 
 			// Get information about the frame
-			if (mpa_header_parse( mpabuf, &mh )) {
+			if (mh.parse( mpabuf )) {
 			
 				// Once we see two valid MPEG Audio frames in a row
 				// then we consider ourselves synced
 				if (!synced) {
 					// ignore the rest of the first frame
-					bytes_read = fread( &mpabuf[4], 1, mh.framesize-4, input);
-					if (bytes_read!=mh.framesize-4) continue;
+					bytes_read = fread( &mpabuf[4], 1, mh.get_framesize()-4, input);
+					if (bytes_read!=(int)mh.get_framesize()-4) continue;
 					
 					// read in next header
 					bytes_read = fread( mpabuf, 1, 4, input);
 					if (bytes_read!=4) continue;
 					
 					// Check that the next header is valid too
-					if (mpa_header_parse( mpabuf, &mh )) {
+					if (mh.parse( mpabuf )) {
 						MAST_INFO( "Gained sync on MPEG audio stream" );
-						mpa_header_print( stdout, &mh );
+						mh.print( stdout );
 						synced = 1;
 						ever_synced = 1;
 						
 						// Work out how big payload will be
-						if (g_payload_size_limit < mh.framesize) {
+						if (g_payload_size_limit < mh.get_framesize()) {
 							MAST_FATAL("audio frame size is bigger than packet size limit");
 						}
 						
 						// FIXME: support multiple frames per packet
-						printf("MPEG Audio Frame size: %d bytes\n", mh.framesize );
+						printf("MPEG Audio Frame size: %d bytes\n", mh.get_framesize() );
 					}
 
 					
@@ -368,13 +368,13 @@ static void main_loop_mpa( RtpSession *session, FILE* input, u_int8_t* buffer )
 				if (synced) {
 				
 					// Read in the rest of the frame
-					fread( &mpabuf[4], 1, mh.framesize-4, input);
+					fread( &mpabuf[4], 1, mh.get_framesize()-4, input);
 
 					// Send audio payload (plus 4 null bytes at the start)
-					rtp_session_send_with_ts(session, buffer, mh.framesize+4, timestamp);
+					rtp_session_send_with_ts(session, buffer, mh.get_framesize()+4, timestamp);
 					
 					// Timestamp for MPEG Audio is based on fixed 90kHz clock rate
-					timestamp += ((mh.samples * 90000) / mh.samplerate);   //  * frames_per_packet
+					timestamp += ((mh.get_samples() * 90000) / mh.get_samplerate());   //  * frames_per_packet
 
 				}
 				
@@ -417,7 +417,7 @@ int main(int argc, char **argv)
 	}
 	
 	// Allocate memory for the read buffer
-	buffer = malloc( READ_BUFFER_SIZE );
+	buffer = (u_int8_t*)malloc( READ_BUFFER_SIZE );
 	if (!buffer) {
 		MAST_FATAL( "Failed to allocate memory for the read buffer: %s", strerror(errno) );
 	}

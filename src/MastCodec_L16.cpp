@@ -25,15 +25,17 @@
 #include <samplerate.h>
 #include <netinet/in.h>
 
-#include "codecs.h"
+#include "MastCodec_L16.h"
 #include "mast.h"
 
+#define	L16_DEFAULT_SAMPLERATE		(44100)
+#define	L16_DEFAULT_CHANNELS		(2)
 
 
 // Calculate the number of samples per packet
-static int mast_samples_per_packet_l16( mast_codec_t *codec, int max_bytes)
+size_t MastCodec_L16::frames_per_packet_internal( size_t max_bytes )
 {
-	int bytes_per_frame = sizeof(int16_t) * codec->channels;
+	int bytes_per_frame = sizeof(int16_t) * this->channels;
 	int bytes_per_unit = SAMPLES_PER_UNIT * bytes_per_frame;
 	MAST_DEBUG("L16 bytes per frame = %d", bytes_per_frame);
 	MAST_DEBUG("L16 bytes per unit = %d", bytes_per_unit);
@@ -42,17 +44,16 @@ static int mast_samples_per_packet_l16( mast_codec_t *codec, int max_bytes)
 
 
 // Encode a packet's payload
-static u_int32_t mast_encode_l16(
-		mast_codec_t* codec,
-		u_int32_t inputsize, 	// input size in frames
-		float *input,
-		u_int32_t outputsize,	// output size in bytes
+size_t MastCodec_L16::encode_packet_internal(
+		size_t inputsize, 	/* input size in frames */
+		mast_sample_t *input,
+		size_t outputsize,	/* output size in bytes */
 		u_int8_t *output)
 {
-	int num_samples = inputsize * codec->channels;
-	int output_bytes = (num_samples * sizeof(int16_t));
+	size_t num_samples = inputsize * this->channels;
+	size_t output_bytes = (num_samples * sizeof(int16_t));
 	int16_t *output16 = (int16_t*)output;
-	register int i;
+	size_t i;
 
 	if (outputsize < output_bytes) {
 		MAST_ERROR("encode_l16: output buffer isn't big enough");
@@ -73,12 +74,11 @@ static u_int32_t mast_encode_l16(
 
 
 // Decode a packet's payload
-static u_int32_t mast_decode_l16(
-		mast_codec_t* codec,
-		u_int32_t inputsize,		// input size in bytes
+size_t MastCodec_L16::decode_packet_internal(
+		size_t inputsize,	/* input size in bytes */
 		u_int8_t  *input,
-		u_int32_t outputsize, 	// output size in samples
-		float  *output)
+		size_t outputsize, 	/* output size in frames */
+		mast_sample_t  *output)
 {
 	register int num_samples = (inputsize/sizeof(int16_t));
 	int16_t *input16 = (int16_t*)input;
@@ -99,21 +99,21 @@ static u_int32_t mast_decode_l16(
 	src_short_to_float_array( input16, output, num_samples);
 
 
-	return num_samples/codec->channels;
+	return num_samples/this->channels;
 }
 
 
 // Initialise the L16 codec
-int mast_init_l16( mast_codec_t* codec ) {
+MastCodec_L16::MastCodec_L16( MastMimeType *type)
+	: MastCodec(type)
+{
 
-	// Set the callbacks
-	codec->samples_per_packet = mast_samples_per_packet_l16;
-	codec->encode_packet = mast_encode_l16;
-	codec->decode_packet = mast_decode_l16;
+	// Set default values
+	this->samplerate = L16_DEFAULT_SAMPLERATE;
+	this->channels = L16_DEFAULT_CHANNELS;
 
-	// Success
-	return 0;
+	// Apply MIME type parameters to the codec
+	this->apply_mime_type_params( type );
+
 }
-
-
 

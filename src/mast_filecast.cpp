@@ -31,8 +31,9 @@
 #include <ortp/ortp.h>
 #include <sndfile.h>
 
-#include "codecs.h"
-#include "mime_type.h"
+#include "MastAudioBuffer.h"
+#include "MastCodec.h"
+#include "MimeType.h"
 #include "mast.h"
 
 
@@ -43,7 +44,7 @@
 int g_loop_file = FALSE;
 int g_payload_size_limit = DEFAULT_PAYLOAD_LIMIT;
 char* g_filename = NULL;
-mast_mime_type_t *g_mime_type = NULL;
+MastMimeType *g_mime_type = NULL;
 
 
 
@@ -56,7 +57,7 @@ static char* format_duration_string( SF_INFO *sfinfo )
 {
 	float seconds;
 	int minutes;
-	char * string = malloc( STR_BUF_SIZE );
+	char *string = (char*)malloc( STR_BUF_SIZE );
 	
 	if (sfinfo->frames==0 || sfinfo->samplerate==0) {
 		snprintf( string, STR_BUF_SIZE, "Unknown" );
@@ -74,6 +75,25 @@ static char* format_duration_string( SF_INFO *sfinfo )
 	return string;
 }
 
+
+/*
+  fill_input_buffer()
+  Make sure input buffer if full of audio  
+*/
+static size_t fill_input_buffer( SNDFILE *inputfile, MastAudioBuffer* buffer )
+{
+	size_t frames_read = sf_readf_float( inputfile, buffer->get_write_ptr(), buffer->get_write_space() );
+
+	if (frames_read < 0) {
+		MAST_ERROR("Failed to read from file: %s", sf_strerror( inputfile ) );
+		return frames_read;
+	}
+
+	// Add it on to the buffer usage
+	buffer->add_frames( frames_read );
+
+	return frames_read;
+}
 
 /* 
   print_file_info() 
@@ -158,7 +178,7 @@ static void parse_cmd_line(int argc, char **argv, RtpSession* session)
 		break;
 		
 		case 'o':
-			mast_mime_type_set_param_pair( g_mime_type, optarg );
+			g_mime_type->set_param_pair( optarg );
 		break;
 
 		case 'z':
@@ -201,7 +221,7 @@ static void parse_cmd_line(int argc, char **argv, RtpSession* session)
 	}
 	
 	// Parse the payload type
-	if (mast_mime_type_parse( g_mime_type, payload_type )) {
+	if (g_mime_type->parse( payload_type )) {
 		usage();
 	}
 
@@ -235,11 +255,10 @@ int main(int argc, char **argv)
 	PayloadType* pt = NULL;
 	SNDFILE* input = NULL;
 	SF_INFO sfinfo;
-	mast_codec_t *codec = NULL;
-	float *audio_buffer = NULL;
+	MastCodec *codec = NULL;
+	MastAudioBuffer *input_buffer = NULL;
 	u_int8_t *payload_buffer = NULL;
-	int audio_buffer_size = 0;
-	int samples_per_packet = 0;
+	int frames_per_packet = 0;
 	int ts = 0;
 
 	
@@ -247,7 +266,7 @@ int main(int argc, char **argv)
 	session = mast_init_ortp( MAST_TOOL_NAME, RTP_SESSION_SENDONLY, TRUE );
 
 	// Initialise the MIME type
-	g_mime_type = mast_mime_type_init(NULL);
+	g_mime_type = new MastMimeType();
 
 	// Parse the command line arguments 
 	// and configure the session
@@ -266,25 +285,25 @@ int main(int argc, char **argv)
 	// Display some information about the chosen payload type
 	MAST_INFO( "Sending SSRC: 0x%x", session->snd.ssrc );
 	MAST_INFO( "Input Format: %d Hz, %s", sfinfo.samplerate, sfinfo.channels==2 ? "Stereo" : "Mono");
-	mast_mime_type_print( g_mime_type );
+	g_mime_type->print();
 
 	
 	// Load the codec
-	codec = mast_codec_init( g_mime_type, sfinfo.samplerate, sfinfo.channels );
+	codec = MastCodec::new_codec( g_mime_type );
 	if (codec == NULL) MAST_FATAL("Failed to get initialise codec" );
+	MAST_INFO( "Output Format: %d Hz, %s", codec->get_samplerate(), codec->get_channels()==2 ? "Stereo" : "Mono");
 
 	// Work out the payload type to use
-	pt = mast_choose_payloadtype( session, codec->subtype, sfinfo.samplerate, sfinfo.channels );
+	pt = mast_choose_payloadtype( session, codec->get_type(), codec->get_samplerate(), codec->get_channels() );
 	if (pt == NULL) MAST_FATAL("Failed to get payload type information from oRTP");
 
 	// Calculate the packet size
-	samples_per_packet = mast_codec_samples_per_packet( codec, g_payload_size_limit );
-	if (samples_per_packet<=0) MAST_FATAL( "Invalid number of samples per packet" );
+	frames_per_packet = codec->frames_per_packet( g_payload_size_limit );
+	if (frames_per_packet<=0) MAST_FATAL( "Invalid number of samples per packet" );
 
-	// Allocate memory for audio buffer
-	audio_buffer_size = samples_per_packet * sizeof(float) * pt->channels;
-	audio_buffer = (float*)malloc( audio_buffer_size );
-	if (audio_buffer == NULL) MAST_FATAL("Failed to allocate memory for audio buffer");
+	// Create audio buffer
+	input_buffer = new MastAudioBuffer( frames_per_packet, codec->get_samplerate(), codec->get_channels() );
+	if (input_buffer == NULL) MAST_FATAL("Failed to creare audio input buffer");
 
 	// Allocate memory for the packet buffer
 	payload_buffer = (u_int8_t*)malloc( g_payload_size_limit );
@@ -299,37 +318,35 @@ int main(int argc, char **argv)
 	// The main loop
 	while( mast_still_running() )
 	{
-		int samples_read = sf_readf_float( input, audio_buffer, samples_per_packet );
+		int frames_read = fill_input_buffer( input, input_buffer );
 		int payload_bytes = 0;
 		
 		// Was there an error?
-		if (samples_read < 0) {
-			MAST_ERROR("Failed to read from file: %s", sf_strerror( input ) );
-			break;
-		}
+		if (frames_read < 0) break;
 		
 		// Encode audio
-		payload_bytes = mast_codec_encode_packet(codec, samples_read, audio_buffer,
-					g_payload_size_limit, payload_buffer );
+		payload_bytes = codec->encode_packet( input_buffer, g_payload_size_limit, payload_buffer );
 		if (payload_bytes<0)
 		{
 			MAST_ERROR("Codec encode failed" );
 			break;
 		}
 		
+		// We used the audio up
+		input_buffer->empty_buffer();
 	
 		if (payload_bytes) {
 			// Send out an RTP packet
 			rtp_session_send_with_ts(session, payload_buffer, payload_bytes, ts);
 			
 			// Calculate the timestamp increment
-			ts+=((samples_read * pt->clock_rate) / sfinfo.samplerate);   //  * frames_per_packet;
+			ts+=((frames_read * pt->clock_rate) / sfinfo.samplerate);   //  * frames_per_packet;
 		}
 		
 
 		// Reached end of file?
-		if (samples_read < samples_per_packet) {
-			MAST_DEBUG("Reached end of file (wanted=%d, samples_read=%d)", samples_per_packet, samples_read);
+		if (frames_read < frames_per_packet) {
+			MAST_DEBUG("Reached end of file (wanted=%d, frames_read=%d)", frames_per_packet, frames_read);
 			if (g_loop_file) {
 				// Seek back to the beginning
 				if (sf_seek( input, 0, SEEK_SET )) {
@@ -349,22 +366,21 @@ int main(int argc, char **argv)
 		free(payload_buffer);
 		payload_buffer=NULL;
 	}
-	if (audio_buffer) {
-		free(audio_buffer);
-		audio_buffer=NULL;
+	if (input_buffer) {
+		delete input_buffer;
+		input_buffer=NULL;
 	}
 	
-	// De-initialise the codec
-	mast_codec_deinit( codec );
-	 
+
 	// Close input file
 	if (sf_close( input )) {
 		MAST_ERROR("Failed to close input file:\n%s", sf_strerror(input));
 	}
 	
 
-	// Free up the mime type memory	
-	mast_mime_type_deinit( g_mime_type );
+	// Delete objects
+	delete codec;
+	delete g_mime_type;
 
 	// Close RTP session
 	mast_deinit_ortp( session );

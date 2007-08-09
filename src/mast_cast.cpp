@@ -30,8 +30,8 @@
 
 #include <ortp/ortp.h>
 
-#include "codecs.h"
-#include "mime_type.h"
+#include "MastCodec.h"
+#include "MastMimeType.h"
 #include "mast_cast-jack.h"
 #include "mast.h"
 

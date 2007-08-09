@@ -22,11 +22,14 @@
 #include <string.h>
 #include <sys/types.h>
 
-#include "codecs.h"
-#include "mast.h"
+#include "MastCodec_PCMU.h"
 
 
-static float pcmu_decode[128] =
+#define	PCMU_DEFAULT_CHANNELS		(1)
+#define	PCMU_DEFAULT_SAMPLERATE		(8000)
+
+
+static mast_sample_t pcmu_decode_table[128] =
 {
         -0.980347, -0.949097, -0.917847, -0.886597, -0.855347, -0.824097, -0.792847, -0.761597, 
         -0.730347, -0.699097, -0.667847, -0.636597, -0.605347, -0.574097, -0.542847, -0.511597, 
@@ -51,10 +54,10 @@ static float pcmu_decode[128] =
 #define uCLIP 32635
 
 /*
-static inline float ulaw_to_float( char ulawbyte )
+static inline mast_sample_t ulaw_to_float( char ulawbyte )
 {
 	int sign, exponent, mantissa;
-	float sample;
+	mast_sample_t sample;
 
 	ulawbyte = ~ulawbyte;
 	sign = (ulawbyte & 0x80);
@@ -68,20 +71,20 @@ static inline float ulaw_to_float( char ulawbyte )
 */
 
 
-static inline float ulaw_to_float( int ulawbyte )
+static inline mast_sample_t ulaw_to_float( int ulawbyte )
 {
-	float sample = 0.0;
+	mast_sample_t sample = 0.0;
 
 	if (ulawbyte & 0x80) {
-		sample = -1.0f * pcmu_decode[ulawbyte & 0x7F];
+		sample = -1.0f * pcmu_decode_table[ulawbyte & 0x7F];
 	} else {
-		sample = pcmu_decode[ulawbyte & 0x7F];
+		sample = pcmu_decode_table[ulawbyte & 0x7F];
 	}
 		
 	return sample;
 }
 
-static inline char float_to_ulaw( float sample_f32 )
+static inline char float_to_ulaw( mast_sample_t sample_f32 )
 {
 	int sign, exponent, mantissa;
 	int sample_s16 = sample_f32 * 0x8000;
@@ -123,9 +126,9 @@ static inline char float_to_ulaw( float sample_f32 )
 
 
 // Calculate the number of samples per packet
-static int mast_samples_per_packet_pcmu( mast_codec_t *codec, int max_bytes)
+size_t MastCodec_PCMU::frames_per_packet_internal( size_t max_bytes )
 {
-	int bytes_per_unit = SAMPLES_PER_UNIT * codec->channels;
+	int bytes_per_unit = SAMPLES_PER_UNIT * this->channels;
 	MAST_DEBUG("PCMU bytes per unit = %d", bytes_per_unit);
 	return (max_bytes / bytes_per_unit) * SAMPLES_PER_UNIT;
 }
@@ -133,14 +136,13 @@ static int mast_samples_per_packet_pcmu( mast_codec_t *codec, int max_bytes)
 
 
 // Encode a packet's payload
-static u_int32_t mast_encode_pcmu(
-		mast_codec_t* codec,
-		u_int32_t inputsize, 	/* input size in samples */
-		float *input,
-		u_int32_t outputsize,	/* output size in bytes */
+size_t MastCodec_PCMU::encode_packet_internal(
+		size_t inputsize, 	/* input size in frames */
+		mast_sample_t *input,
+		size_t outputsize,	/* output size in bytes */
 		u_int8_t *output)
 {
-	register int i;
+	register size_t i;
 	
 	if (outputsize < inputsize) {
 		MAST_ERROR("encode_ulaw: output buffer isn't big enough");
@@ -157,14 +159,13 @@ static u_int32_t mast_encode_pcmu(
 
 
 // Decode a packet's payload
-static u_int32_t mast_decode_pcmu(
-		mast_codec_t* codec,
-		u_int32_t inputsize,	/* input size in bytes */
+size_t MastCodec_PCMU::decode_packet_internal(
+		size_t inputsize,	/* input size in bytes */
 		u_int8_t  *input,
-		u_int32_t outputsize, 	/* output size in samples */
-		float  *output)
+		size_t outputsize, 	/* output size in frames */
+		mast_sample_t  *output)
 {
-	int i;
+	size_t i;
 	
 	if (outputsize < inputsize) {
 		MAST_ERROR("decode_ulaw: output buffer isn't big enough");
@@ -177,24 +178,22 @@ static u_int32_t mast_decode_pcmu(
 	
 	return inputsize;
 }
+
 	
-
-
 // Initialise the PCMU codec
-int mast_init_pcmu( mast_codec_t* codec ) {
+MastCodec_PCMU::MastCodec_PCMU( MastMimeType* type )
+	: MastCodec(type)
+{
 
-	if (codec->channels!=1) {
-		MAST_ERROR("The PCMU codec is mono only");
-		return -1;
-	}
+	// Set default values
+	this->samplerate = PCMU_DEFAULT_SAMPLERATE;
+	this->channels = PCMU_DEFAULT_CHANNELS;
+	
+	// Apply MIME type parameters to the codec
+	this->apply_mime_type_params( type );
 
-	// Set the callbacks
-	codec->samples_per_packet = mast_samples_per_packet_pcmu;
-	codec->encode_packet = mast_encode_pcmu;
-	codec->decode_packet = mast_decode_pcmu;
-
-	// Success
-	return 0;
 }
+
+
 
 

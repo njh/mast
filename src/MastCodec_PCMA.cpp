@@ -22,9 +22,11 @@
 #include <string.h>
 #include <sys/types.h>
 
-#include "codecs.h"
-#include "mast.h"
+#include "MastCodec_PCMA.h"
 
+
+#define	PCMA_DEFAULT_CHANNELS		(1)
+#define	PCMA_DEFAULT_SAMPLERATE		(8000)
 
 
 static float pcma_decode[128] =
@@ -110,80 +112,74 @@ static inline int float_to_alaw( float sample_f32 )
 
 
 // Calculate the number of samples per packet
-static int mast_samples_per_packet_pcma( mast_codec_t *codec, int max_bytes)
+size_t MastCodec_PCMA::frames_per_packet_internal( size_t max_bytes )
 {
-	int bytes_per_unit = SAMPLES_PER_UNIT * codec->channels;
+	int bytes_per_unit = SAMPLES_PER_UNIT * this->channels;
 	MAST_DEBUG("PCMA bytes per unit = %d", bytes_per_unit);
 	return (max_bytes / bytes_per_unit) * SAMPLES_PER_UNIT;
 }
 
 
 // Encode a packet's payload
-static u_int32_t mast_encode_pcma(
-		mast_codec_t* codec,
-		u_int32_t num_samples, 	/* input size in samples */
-		float *input,
-		u_int32_t outputsize,	/* output size in bytes */
+size_t MastCodec_PCMA::encode_packet_internal(
+		size_t inputsize, 	/* input size in frames */
+		mast_sample_t *input,
+		size_t outputsize,	/* output size in bytes */
 		u_int8_t *output)
 {
-	int i=0;
+	size_t i=0;
 	
-	if (outputsize < num_samples) {
+	if (outputsize < inputsize) {
 		MAST_ERROR("encode_pcma: output buffer isn't big enough");
 		return 0;
 	}
 
-	for (i=0; i < num_samples; i++)
+	for (i=0; i < inputsize; i++)
 	{
 		output[i] = float_to_alaw( input[i] );
 	};
 	
-	return num_samples;
+	return inputsize;
 }
 
 
 // Decode a packet's payload
-static u_int32_t mast_decode_pcma(
-		mast_codec_t* codec,
-		u_int32_t inputsize,		/* input size in bytes */
+size_t MastCodec_PCMA::decode_packet_internal(
+		size_t inputsize,	/* input size in bytes */
 		u_int8_t  *input,
-		u_int32_t outputsize, 	/* output size in samples */
-		float  *output)
+		size_t outputsize, 	/* output size in frames */
+		mast_sample_t  *output)
 {
-	int num_samples = inputsize;
-	int i=0;
+	size_t i=0;
 	
-	if (outputsize < num_samples) {
+	if (outputsize < inputsize) {
 		MAST_ERROR("decode_pcma: output buffer isn't big enough");
 		return 0;
 	}
 
-	for (i=0; i < num_samples; i++)
+	for (i=0; i < inputsize; i++)
 	{
 		output[i] = alaw_to_float( input[i] );
 	};
 
 
-	return num_samples;
+	return inputsize;
 }
 
 
 
 
 // Initialise the PCMA codec
-int mast_init_pcma( mast_codec_t* codec ) {
+MastCodec_PCMA::MastCodec_PCMA( MastMimeType *type)
+	: MastCodec(type)
+{
 
-	if (codec->channels!=1) {
-		MAST_ERROR("The PCMA codec is mono only");
-		return -1;
-	}
+	// Set default values
+	this->samplerate = PCMA_DEFAULT_SAMPLERATE;
+	this->channels = PCMA_DEFAULT_CHANNELS;
 
-	// Set the callbacks
-	codec->samples_per_packet = mast_samples_per_packet_pcma;
-	codec->encode_packet = mast_encode_pcma;
-	codec->decode_packet = mast_decode_pcma;
-	
-	// Success
-	return 0;
+	// Apply MIME type parameters to the codec
+	this->apply_mime_type_params( type );
+
 }
 

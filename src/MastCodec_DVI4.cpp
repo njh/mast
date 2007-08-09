@@ -206,7 +206,7 @@ void adpcm_decode(
 
 
 // Calculate the number of samples per packet
-static int mast_samples_per_packet_dvi4( mast_codec_t *codec, int max_bytes)
+static int mast_frames_per_packet_dvi4( mast_codec_t *codec, int max_bytes)
 {
 	return 0;
 }

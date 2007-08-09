@@ -18,12 +18,13 @@
  */
 
 
-#include <ortp/ortp.h>
-#include "config.h"
-
 
 #ifndef	_MAST_H_
 #define	_MAST_H_
+
+
+#include <ortp/ortp.h>
+#include "config.h"
 
 
 // Defaults
@@ -95,7 +96,11 @@
 #define MAST_FATAL(s ...)  mast_message_handler( MSG_LEVEL_FATAL, __FILE__, __LINE__, s )
 
 
-// ------- util.c -------
+// Type for storing audio samples
+typedef float mast_sample_t;
+
+
+// ------- util.cpp -------
 RtpSession *mast_init_ortp( char* tool_name, int mode, int scheduling );
 char* mast_get_tool_name();
 void mast_deinit_ortp( RtpSession *session );
@@ -117,4 +122,4 @@ void mast_update_mpa_pt( mblk_t* packet );
 
 
 
-#endif
+#endif	// _MAST_H_

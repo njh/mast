@@ -20,6 +20,7 @@ AM_CONFIG_HEADER(src/config.h)
 dnl ############# Compiler and tools Checks
 
 AC_PROG_CC
+AC_PROG_CXX
 AC_PROG_INSTALL
 AC_PROG_LN_S
 AC_PROG_RANLIB
@@ -114,12 +115,15 @@ AC_CHECK_TYPE(u_int8_t, unsigned char)
 
 dnl ############## Compiler and Linker Flags
 CFLAGS="$CFLAGS $ORTP_CFLAGS"
+CXXFLAGS="$CFLAGS $ORTP_CFLAGS"
 LDFLAGS="$LDFLAGS $ORTP_LIBS"
 
 if test x$Debugging = xEnabled; then
 	CFLAGS="$CFLAGS -g -Wunused -Wall -Werror"
+	CXXFLAGS="$CXXFLAGS -g -Wunused -Wall -Werror"
 else
 	CFLAGS="$CFLAGS -O2"
+	CXXFLAGS="$CXXFLAGS -O2"
 fi
 
 

@@ -21,17 +21,53 @@
 #define	_MAST_MIME_TYPE_H_
 
 
+
 // Maximum number of mime type parameters
 #define	MAX_MIME_TYPE_PARAMS	(16)
 
 
-typedef struct mast_mime_type_param {
+class MastMimeTypeParam {
+
+public:
+	// Constructors
+	MastMimeTypeParam( const char* name, const char* value );
+	MastMimeTypeParam( const char* string );
+	~MastMimeTypeParam();
+	
+	const char* get_name() { return this->name; };
+	const char* get_value() { return this->value; };
+
+	void set_name( const char* name );
+	void set_value( const char* value );
+
+private:
 	char* name;
 	char* value;
-} mast_mime_type_param_t;
+};
 
 
-typedef struct mast_mime_type {
+class MastMimeType {
+
+public:
+	// Constructors
+	MastMimeType();
+	MastMimeType( const char* string );
+	~MastMimeType();
+
+	// Methods 
+	MastMimeTypeParam* get_param( int n ) { return this->param[ n ]; };
+	int parse( const char* string );
+	void set_param( char* name, char* value );
+	void set_param_pair( char* pair );
+	void print();
+	
+	const char* get_major() { return this->major; };
+	const char* get_minor() { return this->minor; };
+	
+	
+private:
+
+	int istoken( const char c );
 
 	// Pointer to malloced memory containing data
 	char* str;
@@ -41,19 +77,9 @@ typedef struct mast_mime_type {
 	char* minor;
 	
 	// Array of parameters
-	mast_mime_type_param_t param[ MAX_MIME_TYPE_PARAMS ];
+	MastMimeTypeParam* param[ MAX_MIME_TYPE_PARAMS ];
 	
-} mast_mime_type_t;
-
-
-
-// Prototypes of functions in mime_type.c
-mast_mime_type_t * mast_mime_type_init( const char* string );
-int mast_mime_type_parse( mast_mime_type_t *type, const char* string );
-void mast_mime_type_set_param( mast_mime_type_t *type, char* name, char* value );
-void mast_mime_type_set_param_pair( mast_mime_type_t *type, char* pair );
-void mast_mime_type_print( mast_mime_type_t *type );
-void mast_mime_type_deinit( mast_mime_type_t *type );
+};
 
 
 

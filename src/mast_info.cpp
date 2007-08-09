@@ -31,8 +31,7 @@
 
 #include <ortp/ortp.h>
 
-#include "codecs.h"
-#include "mpa_header.h"
+#include "MPA_Header.h"
 #include "mast.h"
 
 
@@ -181,15 +180,15 @@ int main(int argc, char **argv)
 	if (rtp_get_payload_type( packet ) == RTP_MPEG_AUDIO_PT) {
 		/* FIXME: check fragment offset header (see rfc2250) */
 		unsigned char* mpa_ptr = body->b_rptr + 4;
-		mpa_header_t mh;
+		MPA_Header mh;
 	
 		printf("MPEG Audio Header\n");
 		printf("=================\n");
 		
-		if (!mpa_header_parse( mpa_ptr, &mh)) {
+		if (!mh.parse( mpa_ptr )) {
 			MAST_WARNING("Failed to parse MPEG Audio header");
 		} else {
-			mpa_header_debug( stdout, &mh );
+			mh.debug( stdout );
 		}
 	}
 	

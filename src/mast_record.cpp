@@ -30,9 +30,10 @@
 #include <sndfile.h>
 #include <ortp/ortp.h>
 
+//#include "MastMimeType.h"
+#include "MimeType.h"
+#include "MastCodec.h"
 #include "mast.h"
-#include "mime_type.h"
-#include "codecs.h"
 
 
 
@@ -41,7 +42,7 @@
 
 /* Global Variables */
 char *g_filename = NULL;			// filename of output file
-mast_mime_type_t *g_mime_type = NULL;
+MastMimeType *g_mime_type = NULL;
 
 
 
@@ -235,7 +236,7 @@ int main(int argc, char **argv)
 	PayloadType* pt = NULL;
 	SNDFILE* output = NULL;
 	mblk_t* packet = NULL;
-	mast_codec_t *codec = NULL;
+	MastCodec *codec = NULL;
 	float *audio_buffer = NULL;
 	int audio_buffer_len = 0;
 	unsigned long total_samples_written = 0;
@@ -277,11 +278,11 @@ int main(int argc, char **argv)
 	if (output==NULL) MAST_FATAL( "failed to open output file" );
 
 	// Parse the payload type
-	g_mime_type = mast_mime_type_init( pt->mime_type );
+	g_mime_type = new MastMimeType( pt->mime_type );
 	if (g_mime_type==NULL) MAST_FATAL("Failed to initise MIME type");
 
 	// Load the codec
-	codec = mast_codec_init( g_mime_type, pt->clock_rate, pt->channels );
+	codec = MastCodec::new_codec( g_mime_type );
 	if (codec == NULL) MAST_FATAL("Failed to get initialise codec" );
 
 	// Allocate memory for audio buffer
@@ -314,7 +315,7 @@ int main(int argc, char **argv)
 				int samples_written = 0;
 
 				// Decode the audio
-				samples_decoded = codec->decode_packet(codec, data_len, data_ptr, 
+				samples_decoded = codec->decode_packet(data_len, data_ptr, 
 							audio_buffer_len, audio_buffer );
 				if (samples_decoded<0)
 				{
@@ -354,16 +355,14 @@ int main(int argc, char **argv)
 		audio_buffer=NULL;
 	}
 
-	// De-initialise the codec
-	mast_codec_deinit( codec );
-	 
 	// Close output file
 	if (sf_close( output )) {
 		MAST_ERROR("Failed to close output file:\n%s", sf_strerror(output));
 	}
 	
-	// Free up the mime type memory	
-	mast_mime_type_deinit( g_mime_type );
+	// Delete objects
+	delete codec;
+	delete g_mime_type;
 
 	// Close RTP session
 	mast_deinit_ortp( session );

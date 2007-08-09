@@ -27,42 +27,99 @@
 #include <strings.h>
 #include <ctype.h>
 
-#include "mime_type.h"
+#include "MimeType.h"
 #include "mast.h"
 
 
 
 
-mast_mime_type_t * mast_mime_type_init( const char* string )
+MastMimeTypeParam::MastMimeTypeParam( const char* name, const char* value )
 {
-	mast_mime_type_t *type = NULL;
-	int i;
-	
-	// Allocate memory for the mast_mime_type structure
-	type = malloc( sizeof(mast_mime_type_t) );
-	if (type==NULL) {
-		MAST_FATAL("Failed to allocate memory for mast_mime_type_t");
-	}
+	this->set_name( name );
+	this->set_value( value );
+}
 
-	type->str = NULL;
-	type->major = "audio";
-	type->minor = NULL;
-	
-	for(i=0; i<MAX_MIME_TYPE_PARAMS; i++) {
-		type->param[i].name = NULL;
-		type->param[i].value = NULL;
-	}
-	
-	// Now parse the string passed
-	if (string) {
-		mast_mime_type_parse( type, string );
-	}
-	
-	return type;
+MastMimeTypeParam::MastMimeTypeParam( const char* string )
+{
+	// parse name=value
+
+}
+
+MastMimeTypeParam::~MastMimeTypeParam()
+{
+	if (this->name) free( this->name );
+	if (this->value) free( this->value );
+}
+
+void MastMimeTypeParam::set_name( const char* name )
+{
+	if (this->name) free( this->name );
+	this->name = strdup( name );
+}
+
+void MastMimeTypeParam::set_value( const char* value )
+{
+	if (this->value) free( this->value );
+	this->value = strdup( value );
 }
 
 
-static int istoken( char chr )
+
+
+
+
+MastMimeType::MastMimeType()
+{
+	int i;
+
+	this->str = NULL;
+	this->major = "audio";
+	this->minor = NULL;
+	
+	for(i=0; i<MAX_MIME_TYPE_PARAMS; i++) {
+		this->param[i] = NULL;
+	}
+
+}
+
+
+MastMimeType::MastMimeType( const char* string )
+{
+	// Initialise ourselves
+	MastMimeType();
+	
+	// Now parse the string passed
+	if (string) {
+		this->parse( string );
+	}
+	
+}
+
+
+
+MastMimeType::~MastMimeType()
+{
+	int i;
+	
+	if (this->str) {
+		free( this->str );
+		this->str=NULL;
+	}
+
+	for(i=0; i<MAX_MIME_TYPE_PARAMS; i++) {
+		if (this->param[i]) {
+			delete this->param[i];
+			this->param[i] = NULL;
+		}
+	}
+
+}
+
+
+
+
+
+int MastMimeType::istoken( char chr )
 {
 	if (isalnum(chr)) return TRUE;
 	if (chr=='.') return TRUE;
@@ -73,43 +130,43 @@ static int istoken( char chr )
 }
 
 
-int mast_mime_type_parse( mast_mime_type_t *type, const char* string )
+int MastMimeType::parse( const char* string )
 {
 	char* foundslash=NULL;
 	char* foundsemi=NULL;
-	int i=0;
+	size_t i=0;
 	
 	
 	// Duplicate the string so that we can play with it
-	type->str = strdup( string );
+	this->str = strdup( string );
 
 	// Look for a slash from the start of the string	
-	for(i=0; i<strlen(type->str); i++) {
-		if (istoken(type->str[i])) continue;
-		if (type->str[i]=='/') {
-			type->str[i]=0x00;
-			foundslash = &type->str[i];
+	for(i=0; i<strlen(this->str); i++) {
+		if (istoken(this->str[i])) continue;
+		if (this->str[i]=='/') {
+			this->str[i]=0x00;
+			foundslash = &this->str[i];
 		}
 		break;
 	}
 	
 	// If we found a slash, check the major type is 'audio'
-	if (foundslash && strcmp( "audio", type->str )!=0) {
+	if (foundslash && strcmp( "audio", this->str )!=0) {
 		MAST_FATAL("MIME Type is not audio/*");
 	}
 	
 	// Copy the subtype from the position we think is the start
 	if (foundslash) {
-		type->minor = foundslash+1;
+		this->minor = foundslash+1;
 	} else {
-		type->minor = type->str;
+		this->minor = this->str;
 	}
 	
 	// Now find the end of the subtype
-	for(i=0; i<strlen(type->minor); i++) {
-		if (istoken(type->minor[i])) continue;
-		if (type->minor[i] == ';') foundsemi = &type->minor[i];
-		type->minor[i] = 0x00;
+	for(i=0; i<strlen(this->minor); i++) {
+		if (istoken(this->minor[i])) continue;
+		if (this->minor[i] == ';') foundsemi = &this->minor[i];
+		this->minor[i] = 0x00;
 		break;
 	}
 	
@@ -132,7 +189,7 @@ int mast_mime_type_parse( mast_mime_type_t *type, const char* string )
 			}
 			
 			// Store it
-			mast_mime_type_set_param_pair( type, pair );
+			this->set_param_pair( pair );
 
 			// Another pair after this one?			
 			if (end) ptr = end+1;
@@ -147,11 +204,11 @@ int mast_mime_type_parse( mast_mime_type_t *type, const char* string )
 }
 
 
-void mast_mime_type_set_param_pair( mast_mime_type_t *type, char* pair )
+void MastMimeType::set_param_pair( char* pair )
 {
 	char* name = pair;
 	char* value = NULL;
-	int i;
+	size_t i;
 	
 	// Search for the equals sign
 	for(i=0; i<strlen(name); i++) {
@@ -163,11 +220,11 @@ void mast_mime_type_set_param_pair( mast_mime_type_t *type, char* pair )
 	}
 	
 	// Set the parameter
-	mast_mime_type_set_param( type, name, value );
+	this->set_param( name, value );
 }
 
 
-void mast_mime_type_set_param( mast_mime_type_t *type, char* name, char* value )
+void MastMimeType::set_param( char* name, char* value )
 {
 	int existing = -1;
 	int available = -1;
@@ -175,9 +232,9 @@ void mast_mime_type_set_param( mast_mime_type_t *type, char* name, char* value )
 	
 	// Loop through the existing parameters, finding a place
 	for(i=0; i<MAX_MIME_TYPE_PARAMS; i++) {
-		if (type->param[i].name==NULL) {
+		if (this->param[i]==NULL) {
 			if (available==-1) available = i;
-		} else if (strcmp(type->param[i].name, name)==0) {
+		} else if (strcmp(this->param[i]->get_name(), name)==0) {
 			existing = i;
 			break;
 		}
@@ -186,11 +243,10 @@ void mast_mime_type_set_param( mast_mime_type_t *type, char* name, char* value )
 	// Parameter name already stored?
 	if (existing != -1) {
 		// Re-use existing place in array
-		type->param[existing].value = value;
+		this->param[existing]->set_value(value);
 	} else if (available != -1) {
 		// Use first available slot
-		type->param[available].name = name;
-		type->param[available].value = value;
+		this->param[available] = new MastMimeTypeParam( name, value );
 	} else {
 		MAST_FATAL( "Failed to find space in array to store parameter %s=%s", name, value );
 	}
@@ -198,27 +254,15 @@ void mast_mime_type_set_param( mast_mime_type_t *type, char* name, char* value )
 }
 
 
-void mast_mime_type_print( mast_mime_type_t *type )
+void MastMimeType::print( )
 {
 	int i;
-	MAST_INFO("Mime Type: %s/%s", type->major, type->minor);
+	MAST_INFO("Mime Type: %s/%s", this->major, this->minor);
 	
 	for(i=0; i<MAX_MIME_TYPE_PARAMS; i++) {
-		if (type->param[i].name) {
-			MAST_INFO("Mime Parameter: %s=%s", type->param[i].name, type->param[i].value);
+		if (this->param[i]) {
+			MAST_INFO("Mime Parameter: %s=%s", this->param[i]->get_name(), this->param[i]->get_value());
 		}
 	}
 }
-
-
-void mast_mime_type_deinit( mast_mime_type_t *type )
-{
-	if (type) {
-	
-		if (type->str) free( type->str );
-		free( type );
-	}
-	
-}
-
 

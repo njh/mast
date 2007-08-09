@@ -21,36 +21,13 @@
 #include <math.h>
 #include <sys/types.h>
 
-#include "config.h"
-#include "codecs.h"
 #include "mast.h"
+#include "MastCodec_LPC.h"
 
 
-/*
- * LPC subroutine declarations
- */
-#define LPC_FILTORDER			(10)
+#define	LPC_DEFAULT_CHANNELS		(1)
+#define	LPC_DEFAULT_SAMPLERATE		(8000)
 
-typedef struct {
-	unsigned short period;
-	unsigned char gain;
-	char k[LPC_FILTORDER];
-	char pad;
-} lpcparams_t;
-
-/*
- * we can't use 'sizeof(lpcparams_t)' because some compilers
- * add random padding so define size of record that goes over net.
- */
-#define LPC_BYTES_PER_FRAME		(14)
-
-typedef struct {
-	double Oldper;
-	double OldG;
-	double Oldk[LPC_FILTORDER + 1];
-	double bp[LPC_FILTORDER + 1];
-	int pitchctr;
-} lpcstate_t;
 
 
 
@@ -185,15 +162,10 @@ static void calc_pitch(float *w, float *per)
 	}
 }
 
-static lpcstate_t* lpc_initialise()
+static void lpc_initialise( lpcstate_t* state )
 {
-	lpcstate_t* state = NULL;
 	float   r, v, w, wcT;
 	int     i;
-
-	// Allocate memory for the state storage
-	state = (lpcstate_t*)malloc( sizeof(lpcstate_t) );
-	if (state==NULL) return NULL;
 
 	for (i = 0; i < LPC_BUFLEN; i++) {
 		s[i] = 0.0;
@@ -221,9 +193,7 @@ static lpcstate_t* lpc_initialise()
 		state->bp[i] = 0.0f;
 	}
 	state->pitchctr = 0;
-	
-	// Return the initialised state
-	return state;
+
 }
 
 
@@ -330,8 +300,15 @@ static void lpc_synthesize(lpcparams_t *input, float *output, lpcstate_t* state)
 }
 
 
+
+
+
+
+
+
+
 // Calculate the number of samples per packet
-static int mast_samples_per_packet_lpc( mast_codec_t *codec, int max_bytes)
+size_t MastCodec_LPC::frames_per_packet_internal( size_t max_bytes )
 {
 	int frames_per_packet = max_bytes/LPC_BYTES_PER_FRAME;
 	MAST_DEBUG("LPC frames per packet = %d",frames_per_packet);
@@ -340,16 +317,14 @@ static int mast_samples_per_packet_lpc( mast_codec_t *codec, int max_bytes)
 
 
 // Encode a packet's payload
-static u_int32_t mast_encode_lpc(
-		mast_codec_t* codec,
-		u_int32_t inputsize, 	// input size in samples
-		float *input,
-		u_int32_t outputsize,	// output size in bytes
+size_t MastCodec_LPC::encode_packet_internal(
+		size_t inputsize, 	/* input size in frames */
+		mast_sample_t *input,
+		size_t outputsize,	/* output size in bytes */
 		u_int8_t *output)
 {
-	lpcstate_t* state = codec->ptr;
-	int frames = (inputsize/LPC_FRAMESIZE);
-	int f = 0;
+	size_t frames = (inputsize/LPC_FRAMESIZE);
+	size_t f = 0;
 	
 	if (inputsize % LPC_FRAMESIZE) {
 		MAST_DEBUG("encode_lpc: number of input samples (%d) isn't a multiple of %d", inputsize, LPC_FRAMESIZE);
@@ -364,7 +339,7 @@ static u_int32_t mast_encode_lpc(
 	for(f=0; f<frames; f++) {
 		float* in = &input[LPC_FRAMESIZE*f];
 		lpcparams_t* out = (lpcparams_t*)output+(LPC_BYTES_PER_FRAME*f);
-		lpc_analyze( in, out, state );
+		lpc_analyze( in, out, &lpc_state );
 		out->period = htons( out->period );
 	}
 	
@@ -373,16 +348,14 @@ static u_int32_t mast_encode_lpc(
 
 
 // Decode a packet's payload
-static u_int32_t mast_decode_lpc(
-		mast_codec_t* codec,
-		u_int32_t inputsize,		// input size in bytes
+size_t MastCodec_LPC::decode_packet_internal(
+		size_t inputsize,	/* input size in bytes */
 		u_int8_t  *input,
-		u_int32_t outputsize, 		// output size in samples
-		float  *output)
+		size_t outputsize, 	/* output size in frames */
+		mast_sample_t  *output)
 {
-	lpcstate_t* state = codec->ptr;
-	int frames = (inputsize/LPC_BYTES_PER_FRAME);
-	int f = 0;
+	size_t frames = (inputsize/LPC_BYTES_PER_FRAME);
+	size_t f = 0;
 	
 	if (outputsize < (frames*LPC_FRAMESIZE)) {
 		MAST_ERROR("decode_lpc: output buffer isn't big enough");
@@ -394,48 +367,29 @@ static u_int32_t mast_decode_lpc(
 		lpcparams_t* in = (lpcparams_t*)input+(LPC_BYTES_PER_FRAME*f);
 		float* out = &output[LPC_FRAMESIZE*f];
 		in->period = ntohs( in->period );
-		lpc_synthesize(in, out, state);
+		lpc_synthesize(in, out, &lpc_state);
 	}
 
 	return frames*LPC_FRAMESIZE;
 }
 
 
-static int mast_deinit_lpc( mast_codec_t* codec )
+
+
+// Initialise the LPC codec
+MastCodec_LPC::MastCodec_LPC( MastMimeType *type)
+	: MastCodec(type)
 {
-	lpcstate_t *state = codec->ptr;
-
-	// Free the LPC state structure
-	if (state) free( state );
-
-	// Success
-	return 0;
-}
 	
+	// Set default values
+	this->samplerate = LPC_DEFAULT_SAMPLERATE;
+	this->channels = LPC_DEFAULT_CHANNELS;
 
-
-// Initialise the LPC10 codec
-int mast_init_lpc( mast_codec_t* codec )
-{
-
-	if (codec->channels!=1) {
-		MAST_ERROR("The LPC codec is mono only");
-		return -1;
-	}
-
-	// Set the callbacks
-	codec->samples_per_packet = mast_samples_per_packet_lpc;
-	codec->encode_packet = mast_encode_lpc;
-	codec->decode_packet = mast_decode_lpc;
-	codec->deinit = mast_deinit_lpc;
 	
 	// Initialise the codec state
-	codec->ptr = lpc_initialise();
-	if (codec->ptr==NULL) {
-		MAST_ERROR( "Failed to allocate memory for lpcstate_t data structure" );
-		return -1;
-	}
+	lpc_initialise( &lpc_state );
 
-	// Success
-	return 0;
+	// Apply MIME type parameters to the codec
+	this->apply_mime_type_params( type );
+
 }

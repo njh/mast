@@ -12,14 +12,24 @@ EXTRA_PROGRAMS = \
 
 noinst_LIBRARIES = libmastcodecs.a
 libmastcodecs_a_SOURCES = \
-	codecs.h \
-	codecs.c \
-	codec_gsm.c \
-	codec_lpc.c \
-	codec_l16.c \
-	codec_mpa.c \
-	codec_pcma.c \
-	codec_pcmu.c
+	MastAudioBuffer.cpp \
+	MastAudioBuffer.h \
+	MimeType.cpp \
+	MimeType.h \
+	MastCodec.cpp \
+	MastCodec.h \
+	MastCodec_GSM.cpp \
+	MastCodec_GSM.h \
+	MastCodec_L16.cpp \
+	MastCodec_L16.h \
+	MastCodec_LPC.cpp \
+	MastCodec_LPC.h \
+	MastCodec_MPA.cpp \
+	MastCodec_MPA.h \
+	MastCodec_PCMU.cpp \
+	MastCodec_PCMU.h \
+	MastCodec_PCMA.cpp \
+	MastCodec_PCMA.h
 
 MAST_CODEC_LIBS = \
 	libmastcodecs.a \
@@ -32,63 +42,57 @@ endif
 
 
 mast_info_SOURCES = \
-	mast_info.c \
-	mpa_header.c \
-	mpa_header.h \
+	mast_info.cpp \
+	MPA_Header.cpp \
+	MPA_Header.h \
 	mast.h \
-	util.c
+	util.cpp
 
 
 mast_rawcast_SOURCES = \
-	mast_rawcast.c \
-	mpa_header.c \
-	mpa_header.h \
+	mast_rawcast.cpp \
+	MPA_Header.cpp \
+	MPA_Header.h \
 	mast.h \
-	util.c
+	util.cpp
 
 
 mast_rawrecord_SOURCES = \
-	mpa_header.c \
-	mpa_header.h \
-	mast_rawrecord.c \
+	MPA_Header.cpp \
+	MPA_Header.h \
+	mast_rawrecord.cpp \
 	mast.h \
-	util.c
+	util.cpp
 
 
 mast_cast_CFLAGS = @JACK_CFLAGS@
 mast_cast_LDADD = $(MAST_CODEC_LIBS) @JACK_LIBS@
 mast_cast_SOURCES = \
-	mast_cast.c \
-	mast_cast-jack.c \
+	mast_cast.cpp \
+	mast_cast-jack.cpp \
 	mast_cast-jack.h \
-	mime_type.c \
-	mime_type.h \
-	mpa_header.c \
-	mpa_header.h \
+	MPA_Header.cpp \
+	MPA_Header.h \
 	mast.h \
-	util.c
+	util.cpp
 
 
 mast_filecast_CFLAGS = @SNDFILE_CFLAGS@
 mast_filecast_LDADD = $(MAST_CODEC_LIBS) @SNDFILE_LIBS@
 mast_filecast_SOURCES = \
-	mast_filecast.c \
-	mime_type.c \
-	mime_type.h \
-	mpa_header.c \
-	mpa_header.h \
+	mast_filecast.cpp \
+	MPA_Header.cpp \
+	MPA_Header.h \
 	mast.h \
-	util.c
+	util.cpp
 
 
 mast_record_CFLAGS = @SNDFILE_CFLAGS@
 mast_record_LDADD = $(MAST_CODEC_LIBS) @SNDFILE_LIBS@
 mast_record_SOURCES = \
-	mast_record.c \
-	mime_type.c \
-	mime_type.h \
-	mpa_header.c \
-	mpa_header.h \
+	mast_record.cpp \
+	MPA_Header.cpp \
+	MPA_Header.h \
 	mast.h \
-	util.c
+	util.cpp
 
