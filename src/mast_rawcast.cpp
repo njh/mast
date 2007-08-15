@@ -28,10 +28,9 @@
 #include <string.h>
 #include <getopt.h>
 
-#include <ortp/ortp.h>
-
 
 #include "MPA_Header.h"
+#include "MastTool.h"
 #include "mast.h"
 
 
@@ -41,8 +40,6 @@
 
 /* Global Variables */
 int g_loop_file = FALSE;
-unsigned int g_payload_size_limit = DEFAULT_PAYLOAD_LIMIT;
-char* g_chosen_payload_type = "MPA";
 char* g_filename = NULL;
 
 
@@ -63,43 +60,20 @@ static int usage() {
 }
 
 
-static void parse_cmd_line(int argc, char **argv, RtpSession* session)
+static void parse_cmd_line(int argc, char **argv, MastTool* tool)
 {
-	char* remote_address = NULL;
-	int remote_port = DEFAULT_RTP_PORT;
 	int ch;
 
 
 	// Parse the options/switches
 	while ((ch = getopt(argc, argv, "s:t:p:z:d:lh?")) != -1)
 	switch (ch) {
-		case 's':
-			mast_set_session_ssrc( session, optarg );
-		break;
-		
-		case 't':
-			if (rtp_session_set_multicast_ttl( session, atoi(optarg) )) {
-				MAST_FATAL("Failed to set multicast TTL");
-			}
-		break;
-		
-		case 'p':
-			g_chosen_payload_type = optarg;
-		break;
-
-		case 'z':
-			g_payload_size_limit = atoi(optarg);
-		break;
-		
-		case 'd':
-			if (rtp_session_set_dscp( session, mast_parse_dscp(optarg) )) {
-				MAST_FATAL("Failed to set DSCP value");
-			}
-		break;
-		
-		case 'l':
-			g_loop_file = TRUE;
-		break;
+		case 's': tool->set_session_ssrc( optarg ); break;
+		case 't': tool->set_multicast_ttl( optarg ); break;
+		case 'p': tool->set_payload_mimetype( optarg ); break;
+		case 'z': tool->set_payload_size_limit( optarg ); break;
+		case 'd': tool->set_session_dscp( optarg ); break;
+		case 'l': g_loop_file = TRUE; break;
 		
 		case '?':
 		case 'h':
@@ -110,37 +84,15 @@ static void parse_cmd_line(int argc, char **argv, RtpSession* session)
 
 	// Parse the ip address and port
 	if (argc > optind) {
-		remote_address = argv[optind];
-		optind++;
-		
-		// Look for port in the address
-		char* portstr = strchr(remote_address, '/');
-		if (portstr && strlen(portstr)>1) {
-			*portstr = 0;
-			portstr++;
-			remote_port = atoi(portstr);
-		}
-	
+		tool->set_session_address( argv[optind++] );
 	} else {
 		MAST_ERROR("missing address/port to send to");
 		usage();
 	}
 	
-	// Make sure the port number is even
-	if (remote_port%2 == 1) remote_port--;
-	
-	// Set the remote address/port
-	if (rtp_session_set_remote_addr( session, remote_address, remote_port )) {
-		MAST_FATAL("Failed to set remote address/port (%s/%d)", remote_address, remote_port);
-	} else {
-		printf( "Remote address: %s/%d\n", remote_address,  remote_port );
-	}
-	
-
 	// Get the input file
 	if (argc > optind) {
-		g_filename = argv[optind];
-		optind++;
+		g_filename = argv[optind++];
 	} else {
 		MAST_ERROR("missing input filename");
 		usage();
@@ -167,7 +119,7 @@ static FILE* open_source( char* filename )
 }
 
 
-static void main_loop_gsm( RtpSession *session, FILE* input, u_int8_t* buffer )
+static void main_loop_gsm( MastTool *tool, FILE* input, u_int8_t* buffer )
 {
 	int ever_synced = 0;
 	int synced = 0;
@@ -247,7 +199,7 @@ static void main_loop_gsm( RtpSession *session, FILE* input, u_int8_t* buffer )
 			if (synced) {
 			
 				// Send audio payload
-				rtp_session_send_with_ts(session, buffer, GSM_FRAME_BYTES, timestamp);
+				rtp_session_send_with_ts(tool->get_session(), buffer, GSM_FRAME_BYTES, timestamp);
 				
 				// Frame of GSM audio is 160 samples long
 				timestamp += GSM_FRAME_SAMPLES;   //  * frames_per_packet
@@ -263,7 +215,7 @@ static void main_loop_gsm( RtpSession *session, FILE* input, u_int8_t* buffer )
 
 }
 
-static void main_loop_mpa( RtpSession *session, FILE* input, u_int8_t* buffer )
+static void main_loop_mpa( MastTool *tool, FILE* input, u_int8_t* buffer )
 {
 	MPA_Header mh;
 	u_int8_t* mpabuf = buffer+4;
@@ -349,7 +301,7 @@ static void main_loop_mpa( RtpSession *session, FILE* input, u_int8_t* buffer )
 						ever_synced = 1;
 						
 						// Work out how big payload will be
-						if (g_payload_size_limit < mh.get_framesize()) {
+						if (tool->get_payload_size_limit() < mh.get_framesize()) {
 							MAST_FATAL("audio frame size is bigger than packet size limit");
 						}
 						
@@ -371,7 +323,7 @@ static void main_loop_mpa( RtpSession *session, FILE* input, u_int8_t* buffer )
 					fread( &mpabuf[4], 1, mh.get_framesize()-4, input);
 
 					// Send audio payload (plus 4 null bytes at the start)
-					rtp_session_send_with_ts(session, buffer, mh.get_framesize()+4, timestamp);
+					rtp_session_send_with_ts(tool->get_session(), buffer, mh.get_framesize()+4, timestamp);
 					
 					// Timestamp for MPEG Audio is based on fixed 90kHz clock rate
 					timestamp += ((mh.get_samples() * 90000) / mh.get_samplerate());   //  * frames_per_packet
@@ -393,22 +345,43 @@ static void main_loop_mpa( RtpSession *session, FILE* input, u_int8_t* buffer )
 }
 
 
+static void select_payload_type( MastTool* tool, MastMimeType* mime )
+{
+	const char* mime_subtype = mime->get_minor();
+
+	// This method only works for a few select payload types
+	// the MastSendTool::set_chosen_payload() suppots lots more
+	if (strcmp(mime_subtype, "MPA")==0) {
+		tool->set_payloadtype_index( RTP_MPEG_AUDIO_PT );
+	} else if (strcmp(mime_subtype, "GSM")==0) {
+		tool->set_payloadtype_index( RTP_GSM_PT );
+	} else {
+		MAST_FATAL("The payload type '%s' isn't support by %s", mime_subtype, tool->get_tool_name());
+	}
+
+}
+
+
 
 int main(int argc, char **argv)
 {
-	RtpSession *session = NULL;
+	MastTool *tool = NULL;
 	FILE* input = NULL;
 	u_int8_t *buffer = NULL;
 	
 	
 	// Create an RTP session
-	session = mast_init_ortp( MAST_TOOL_NAME, RTP_SESSION_SENDONLY, TRUE );
-
+	tool = new MastTool( MAST_TOOL_NAME, RTP_SESSION_SENDONLY );
+	tool->enable_scheduling();
 
 	// Parse the command line arguments 
 	// and configure the session
-	parse_cmd_line( argc, argv, session );
-	
+	parse_cmd_line( argc, argv, tool );
+
+
+	// Select the payload type based on the chosen MIME type
+	select_payload_type( tool, tool->get_payload_mimetype() );
+
 
 	// Open the input source
 	input = open_source( g_filename );
@@ -425,32 +398,28 @@ int main(int argc, char **argv)
 	// Setup signal handlers
 	mast_setup_signals();
 
-	// The main loop
-	if (strcasecmp( g_chosen_payload_type, "MPA") == 0) {
-	
-		if (rtp_session_set_send_payload_type( session, RTP_MPEG_AUDIO_PT )) {
-			MAST_FATAL("Failed to set session payload type index");
-		}
-	
-		main_loop_mpa( session, input, buffer );
-		
-	} else if (strcasecmp( g_chosen_payload_type, "GSM") == 0) {
 
-		if (rtp_session_set_send_payload_type( session, 3 )) {
-			MAST_FATAL("Failed to set session payload type index");
-		}
+
+	// The main loop
+	if (tool->get_payloadtype_index() == RTP_MPEG_AUDIO_PT) {
 	
-		main_loop_gsm( session, input, buffer );
+		// MPEG Audio header parser
+		main_loop_mpa( tool, input, buffer );
+		
+	} else if (tool->get_payloadtype_index() == RTP_GSM_PT) {
+
+		// GSM header parser
+		main_loop_gsm( tool, input, buffer );
 	
 	} else {
-		MAST_ERROR("Unsuppored raw payload type: %s", g_chosen_payload_type );
+		MAST_ERROR("Unsuppored raw payload type index: %d", tool->get_payloadtype_index() );
 	}
+
+
+
 	
 	// Free the read buffer
-	if (buffer) {
-		free(buffer);
-		buffer=NULL;
-	}
+	if (buffer) free(buffer);
 
 	// Close input file
 	if (fclose( input )) {
@@ -458,7 +427,8 @@ int main(int argc, char **argv)
 	}
 	
 	// Close RTP session
-	mast_deinit_ortp( session );
+	delete tool;
+	
 	
 	// Success !
 	return 0;

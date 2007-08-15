@@ -29,8 +29,7 @@
 #include <string.h>
 #include <getopt.h>
 
-#include <ortp/ortp.h>
-
+#include "MastTool.h"
 #include "MPA_Header.h"
 #include "mast.h"
 
@@ -60,7 +59,7 @@ static void parse_cmd_line(int argc, char **argv, RtpSession* session)
 	// Parse the options/switches
 	while ((ch = getopt(argc, argv, "h?")) != -1)
 	switch (ch) {
-		// case 'T': timeout?
+		// case 'T': FIXME: timeout?
 		case '?':
 		case 'h':
 		default:
@@ -104,30 +103,28 @@ static void parse_cmd_line(int argc, char **argv, RtpSession* session)
 
 int main(int argc, char **argv)
 {
-	RtpSession* session = NULL;
+	MastTool* tool = NULL;
 	mblk_t* packet = NULL;
 	mblk_t* body = NULL;
-	RtpProfile* profile = &av_profile;
 	PayloadType* pt = NULL;
 	int payload_size = 0;
 
 	
 	// Create an RTP session
-	session = mast_init_ortp( MAST_TOOL_NAME, RTP_SESSION_RECVONLY, TRUE );
-
+	tool = new MastTool( MAST_TOOL_NAME, RTP_SESSION_RECVONLY );
+	if (tool==NULL) return -1;
 
 	// Parse the command line arguments 
 	// and configure the session
-	parse_cmd_line( argc, argv, session );
+	parse_cmd_line( argc, argv, tool->get_session() );
 
 	
 
 	// Setup signal handlers
 	mast_setup_signals();
 
-
 	// Recieve a single packet
-	packet = mast_wait_for_rtp_packet( session, DEFAULT_TIMEOUT );
+	packet = tool->wait_for_rtp_packet();
 	if (packet == NULL) MAST_FATAL("Failed to receive a packet");
 	body = packet->b_cont;
 	payload_size = (body->b_wptr - body->b_rptr);
@@ -147,7 +144,7 @@ int main(int argc, char **argv)
 	
 
 	// Lookup the payload type
-	pt = rtp_profile_get_payload( profile, rtp_get_payload_type( packet ) );
+	pt = rtp_profile_get_payload( tool->get_profile(), rtp_get_payload_type( packet ) );
 	if (pt == NULL) {
 		MAST_WARNING( "Payload type %u isn't registered with oRTP", rtp_get_payload_type( packet ) );
 	} else {
@@ -194,7 +191,7 @@ int main(int argc, char **argv)
 	
 
 	// Close RTP session
-	mast_deinit_ortp( session );
+	delete tool;
 	
 	 
 	// Success !

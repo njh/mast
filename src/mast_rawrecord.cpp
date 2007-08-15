@@ -27,9 +27,8 @@
 #include <string.h>
 #include <getopt.h>
 
-#include <ortp/ortp.h>
-
 #include "MPA_Header.h"
+#include "MastTool.h"
 #include "mast.h"
 
 
@@ -59,23 +58,16 @@ static int usage()
 
 
 
-static void parse_cmd_line(int argc, char **argv, RtpSession* session)
+static void parse_cmd_line(int argc, char **argv, MastTool* tool)
 {
-	char* local_address = NULL;
-	int local_port = DEFAULT_RTP_PORT;
 	int ch;
-
 
 	// Parse the options/switches
 	while ((ch = getopt(argc, argv, "h?")) != -1)
 	switch (ch) {
 
 /* may still be useful for RTCP		
-		case 't':
-			if (rtp_session_set_multicast_ttl( session, atoi(optarg) )) {
-				MAST_FATAL("Failed to set multicast TTL");
-			}
-		break;
+		case 't': tool->set_multicast_ttl( optarg ); break;
 */
 
 		case '?':
@@ -87,37 +79,15 @@ static void parse_cmd_line(int argc, char **argv, RtpSession* session)
 
 	// Parse the ip address and port
 	if (argc > optind) {
-		local_address = argv[optind];
-		optind++;
-		
-		// Look for port in the address
-		char* portstr = strchr(local_address, '/');
-		if (portstr && strlen(portstr)>1) {
-			*portstr = 0;
-			portstr++;
-			local_port = atoi(portstr);
-		}
-	
+		tool->set_session_address( argv[optind++] );
 	} else {
-		MAST_ERROR("missing address/port to receive from");
+		MAST_ERROR("missing address/port to send to");
 		usage();
-	}
-	
-	// Make sure the port number is even
-	if (local_port%2 == 1) local_port--;
-	
-	// Set the remote address/port
-	if (rtp_session_set_local_addr( session, local_address, local_port )) {
-		MAST_FATAL("Failed to set receive address/port (%s/%d)", local_address, local_port);
-	} else {
-		printf( "Receive address: %s/%d\n", local_address,  local_port );
-	}
-	
+	}	
 
 	// Get the output file
 	if (argc > optind) {
-		g_filename = argv[optind];
-		optind++;
+		g_filename = argv[optind++];
 	} else {
 		MAST_ERROR("missing audio output filename");
 		usage();
@@ -152,7 +122,7 @@ static FILE* open_output_file( char* filename )
 
 int main(int argc, char **argv)
 {
-	RtpSession* session = NULL;
+	MastTool* tool = NULL;
 	RtpProfile* profile = &av_profile;
 	PayloadType* pt = NULL;
 	FILE* output = NULL;
@@ -162,18 +132,19 @@ int main(int argc, char **argv)
 
 	
 	// Create an RTP session
-	session = mast_init_ortp( MAST_TOOL_NAME, RTP_SESSION_RECVONLY, TRUE );
+	tool = new MastTool( MAST_TOOL_NAME, RTP_SESSION_RECVONLY );
+	tool->enable_scheduling();
 
 
 	// Parse the command line arguments 
 	// and configure the session
-	parse_cmd_line( argc, argv, session );
+	parse_cmd_line( argc, argv, tool );
 	
 
 	
 	
 	// Recieve an initial packet
-	packet = mast_wait_for_rtp_packet( session, DEFAULT_TIMEOUT );
+	packet = tool->wait_for_rtp_packet();
 	if (packet == NULL) MAST_FATAL("Failed to receive an initial packet");
 	
 	// Lookup the payload type
@@ -204,7 +175,7 @@ int main(int argc, char **argv)
 	{
 
 		// Read in a packet
-		packet = rtp_session_recvm_with_ts( session, ts );
+		packet = rtp_session_recvm_with_ts( tool->get_session(), ts );
 		if (packet==NULL) {
 
 			MAST_DEBUG( "packet is NULL" );
@@ -248,7 +219,7 @@ int main(int argc, char **argv)
 	}
 	
 	// Close RTP session
-	mast_deinit_ortp( session );
+	delete tool;
 	
 	
 	// Success

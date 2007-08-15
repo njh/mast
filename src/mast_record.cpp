@@ -30,6 +30,7 @@
 #include <sndfile.h>
 #include <ortp/ortp.h>
 
+#include "MastTool.h"
 #include "MastMimeType.h"
 #include "MastCodec.h"
 #include "mast.h"
@@ -101,10 +102,8 @@ static void display_recorded_duration( unsigned long seconds )
 }
 
 
-static void parse_cmd_line(int argc, char **argv, RtpSession* session)
+static void parse_cmd_line(int argc, char **argv, MastTool* tool)
 {
-	char* local_address = NULL;
-	int local_port = DEFAULT_RTP_PORT;
 	int ch;
 
 
@@ -113,11 +112,7 @@ static void parse_cmd_line(int argc, char **argv, RtpSession* session)
 	switch (ch) {
 
 /* may still be useful for RTCP		
-		case 't':
-			if (rtp_session_set_multicast_ttl( session, atoi(optarg) )) {
-				MAST_FATAL("Failed to set multicast TTL");
-			}
-		break;
+		case 't': tool->set_multicast_ttl( optarg ); break;
 */
 		case 'l':
 			list_output_formats();
@@ -132,32 +127,11 @@ static void parse_cmd_line(int argc, char **argv, RtpSession* session)
 
 	// Parse the ip address and port
 	if (argc > optind) {
-		local_address = argv[optind];
-		optind++;
-		
-		// Look for port in the address
-		char* portstr = strchr(local_address, '/');
-		if (portstr && strlen(portstr)>1) {
-			*portstr = 0;
-			portstr++;
-			local_port = atoi(portstr);
-		}
-	
+		tool->set_session_address( argv[optind++] );
 	} else {
-		MAST_ERROR("missing address/port to receive from");
+		MAST_ERROR("missing address/port to send to");
 		usage();
-	}
-	
-	// Make sure the port number is even
-	if (local_port%2 == 1) local_port--;
-	
-	// Set the remote address/port
-	if (rtp_session_set_local_addr( session, local_address, local_port )) {
-		MAST_FATAL("Failed to set receive address/port (%s/%d)", local_address, local_port);
-	} else {
-		printf( "Receive address: %s/%d\n", local_address,  local_port );
-	}
-	
+	}	
 
 	// Get the output file
 	if (argc > optind) {
@@ -230,35 +204,33 @@ static SNDFILE* open_output_file( char* filename, PayloadType* pt )
 
 int main(int argc, char **argv)
 {
-	RtpSession* session = NULL;
-	RtpProfile* profile = &av_profile;
+	MastTool* tool = NULL;
 	PayloadType* pt = NULL;
 	SNDFILE* output = NULL;
 	mblk_t* packet = NULL;
 	MastCodec *codec = NULL;
-	float *audio_buffer = NULL;
-	int audio_buffer_len = 0;
-	unsigned long total_samples_written = 0;
+	MastAudioBuffer *audio_buffer = NULL;
+	unsigned long total_frames_written = 0;
 	int ts_diff = 0;
 	int ts = 0;
 
 	
 	// Create an RTP session
-	session = mast_init_ortp( MAST_TOOL_NAME, RTP_SESSION_RECVONLY, TRUE );
+	tool = new MastTool( MAST_TOOL_NAME, RTP_SESSION_RECVONLY );
 
 
 	// Parse the command line arguments 
 	// and configure the session
-	parse_cmd_line( argc, argv, session );
+	parse_cmd_line( argc, argv, tool );
 	
 
 
 	// Recieve an initial packet
-	packet = mast_wait_for_rtp_packet( session, DEFAULT_TIMEOUT );
+	packet = tool->wait_for_rtp_packet();
 	if (packet == NULL) MAST_FATAL("Failed to receive an initial packet");
 	
 	// Lookup the payload type
-	pt = rtp_profile_get_payload( profile, rtp_get_payload_type( packet ) );
+	pt = rtp_profile_get_payload( tool->get_profile(), rtp_get_payload_type( packet ) );
 	if (pt == NULL) MAST_FATAL( "Payload type %d isn't registered with oRTP", rtp_get_payload_type( packet ) );
 	fprintf(stderr, "Payload type: %s\n", payload_type_get_rtpmap( pt ));
 	
@@ -285,8 +257,9 @@ int main(int argc, char **argv)
 	if (codec == NULL) MAST_FATAL("Failed to get initialise codec" );
 
 	// Allocate memory for audio buffer
-	audio_buffer_len = ts_diff * sizeof(float) * pt->channels;
-	audio_buffer = (float*)malloc( audio_buffer_len );
+	audio_buffer = new MastAudioBuffer( ts_diff, pt->clock_rate, pt->channels );
+//	audio_buffer_len = ts_diff * sizeof(float) * pt->channels;
+//	audio_buffer = (float*)malloc( audio_buffer_len );
 	if (audio_buffer == NULL) MAST_FATAL("Failed to allocate memory for audio buffer");
 	
 
@@ -299,7 +272,7 @@ int main(int argc, char **argv)
 	{
 
 		// Read in a packet
-		packet = rtp_session_recvm_with_ts( session, ts );
+		packet = rtp_session_recvm_with_ts( tool->get_session(), ts );
 		if (packet==NULL) {
 
 			MAST_DEBUG( "packet is NULL" );
@@ -310,13 +283,12 @@ int main(int argc, char **argv)
 				MAST_WARNING("Failed to get size of packet's payload");
 			} else {
 				unsigned char* data_ptr = packet->b_cont->b_rptr;
-				int samples_decoded = 0;
-				int samples_written = 0;
+				int frames_decoded = 0;
+				int frames_written = 0;
 
 				// Decode the audio
-				samples_decoded = codec->decode_packet(data_len, data_ptr, 
-							audio_buffer_len, audio_buffer );
-				if (samples_decoded<0)
+				frames_decoded = codec->decode_packet(data_len, data_ptr, audio_buffer );
+				if (frames_decoded<0)
 				{
 					MAST_ERROR("Codec decode failed" );
 					break;
@@ -327,17 +299,22 @@ int main(int argc, char **argv)
 				//MAST_DEBUG("ts_diff = %d", ts_diff);
 				
 				// Write to disk
-				samples_written = sf_write_float( output, audio_buffer, samples_decoded );
-				if (samples_written<0) {
+				frames_written = sf_writef_float( output, audio_buffer->get_read_ptr(), audio_buffer->get_read_space() );
+				if (frames_written<0) {
 					MAST_ERROR("Failed to write audio samples to disk: %s", sf_strerror( output ));
 					break;
 				}
-				total_samples_written += samples_written;
+				
+				// Remove the frames written to disk from the buffer
+				audio_buffer->remove_frames( frames_written );
+				
+				// Keep count of total number of frames
+				total_frames_written += frames_written;
 			}
 		}
 		
 		// Display the duration recorded
-		display_recorded_duration( total_samples_written/pt->clock_rate );
+		display_recorded_duration( total_frames_written/pt->clock_rate );
 
 		// Increment the timestamp for the next packet
 		ts += ts_diff;
@@ -345,7 +322,7 @@ int main(int argc, char **argv)
 	
 
 	// Display final total time recorded
-	display_recorded_duration( total_samples_written/pt->clock_rate );
+	display_recorded_duration( total_frames_written/pt->clock_rate );
 	fprintf(stderr, "\n");
 
 	// Free up the buffers audio/read buffers
@@ -364,7 +341,7 @@ int main(int argc, char **argv)
 	delete g_mime_type;
 
 	// Close RTP session
-	mast_deinit_ortp( session );
+	delete tool;
 	
 	
 	// Success

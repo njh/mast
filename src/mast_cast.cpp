@@ -28,11 +28,10 @@
 #include <string.h>
 #include <getopt.h>
 
-#include <ortp/ortp.h>
+#include <jack/jack.h>
+#include <jack/ringbuffer.h>
 
-#include "MastCodec.h"
-#include "MastMimeType.h"
-#include "mast_cast-jack.h"
+#include "MastSendTool.h"
 #include "mast.h"
 
 
@@ -40,11 +39,247 @@
 
 
 /* Global Variables */
-char* g_client_name = MAST_TOOL_NAME;
 jack_options_t g_client_opt = JackNullOption;
-int g_payload_size_limit = DEFAULT_PAYLOAD_LIMIT;
-mast_mime_type_t *g_mime_type = NULL;
+int g_do_autoconnect = FALSE;
+int g_rb_duration = DEFAULT_RINGBUFFER_DURATION;
+jack_port_t *g_jackport[2] = {NULL, NULL};
+jack_ringbuffer_t *g_ringbuffer = NULL;
+jack_default_audio_sample_t *g_interleavebuf = NULL;
 
+/* For signaling when there's room in the ringbuffer. */
+pthread_mutex_t g_ringbuffer_cond_mutex;
+pthread_cond_t g_ringbuffer_cond;
+
+
+
+/* Callback called by JACK when audio is available
+   Use as little CPU time as possible, just copy accross the audio
+   into the ring buffer
+*/
+static int process_callback(jack_nframes_t nframes, void *arg)
+{
+	MastSendTool* tool = (MastSendTool*)arg;
+	unsigned int channels = tool->get_input_channels();
+    size_t to_write = 0, written = 0;
+	unsigned int c,n;
+	
+	// Process channel by channel
+	for (c=0; c < channels; c++)
+	{	
+        jack_default_audio_sample_t *buf = (jack_default_audio_sample_t*)
+        	jack_port_get_buffer(g_jackport[c], nframes);
+ 
+		// Interleave the left and right channels
+		for(n=0; n<nframes; n++) {
+			g_interleavebuf[(n*channels)+c] = buf[n];
+		}
+	}
+
+	// Now write the interleaved audio to the ring buffer
+	to_write = sizeof(float) * nframes * channels;
+	written = jack_ringbuffer_write(g_ringbuffer, (char*)g_interleavebuf, to_write);
+	if (to_write > written) {
+		// If this goes wrong, then the buffer goes out of sync and we get static
+		MAST_FATAL("Failed to write to ring ruffer, try increading the ring-buffer size");
+		return 1;
+	}
+	
+	// Signal the other thread that audio is available
+	pthread_cond_signal(&g_ringbuffer_cond);
+
+	// Success
+	return 0;
+}
+					
+
+// Callback called by JACK when buffersize changes
+static int buffersize_callback(jack_nframes_t nframes, void *arg)
+{
+	MastSendTool* tool = (MastSendTool*)arg;
+	int channels = tool->get_input_channels();
+	MAST_DEBUG("JACK buffer size is %d samples long", nframes);
+
+	// (re-)allocate conversion buffer
+	g_interleavebuf = (jack_default_audio_sample_t*)
+		realloc( g_interleavebuf, nframes * sizeof(float) * channels );
+	if (g_interleavebuf == NULL) {
+		MAST_FATAL("Failed to (re-)allocate the convertion buffer");
+	}
+
+	// Success
+	return 0;
+}
+
+
+
+/*
+  mast_fill_input_buffer()
+  Make sure input buffer if full of audio  
+*/
+size_t mast_fill_input_buffer( MastAudioBuffer* buffer )
+{
+	int frames_wanted = buffer->get_write_space();
+	size_t bytes_wanted = frames_wanted * buffer->get_channels() * sizeof( mast_sample_t );
+	size_t bytes_read = 0, frames_read = 0;
+
+
+
+	// Keep checking that there is enough audio available
+	while (jack_ringbuffer_read_space(g_ringbuffer) < bytes_wanted) {
+		MAST_WARNING( "Not enough audio available in ringbuffer; waiting" );
+		//MAST_DEBUG("Ring buffer is %u%% full", (jack_ringbuffer_read_space(g_ringbuffer)*100) / g_ringbuffer->size);
+
+		// Wait for some more audio to become available
+		pthread_mutex_lock(&g_ringbuffer_cond_mutex);
+		pthread_cond_wait(&g_ringbuffer_cond, &g_ringbuffer_cond_mutex);
+		pthread_mutex_unlock(&g_ringbuffer_cond_mutex);
+	}
+
+	// Copy frames from ring buffer to temporary buffer
+	bytes_read = jack_ringbuffer_read(g_ringbuffer, (char*)buffer->get_write_ptr(), bytes_wanted);
+	if (bytes_read<=0) MAST_FATAL( "Failed to read from ringbuffer" );
+	if (bytes_read!=bytes_wanted) MAST_WARNING("Failed to read enough audio for a full packet");
+	
+	// Mark the space in the buffer as used
+	frames_read = bytes_read / (buffer->get_channels() * sizeof( mast_sample_t ));
+	buffer->add_frames( frames_read );
+
+	// Return the number 
+	return frames_read;
+}
+
+// Callback called by JACK when jackd is shutting down
+static void shutdown_callback(void *arg)
+{
+	MAST_WARNING("MAST quitting because jackd is shutting down" );
+	
+	// Signal the main thead to stop
+	mast_stop_running();
+}
+
+
+
+// Crude way of automatically connecting up jack ports
+static void autoconnect_jack_ports( jack_client_t* client, int port_count )
+{
+	const char **all_ports;
+	int ch=0, err = 0;
+	int i;
+
+	// Get a list of all the jack ports
+	all_ports = jack_get_ports(client, NULL, NULL, JackPortIsOutput);
+	if (!all_ports) {
+		MAST_FATAL("autoconnect_jack_ports(): jack_get_ports() returned NULL");
+	}
+	
+	// Step through each port name
+	for (i = 0; all_ports[i]; ++i) {
+		const char* local_port = jack_port_name( g_jackport[ch] );
+		
+		// Connect the port
+		MAST_INFO("Connecting '%s' => '%s'", all_ports[i], local_port);
+		err = jack_connect(client, all_ports[i], local_port);
+		if (err != 0) MAST_FATAL("connect_jack_port(): failed to jack_connect() ports: %d", err);
+		
+		// Found enough ports ?
+		if (++ch >= port_count) break;
+	}
+	
+	free( all_ports );
+}
+
+
+// Initialise Jack related stuff
+static jack_client_t* init_jack( MastSendTool* tool ) 
+{
+	const char* client_name = tool->get_tool_name();
+	jack_client_t* client = NULL;
+	jack_status_t status;
+	size_t ringbuffer_size = 0;
+	int port_count = tool->get_input_channels();
+	int i = 0;
+
+
+    pthread_mutex_init(&g_ringbuffer_cond_mutex, NULL);
+    pthread_cond_init(&g_ringbuffer_cond, NULL);
+
+	// Register with Jack
+	if ((client = jack_client_open(client_name, g_client_opt, &status)) == 0) {
+		MAST_ERROR("Failed to start jack client: 0x%x", status);
+		return NULL;
+	} else {
+		MAST_INFO( "JACK client registered as '%s'", jack_get_client_name( client ) );
+	}
+
+	// Create our input port(s)
+	if (port_count==1) {
+		if (!(g_jackport[0] = jack_port_register(client, "mono", JACK_DEFAULT_AUDIO_TYPE, JackPortIsInput, 0))) {
+			MAST_ERROR("Cannot register mono input port");
+			return NULL;
+		}
+	} else {
+		if (!(g_jackport[0] = jack_port_register(client, "left", JACK_DEFAULT_AUDIO_TYPE, JackPortIsInput, 0))) {
+			MAST_ERROR("Cannot register left input port");
+			return NULL;
+		}
+		
+		if (!(g_jackport[1] = jack_port_register(client, "right", JACK_DEFAULT_AUDIO_TYPE, JackPortIsInput, 0))) {
+			MAST_ERROR( "Cannot register left input port");
+			return NULL;
+		}
+	}
+	
+	// Create ring buffer
+	ringbuffer_size = jack_get_sample_rate( client ) * g_rb_duration * port_count * sizeof(int16_t) / 1000;
+	MAST_INFO("Duration of the ring buffer is %d ms (%d bytes)", g_rb_duration, (int)ringbuffer_size );
+	if (!(g_ringbuffer = jack_ringbuffer_create( ringbuffer_size ))) {
+		MAST_ERROR("Cannot create ringbuffer %d", i);
+		return NULL;
+	}
+
+	// Register callbacks
+	jack_on_shutdown(client, shutdown_callback, tool );
+	jack_set_buffer_size_callback( client, buffersize_callback, tool);
+	jack_set_process_callback(client, process_callback, tool);
+	
+	// Create conversion buffer
+	buffersize_callback( jack_get_buffer_size(client), tool );
+
+	// Activate JACK
+	if (jack_activate(client)) MAST_FATAL("Cannot activate JACK client");
+	
+	/* Auto connect ports ? */
+	if (g_do_autoconnect) autoconnect_jack_ports( client, tool->get_input_channels() );
+	
+	return client;
+}
+
+
+
+// Shut down jack related stuff
+static void deinit_jack( jack_client_t *client )
+{
+	// Leave the Jack graph
+	if (jack_client_close(client)) {
+		MAST_WARNING("Failed to close jack client");
+	}
+	
+	// Free the coversion buffer
+	if (g_interleavebuf) {
+		free( g_interleavebuf );
+		g_interleavebuf = NULL;
+	}
+	
+	// Free up the ring buffer
+	if (g_ringbuffer) {
+		jack_ringbuffer_free( g_ringbuffer );
+		g_ringbuffer = NULL;
+	}
+
+    pthread_cond_destroy(&g_ringbuffer_cond);
+    pthread_mutex_destroy(&g_ringbuffer_cond_mutex);
+
+}
 
 
 
@@ -70,56 +305,24 @@ static int usage() {
 }
 
 
-static void parse_cmd_line(int argc, char **argv, RtpSession* session)
+static void parse_cmd_line(int argc, char **argv, MastSendTool* tool)
 {
-	char* payload_type = DEFAULT_PAYLOAD_TYPE;
-	char* remote_address = NULL;
-	int remote_port = DEFAULT_RTP_PORT;
 	int ch;
 
 
 	// Parse the options/switches
 	while ((ch = getopt(argc, argv, "as:t:p:o:z:d:c:r:h?")) != -1)
 	switch (ch) {
-		case 'a':
-			g_do_autoconnect = TRUE;
-		break;
-	
-		case 's':
-			mast_set_session_ssrc( session, optarg );
-		break;
-		
-		case 't':
-			if (rtp_session_set_multicast_ttl( session, atoi(optarg) )) {
-				MAST_FATAL("Failed to set multicast TTL");
-			}
-		break;
-		
-		case 'p':
-			payload_type = optarg;
-		break;
-		
-		case 'o':
-			mast_mime_type_set_param_pair( g_mime_type, optarg );
-		break;
+		case 's': tool->set_session_ssrc( optarg ); break;
+		case 't': tool->set_multicast_ttl( optarg ); break;
+		case 'p': tool->set_payload_mimetype( optarg ); break;
+		case 'o': tool->set_payload_mimetype_param( optarg ); break;
+		case 'z': tool->set_payload_size_limit( optarg ); break;
+		case 'd': tool->set_session_dscp( optarg ); break;
 
-		case 'z':
-			g_payload_size_limit = atoi(optarg);
-		break;
-		
-		case 'd':
-			if (rtp_session_set_dscp( session, mast_parse_dscp(optarg) )) {
-				MAST_FATAL("Failed to set DSCP value");
-			}
-		break;
-
-		case 'c':
-			g_channels = atoi(optarg);
-		break;
-		
-		case 'r':
-			g_rb_duration = atoi(optarg);
-		break;
+		case 'c': tool->set_input_channels( atoi(optarg) ); break;
+		case 'a': g_do_autoconnect = TRUE; break;
+		case 'r': g_rb_duration = atoi(optarg); break;
 		
 		case '?':
 		case 'h':
@@ -127,182 +330,56 @@ static void parse_cmd_line(int argc, char **argv, RtpSession* session)
 			usage();
 	}
 
-
 	// Parse the ip address and port
 	if (argc > optind) {
-		remote_address = argv[optind];
-		optind++;
-		
-		// Look for port in the address
-		char* portstr = strchr(remote_address, '/');
-		if (portstr && strlen(portstr)>1) {
-			*portstr = 0;
-			portstr++;
-			remote_port = atoi(portstr);
-		}
-	
+		tool->set_session_address( argv[optind++] );
 	} else {
 		MAST_ERROR("missing address/port to send to");
 		usage();
 	}
 	
-	// Parse the payload type
-	if (mast_mime_type_parse( g_mime_type, payload_type )) {
-		usage();
-	}
-
-	// Make sure the port number is even
-	if (remote_port%2 == 1) remote_port--;
-	
-	// Set the remote address/port
-	if (rtp_session_set_remote_addr( session, remote_address, remote_port )) {
-		MAST_FATAL("Failed to set remote address/port (%s/%d)", remote_address, remote_port);
-	} else {
-		MAST_INFO( "Remote address: %s/%d", remote_address,  remote_port );
-	}
-	
 }
+
 
 
 
 int main(int argc, char **argv)
 {
-	RtpSession* session = NULL;
-	PayloadType* pt = NULL;
+	MastSendTool *tool = NULL;
 	jack_client_t* client = NULL;
-	mast_codec_t *codec = NULL;
-	float *audio_buffer = NULL;
-	u_int8_t *payload_buffer = NULL;
-	int samples_per_packet = 0;
-	int audio_buffer_size = 0;
-	int payload_buffer_size = 0;
-	int samplerate = 0;
-	int ts = 0;
 
-	
-	// Create an RTP session
-	session = mast_init_ortp( MAST_TOOL_NAME, RTP_SESSION_SENDONLY, FALSE );
 
-	// Initialise the MIME type
-	g_mime_type = mast_mime_type_init(NULL);
+	// Create the send tool object
+	tool = new MastSendTool( MAST_TOOL_NAME );
+
 
 	// Parse the command line arguments 
 	// and configure the session
-	parse_cmd_line( argc, argv, session );
+	parse_cmd_line( argc, argv, tool );
 
-	
 
 	// Initialise Jack
-	client = mast_init_jack( g_client_name, g_client_opt );
-	if (client == NULL) MAST_FATAL( "Failed to initialise JACK client" );
+	client = init_jack( tool );
+	if (client==NULL) MAST_FATAL( "Failed to initialise JACK client" );
 	
 	// Get the samplerate of the JACK Router
-	samplerate = jack_get_sample_rate( client );
-	MAST_INFO( "Samplerate of JACK engine: %d Hz", samplerate );
-
-
-	// Display some information about the chosen payload type
-	MAST_INFO( "Sending SSRC: 0x%x", session->snd.ssrc );
-	//MAST_INFO( "Payload MIME type: %s", g_payload_type );
-	MAST_INFO( "Input Format: %d Hz, %s", samplerate, g_channels==2 ? "Stereo" : "Mono");
-	mast_mime_type_print( g_mime_type );
-
+	tool->set_input_samplerate( jack_get_sample_rate( client ) );
 	
-	// Load the codec
-	codec = mast_codec_init( g_mime_type, samplerate, g_channels );
-	if (codec == NULL) MAST_FATAL("Failed to get initialise codec" );
-
-	// Work out the payload type index to use
-	pt = mast_choose_payloadtype( session, codec->subtype, samplerate, g_channels );
-	if (pt == NULL) MAST_FATAL("Failed to get payload type information from oRTP");
-
-	// Calculate the packet size
-	samples_per_packet = mast_codec_samples_per_packet( codec, g_payload_size_limit );
-	if (samples_per_packet<=0) MAST_FATAL( "Invalid number of samples per packet" );
-
-	// Allocate memory for audio buffer
-	audio_buffer_size = samples_per_packet * sizeof(float) * g_channels;
-	audio_buffer = (float*)malloc( audio_buffer_size );
-	if (audio_buffer == NULL) MAST_FATAL("Failed to allocate memory for audio buffer");
-
-	// Allocate memory for the packet buffer
-	payload_buffer_size = g_payload_size_limit;
-	payload_buffer = (u_int8_t*)malloc( payload_buffer_size );
-	if (payload_buffer == NULL) MAST_FATAL("Failed to allocate memory for payload buffer");
-
-
 	// Setup signal handlers
 	mast_setup_signals();
 
-
-
-	// The main loop
-	while( mast_still_running() )
-	{
-		size_t payload_bytes = 0;
-		size_t bytes_read = 0;
-		size_t samples_read = 0;
-
-		// Check that there is enough audio available
-		if (jack_ringbuffer_read_space(g_ringbuffer) < audio_buffer_size) {
-			//MAST_WARNING( "Not enough audio available in ringbuffer; waiting" );
-
-			// Wait for some more audio to become available
-			pthread_mutex_lock(&g_ringbuffer_cond_mutex);
-			pthread_cond_wait(&g_ringbuffer_cond, &g_ringbuffer_cond_mutex);
-			pthread_mutex_unlock(&g_ringbuffer_cond_mutex);
-			continue;
-		}
-
-		// Copy frames from ring buffer to temporary buffer
-		bytes_read = jack_ringbuffer_read(g_ringbuffer, (char*)audio_buffer, audio_buffer_size);
-		if (bytes_read<=0) MAST_FATAL( "Failed to read from ringbuffer" );
-		if (bytes_read!=audio_buffer_size) MAST_WARNING("Failed to read enough audio for a full packet");
-		
-		//MAST_DEBUG("Ring buffer is now %u%% full", (jack_ringbuffer_read_space(g_ringbuffer)*100) / g_ringbuffer->size);
-
-		// Encode audio
-		samples_read = (bytes_read / sizeof(float)) / g_channels;
-		payload_bytes = mast_codec_encode_packet(codec, samples_read, audio_buffer, 
-					payload_buffer_size, payload_buffer );
-		if (payload_bytes<0)
-		{
-			MAST_ERROR("Codec encode failed" );
-			break;
-		}
-		
-		if (payload_bytes) {
-			// Send out an RTP packet
-			rtp_session_send_with_ts(session, payload_buffer, payload_bytes, ts);
-
-			// Calculate the timestamp increment
-			ts+=((samples_read * pt->clock_rate) / samplerate);
-		}
-			
-	}
+	// Run the main loop
+	tool->run();
 	
-	// Free up the buffers audio/read buffers
-	if (payload_buffer) {
-		free(payload_buffer);
-		payload_buffer=NULL;
-	}
-	if (audio_buffer) {
-		free(audio_buffer);
-		audio_buffer=NULL;
-	}
+	// Clean up
+	delete tool;
 	
-	// De-initialise the codec
-	mast_codec_deinit( codec );
 
-	// Close JACK client
-	mast_deinit_jack( client );
-	 
-	// Close RTP session
-	mast_deinit_ortp( session );
-	
+	// Shut down JACK
+	deinit_jack( client );
+
 	
 	// Success !
 	return 0;
 }
-
 

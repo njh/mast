@@ -43,6 +43,10 @@ endif
 
 mast_info_SOURCES = \
 	mast_info.cpp \
+	MastTool.cpp \
+	MastTool.h \
+	MastMimeType.cpp \
+	MastMimeType.h \
 	MPA_Header.cpp \
 	MPA_Header.h \
 	mast.h \
@@ -51,6 +55,10 @@ mast_info_SOURCES = \
 
 mast_rawcast_SOURCES = \
 	mast_rawcast.cpp \
+	MastTool.cpp \
+	MastTool.h \
+	MastMimeType.cpp \
+	MastMimeType.h \
 	MPA_Header.cpp \
 	MPA_Header.h \
 	mast.h \
@@ -58,9 +66,13 @@ mast_rawcast_SOURCES = \
 
 
 mast_rawrecord_SOURCES = \
+	mast_rawrecord.cpp \
+	MastTool.cpp \
+	MastTool.h \
+	MastMimeType.cpp \
+	MastMimeType.h \
 	MPA_Header.cpp \
 	MPA_Header.h \
-	mast_rawrecord.cpp \
 	mast.h \
 	util.cpp
 
@@ -69,8 +81,10 @@ mast_cast_CFLAGS = @JACK_CFLAGS@
 mast_cast_LDADD = $(MAST_CODEC_LIBS) @JACK_LIBS@
 mast_cast_SOURCES = \
 	mast_cast.cpp \
-	mast_cast-jack.cpp \
-	mast_cast-jack.h \
+	MastTool.cpp \
+	MastTool.h \
+	MastSendTool.cpp \
+	MastSendTool.h \
 	MPA_Header.cpp \
 	MPA_Header.h \
 	mast.h \
@@ -81,6 +95,10 @@ mast_filecast_CFLAGS = @SNDFILE_CFLAGS@
 mast_filecast_LDADD = $(MAST_CODEC_LIBS) @SNDFILE_LIBS@
 mast_filecast_SOURCES = \
 	mast_filecast.cpp \
+	MastTool.cpp \
+	MastTool.h \
+	MastSendTool.cpp \
+	MastSendTool.h \
 	MPA_Header.cpp \
 	MPA_Header.h \
 	mast.h \
@@ -91,6 +109,8 @@ mast_record_CFLAGS = @SNDFILE_CFLAGS@
 mast_record_LDADD = $(MAST_CODEC_LIBS) @SNDFILE_LIBS@
 mast_record_SOURCES = \
 	mast_record.cpp \
+	MastTool.cpp \
+	MastTool.h \
 	MPA_Header.cpp \
 	MPA_Header.h \
 	mast.h \

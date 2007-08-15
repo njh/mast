@@ -189,7 +189,7 @@ int MastMimeType::parse( const char* string )
 			}
 			
 			// Store it
-			this->set_param_pair( pair );
+			this->set_param( pair );
 
 			// Another pair after this one?			
 			if (end) ptr = end+1;
@@ -204,9 +204,9 @@ int MastMimeType::parse( const char* string )
 }
 
 
-void MastMimeType::set_param_pair( char* pair )
+void MastMimeType::set_param( const char* pair )
 {
-	char* name = pair;
+	char* name = strdup(pair);
 	char* value = NULL;
 	size_t i;
 	
@@ -221,10 +221,13 @@ void MastMimeType::set_param_pair( char* pair )
 	
 	// Set the parameter
 	this->set_param( name, value );
+	
+	// Free up the temporary string
+	free(name);
 }
 
 
-void MastMimeType::set_param( char* name, char* value )
+void MastMimeType::set_param( const char* name, const char* value )
 {
 	int existing = -1;
 	int available = -1;

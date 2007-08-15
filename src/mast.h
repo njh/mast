@@ -22,9 +22,8 @@
 #ifndef	_MAST_H_
 #define	_MAST_H_
 
-
-#include <ortp/ortp.h>
 #include "config.h"
+#include <ortp/ortp.h>
 
 
 // Defaults
@@ -32,6 +31,7 @@
 #define DEFAULT_MULTICAST_TTL		(5)
 #define DEFAULT_PAYLOAD_LIMIT		(1450)
 #define DEFAULT_PAYLOAD_TYPE		"audio/L16"
+#define DEFAULT_CHANNELS			(2)
 #define DEFAULT_RTP_PORT			(5004)
 #define DEFAULT_TIMEOUT				(10)
 #define DEFAULT_RINGBUFFER_DURATION	(500)
@@ -42,7 +42,8 @@
 // Standard string buffer size
 #define STR_BUF_SIZE				(255)
 
-// Payload type for MPEG Audio
+// Payload type indexes
+#define RTP_GSM_PT					(3)
 #define RTP_MPEG_AUDIO_PT			(14)
 
 // GSM codec specifics
@@ -99,26 +100,18 @@
 // Type for storing audio samples
 typedef float mast_sample_t;
 
+// Definition for MPEG Audio payload type
+extern PayloadType payload_type_mpeg_audio;
+
 
 // ------- util.cpp -------
-RtpSession *mast_init_ortp( char* tool_name, int mode, int scheduling );
-char* mast_get_tool_name();
-void mast_deinit_ortp( RtpSession *session );
-char* mast_gethostname();
-void mast_set_source_sdes( RtpSession *session );
 void mast_message_handler( int level, const char* file, int line, char *fmt, ... );
 int mast_still_running();
 void mast_stop_running();
 void mast_setup_signals();
-int mast_parse_dscp( const char* value );
-void mast_set_session_ssrc( RtpSession * session, char* ssrc_str );
-mblk_t *mast_wait_for_rtp_packet( RtpSession * session, int seconds );
 int mast_rtp_packet_size( mblk_t* packet );
 int mast_rtp_packet_duration( mblk_t* packet );
-int mast_calc_samples_per_packet( PayloadType *pt, int max_packet_size );
-PayloadType* mast_choose_payloadtype( RtpSession * session, const char* payload_type, int samplerate, int channels );
 void mast_update_mpa_pt( mblk_t* packet );
-
 
 
 

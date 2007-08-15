@@ -18,21 +18,33 @@
  */
 
 
-#include <jack/jack.h>
-#include <jack/ringbuffer.h>
+#ifndef	_MASTRESAMPLER_H_
+#define	_MASTRESAMPLER_H_
+
+#include <sys/types.h>
+#include "MastAudioBuffer.h"
+#include "mast.h"
 
 
-/* Functions in mast_cast-jack.c */
-jack_client_t* mast_init_jack( const char* client_name, jack_options_t jack_opt );
-void mast_deinit_jack( jack_client_t *client );
+class MastResampler {
+
+// Constructors
+public:
+	MastResampler( int in_channels, int quality = SRC_SINC_MEDIUM_QUALITY);
+	~MastResampler();
 
 
-/* Globals in mast_cast-jack.c */
-extern int g_channels;
-extern int g_do_autoconnect;
-extern int g_rb_duration;
-extern jack_port_t *g_jackport[2];
-extern jack_ringbuffer_t *g_ringbuffer;
+// Public methods
+	void resample(MastAudioBuffer *input, MastAudioBuffer *output);
+	
 
-extern pthread_mutex_t g_ringbuffer_cond_mutex;
-extern pthread_cond_t g_ringbuffer_cond;
+
+private:
+	SRC_STATE* src_state;
+	int channels;
+	double ratio;
+
+};
+
+
+#endif	// _MASTRESAMPLER_H_

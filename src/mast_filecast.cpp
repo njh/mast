@@ -28,12 +28,9 @@
 #include <string.h>
 #include <getopt.h>
 
-#include <ortp/ortp.h>
 #include <sndfile.h>
 
-#include "MastAudioBuffer.h"
-#include "MastCodec.h"
-#include "MastMimeType.h"
+#include "MastSendTool.h"
 #include "mast.h"
 
 
@@ -41,10 +38,9 @@
 
 
 /* Global Variables */
+SNDFILE *g_input_file = NULL;
 int g_loop_file = FALSE;
-int g_payload_size_limit = DEFAULT_PAYLOAD_LIMIT;
 char* g_filename = NULL;
-MastMimeType *g_mime_type = NULL;
 
 
 
@@ -77,22 +73,53 @@ static char* format_duration_string( SF_INFO *sfinfo )
 
 
 /*
-  fill_input_buffer()
+  mast_fill_input_buffer()
   Make sure input buffer if full of audio  
 */
-static size_t fill_input_buffer( SNDFILE *inputfile, MastAudioBuffer* buffer )
+size_t mast_fill_input_buffer( MastAudioBuffer* buffer )
 {
-	size_t frames_read = sf_readf_float( inputfile, buffer->get_write_ptr(), buffer->get_write_space() );
+	size_t total_read = 0;
+	int frames_wanted = buffer->get_write_space();
+	int frames_read = 0;
 
-	if (frames_read < 0) {
-		MAST_ERROR("Failed to read from file: %s", sf_strerror( inputfile ) );
-		return frames_read;
+	if (frames_wanted==0) {
+		// No audio wanted
+		MAST_DEBUG( "Tried to fill buffer when it is full" );
+		return 0;
+	}
+	
+	// Loop until buffer is full
+	while( frames_wanted > 0 ) {
+		frames_wanted = buffer->get_write_space();
+		frames_read = sf_readf_float( g_input_file, buffer->get_write_ptr(), frames_wanted );
+		
+		// Add on the frames read
+		if (frames_read > 0) {
+			buffer->add_frames( frames_read );
+			total_read += frames_read;
+		}
+		
+		// Reached end of file?
+		if (frames_read < frames_wanted) {
+			MAST_DEBUG("Reached end of file (frames_wanted=%d, frames_read=%d)", frames_wanted, frames_read);
+			if (g_loop_file) {
+				// Seek back to the beginning
+				if (sf_seek( g_input_file, 0, SEEK_SET )) {
+					MAST_ERROR("Failed to seek to start of file: %s", sf_strerror( g_input_file ) );
+					return 0;
+				}
+			} else {
+				// Reached end of file (and don't want to loop)
+				break;
+			}
+		}
+	}
+		
+	if (total_read < 0) {
+		MAST_ERROR("Failed to read from file: %s", sf_strerror( g_input_file ) );
 	}
 
-	// Add it on to the buffer usage
-	buffer->add_frames( frames_read );
-
-	return frames_read;
+	return total_read;
 }
 
 /* 
@@ -152,48 +179,22 @@ static int usage() {
 }
 
 
-static void parse_cmd_line(int argc, char **argv, RtpSession* session)
+static void parse_cmd_line(int argc, char **argv, MastSendTool* tool)
 {
-	char* payload_type = DEFAULT_PAYLOAD_TYPE;
-	char* remote_address = NULL;
-	int remote_port = DEFAULT_RTP_PORT;
 	int ch;
 
 
 	// Parse the options/switches
 	while ((ch = getopt(argc, argv, "s:t:p:o:z:d:lh?")) != -1)
 	switch (ch) {
-		case 's':
-			mast_set_session_ssrc( session, optarg );
-		break;
-		
-		case 't':
-			if (rtp_session_set_multicast_ttl( session, atoi(optarg) )) {
-				MAST_FATAL("Failed to set multicast TTL");
-			}
-		break;
-		
-		case 'p':
-			payload_type = optarg;
-		break;
-		
-		case 'o':
-			g_mime_type->set_param_pair( optarg );
-		break;
+		case 's': tool->set_session_ssrc( optarg ); break;
+		case 't': tool->set_multicast_ttl( optarg ); break;
+		case 'p': tool->set_payload_mimetype( optarg ); break;
+		case 'o': tool->set_payload_mimetype_param( optarg ); break;
+		case 'z': tool->set_payload_size_limit( optarg ); break;
+		case 'd': tool->set_session_dscp( optarg ); break;
 
-		case 'z':
-			g_payload_size_limit = atoi(optarg);
-		break;
-		
-		case 'd':
-			if (rtp_session_set_dscp( session, mast_parse_dscp(optarg) )) {
-				MAST_FATAL("Failed to set DSCP value");
-			}
-		break;
-		
-		case 'l':
-			g_loop_file = TRUE;
-		break;
+		case 'l': g_loop_file = TRUE; break;
 		
 		case '?':
 		case 'h':
@@ -204,42 +205,16 @@ static void parse_cmd_line(int argc, char **argv, RtpSession* session)
 
 	// Parse the ip address and port
 	if (argc > optind) {
-		remote_address = argv[optind];
-		optind++;
-		
-		// Look for port in the address
-		char* portstr = strchr(remote_address, '/');
-		if (portstr && strlen(portstr)>1) {
-			*portstr = 0;
-			portstr++;
-			remote_port = atoi(portstr);
-		}
-	
+		tool->set_session_address( argv[optind++] );
 	} else {
 		MAST_ERROR("missing address/port to send to");
 		usage();
 	}
 	
-	// Parse the payload type
-	if (g_mime_type->parse( payload_type )) {
-		usage();
-	}
-
-	// Make sure the port number is even
-	if (remote_port%2 == 1) remote_port--;
-	
-	// Set the remote address/port
-	if (rtp_session_set_remote_addr( session, remote_address, remote_port )) {
-		MAST_FATAL("Failed to set remote address/port (%s/%d)", remote_address, remote_port);
-	} else {
-		MAST_INFO( "Remote address: %s/%d", remote_address,  remote_port );
-	}
-	
 
 	// Get the input file
 	if (argc > optind) {
-		g_filename = argv[optind];
-		optind++;
+		g_filename = argv[optind++];
 	} else {
 		MAST_ERROR("missing audio input filename");
 		usage();
@@ -251,141 +226,44 @@ static void parse_cmd_line(int argc, char **argv, RtpSession* session)
 
 int main(int argc, char **argv)
 {
-	RtpSession* session = NULL;
-	PayloadType* pt = NULL;
-	SNDFILE* input = NULL;
+	MastSendTool *tool = NULL;
 	SF_INFO sfinfo;
-	MastCodec *codec = NULL;
-	MastAudioBuffer *input_buffer = NULL;
-	u_int8_t *payload_buffer = NULL;
-	int frames_per_packet = 0;
-	int ts = 0;
 
-	
-	// Create an RTP session
-	session = mast_init_ortp( MAST_TOOL_NAME, RTP_SESSION_SENDONLY, TRUE );
 
-	// Initialise the MIME type
-	g_mime_type = new MastMimeType();
+	// Create the send tool object
+	tool = new MastSendTool( MAST_TOOL_NAME );
+	tool->enable_scheduling();
 
 	// Parse the command line arguments 
 	// and configure the session
-	parse_cmd_line( argc, argv, session );
+	parse_cmd_line( argc, argv, tool );
 
-	
 	// Open the input file by filename
 	memset( &sfinfo, 0, sizeof(sfinfo) );
-	input = sf_open(g_filename, SFM_READ, &sfinfo);
-	if (input == NULL) MAST_FATAL("Failed to open input file:\n%s", sf_strerror(NULL));
-
+	g_input_file = sf_open(g_filename, SFM_READ, &sfinfo);
+	if (g_input_file == NULL) MAST_FATAL("Failed to open input file:\n%s", sf_strerror(NULL));
+	tool->set_input_channels( sfinfo.channels );
+	tool->set_input_samplerate( sfinfo.samplerate );
 	
 	// Display some information about the input file
-	print_file_info( input, &sfinfo );
+	print_file_info( g_input_file, &sfinfo );
 	
-	// Display some information about the chosen payload type
-	MAST_INFO( "Sending SSRC: 0x%x", session->snd.ssrc );
-	MAST_INFO( "Input Format: %d Hz, %s", sfinfo.samplerate, sfinfo.channels==2 ? "Stereo" : "Mono");
-	g_mime_type->print();
-
-	
-	// Load the codec
-	codec = MastCodec::new_codec( g_mime_type );
-	if (codec == NULL) MAST_FATAL("Failed to get initialise codec" );
-	MAST_INFO( "Output Format: %d Hz, %s", codec->get_samplerate(), codec->get_channels()==2 ? "Stereo" : "Mono");
-
-	// Work out the payload type to use
-	pt = mast_choose_payloadtype( session, codec->get_type(), codec->get_samplerate(), codec->get_channels() );
-	if (pt == NULL) MAST_FATAL("Failed to get payload type information from oRTP");
-
-	// Calculate the packet size
-	frames_per_packet = codec->frames_per_packet( g_payload_size_limit );
-	if (frames_per_packet<=0) MAST_FATAL( "Invalid number of samples per packet" );
-
-	// Create audio buffer
-	input_buffer = new MastAudioBuffer( frames_per_packet, codec->get_samplerate(), codec->get_channels() );
-	if (input_buffer == NULL) MAST_FATAL("Failed to creare audio input buffer");
-
-	// Allocate memory for the packet buffer
-	payload_buffer = (u_int8_t*)malloc( g_payload_size_limit );
-	if (payload_buffer == NULL) MAST_FATAL("Failed to allocate memory for payload buffer");
-	
-
-
 	// Setup signal handlers
 	mast_setup_signals();
 
-
-	// The main loop
-	while( mast_still_running() )
-	{
-		int frames_read = fill_input_buffer( input, input_buffer );
-		int payload_bytes = 0;
-		
-		// Was there an error?
-		if (frames_read < 0) break;
-		
-		// Encode audio
-		payload_bytes = codec->encode_packet( input_buffer, g_payload_size_limit, payload_buffer );
-		if (payload_bytes<0)
-		{
-			MAST_ERROR("Codec encode failed" );
-			break;
-		}
-		
-		// We used the audio up
-		input_buffer->empty_buffer();
+	// Run the main loop
+	tool->run();
 	
-		if (payload_bytes) {
-			// Send out an RTP packet
-			rtp_session_send_with_ts(session, payload_buffer, payload_bytes, ts);
-			
-			// Calculate the timestamp increment
-			ts+=((frames_read * pt->clock_rate) / sfinfo.samplerate);   //  * frames_per_packet;
-		}
-		
-
-		// Reached end of file?
-		if (frames_read < frames_per_packet) {
-			MAST_DEBUG("Reached end of file (wanted=%d, frames_read=%d)", frames_per_packet, frames_read);
-			if (g_loop_file) {
-				// Seek back to the beginning
-				if (sf_seek( input, 0, SEEK_SET )) {
-					MAST_ERROR("Failed to seek to start of file: %s", sf_strerror( input ) );
-					break;
-				}
-			} else {
-				// End of file, exit main loop
-				break;
-			}
-		}
-		
-	}
-
-	// Free up the buffers audio/read buffers
-	if (payload_buffer) {
-		free(payload_buffer);
-		payload_buffer=NULL;
-	}
-	if (input_buffer) {
-		delete input_buffer;
-		input_buffer=NULL;
-	}
+	// Clean up
+	delete tool;
 	
 
 	// Close input file
-	if (sf_close( input )) {
-		MAST_ERROR("Failed to close input file:\n%s", sf_strerror(input));
+	if (sf_close( g_input_file )) {
+		MAST_ERROR("Failed to close input file:\n%s", sf_strerror(g_input_file));
 	}
-	
 
-	// Delete objects
-	delete codec;
-	delete g_mime_type;
-
-	// Close RTP session
-	mast_deinit_ortp( session );
 	
-	 
 	// Success !
 	return 0;
 }

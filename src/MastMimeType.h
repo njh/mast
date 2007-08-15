@@ -57,8 +57,8 @@ public:
 	// Methods 
 	MastMimeTypeParam* get_param( int n ) { return this->param[ n ]; };
 	int parse( const char* string );
-	void set_param( char* name, char* value );
-	void set_param_pair( char* pair );
+	void set_param( const char* name, const char* value );
+	void set_param( const char* pair );
 	void print();
 	
 	const char* get_major() { return this->major; };
