@@ -323,7 +323,11 @@ int MastTool::parse_dscp( const char* value )
 	else if (!strcmp(value,"AF42"))  return 0x24;
 	else if (!strcmp(value,"AF43"))  return 0x26;
 	
+	// See http://www.geant.net/server/show/conWebDoc.500
 	else if (!strcmp(value,"EF"))    return 0x2E;
+	else if (!strcmp(value,"LBE"))   return 0x08;
+	else if (!strcmp(value,"DWS"))   return 0x20;
+	else if (!strcmp(value,"PREMIUM")")    return 0x2E;
 
 	// Accept integers too
 	return atoi( value );
