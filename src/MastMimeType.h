@@ -69,9 +69,6 @@ private:
 
 	int istoken( const char c );
 
-	// Pointer to malloced memory containing data
-	char* str;
-
 	// Format: major/minor;name1=value1;name2=value2
 	char* major;
 	char* minor;

@@ -76,7 +76,7 @@ MastCodec* MastCodec::new_codec( MastMimeType* type )
 MastCodec::MastCodec( MastMimeType* type )
 {
 
-	// Initialise the codec's paramters
+	// Initialise the codec's paramters to defaults
 	this->samplerate = 0;
 	this->channels = 0;
 	this->type = type->get_minor();
@@ -116,7 +116,7 @@ size_t MastCodec::frames_per_packet( size_t max_bytes )
 		return -1;
 	}
 	
-	MAST_DEBUG("Samples Per Packet: %d", frames_per_packet );
+	MAST_DEBUG("Frames Per Packet: %d", frames_per_packet );
 	MAST_INFO("Packet duration (ptime): %d ms", (frames_per_packet*1000)/samplerate );
 	
 	return frames_per_packet;
@@ -125,16 +125,31 @@ size_t MastCodec::frames_per_packet( size_t max_bytes )
 // Set a codec parameter - returns 0 on success, or error number on failure
 int MastCodec::set_param( const char* name, const char* value )
 {
-
-	// Call the codec's method
-	return this->set_param_internal( name, value );
 	
-	//return -1;
+	// Automatically alllow parameter if no change is required
+	if (strcmp(name, "channels")==0 && atoi(value)==this->channels) {
+		return 0;
+	}
+	if (strcmp(name, "samplerate")==0 && atoi(value)==this->samplerate) {
+		return 0;
+	}
+
+	// Pass it to the codec's method
+	return this->set_param_internal( name, value );
 }
 
 // Get a codec parameter - returns NULL if parameter doesn't exist
 const char* MastCodec::get_param( const char* name )
 {
+	// Can we deal with it?
+	if (strcmp(name, "channels")==0) {
+		if (this->channels==1) return "1";
+		else if (this->channels==2) return "2";
+		else {
+			MAST_WARNING("Number of channels isn't 1 or 2: %d", this->channels);
+			return "?";
+		}
+	}
 
 	// Call the codec's method
 	return this->get_param_internal( name );
@@ -151,10 +166,10 @@ size_t MastCodec::encode_packet( MastAudioBuffer *input, size_t outsize, u_int8_
 	
 	// Check that the input buffer is the same format as the packet payload
 	if (input->get_channels() != this->get_channels()) {
-		MAST_WARNING( "Input buffer have same number of channels as codec" );
+		MAST_WARNING( "Input buffer doesn't have same number of channels as codec" );
 	}
 	if (input->get_samplerate() != this->get_samplerate()) {
-		MAST_WARNING( "Input buffer have same number of channels as codec" );
+		MAST_WARNING( "Input buffer doesn't have same samplerate as codec" );
 	}
 	
 	// Check that there is enough audio in the input buffer

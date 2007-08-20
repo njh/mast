@@ -24,9 +24,7 @@ MAST To-Do list
 - Built-in audio resampling (using Secret Rabbit Code)
   * use dynamic resampling to cope with unsynced clocks
 
-
-- Seperate out more of the common code in each of the tools source files
-  * Address / port parsing
+- Clean up memory management in MastMimeType class
   
 
 

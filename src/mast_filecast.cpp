@@ -62,7 +62,7 @@ static char* format_duration_string( SF_INFO *sfinfo )
 	
 	// Calculate the number of minutes and seconds
 	seconds = sfinfo->frames / sfinfo->samplerate;
-	minutes = (seconds / 60 );
+	minutes = (int)(seconds / 60 );
 	seconds -= (minutes * 60);
 
 	// Create a string out of it

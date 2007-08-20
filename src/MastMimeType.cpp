@@ -33,37 +33,6 @@
 
 
 
-MastMimeTypeParam::MastMimeTypeParam( const char* name, const char* value )
-{
-	this->set_name( name );
-	this->set_value( value );
-}
-
-MastMimeTypeParam::MastMimeTypeParam( const char* string )
-{
-	// parse name=value
-
-}
-
-MastMimeTypeParam::~MastMimeTypeParam()
-{
-	if (this->name) free( this->name );
-	if (this->value) free( this->value );
-}
-
-void MastMimeTypeParam::set_name( const char* name )
-{
-	if (this->name) free( this->name );
-	this->name = strdup( name );
-}
-
-void MastMimeTypeParam::set_value( const char* value )
-{
-	if (this->value) free( this->value );
-	this->value = strdup( value );
-}
-
-
 
 
 
@@ -72,9 +41,8 @@ MastMimeType::MastMimeType()
 {
 	int i;
 
-	this->str = NULL;
-	this->major = "audio";
-	this->minor = NULL;
+	this->major = strdup(DEFAULT_PAYLOADTYPE_MAJOR);
+	this->minor = strdup(DEFAULT_PAYLOADTYPE_MINOR);
 	
 	for(i=0; i<MAX_MIME_TYPE_PARAMS; i++) {
 		this->param[i] = NULL;
@@ -101,9 +69,14 @@ MastMimeType::~MastMimeType()
 {
 	int i;
 	
-	if (this->str) {
-		free( this->str );
-		this->str=NULL;
+	if (this->major) {
+		free( this->major );
+		this->major=NULL;
+	}
+	
+	if (this->minor) {
+		free( this->minor );
+		this->minor=NULL;
 	}
 
 	for(i=0; i<MAX_MIME_TYPE_PARAMS; i++) {
@@ -134,32 +107,33 @@ int MastMimeType::parse( const char* string )
 {
 	char* foundslash=NULL;
 	char* foundsemi=NULL;
+	char* tmp=NULL;
 	size_t i=0;
 	
 	
 	// Duplicate the string so that we can play with it
-	this->str = strdup( string );
+	tmp = strdup( string );
 
 	// Look for a slash from the start of the string	
-	for(i=0; i<strlen(this->str); i++) {
-		if (istoken(this->str[i])) continue;
-		if (this->str[i]=='/') {
-			this->str[i]=0x00;
-			foundslash = &this->str[i];
+	for(i=0; i<strlen(tmp); i++) {
+		if (istoken(tmp[i])) continue;
+		if (tmp[i]=='/') {
+			tmp[i]=0x00;
+			foundslash = &tmp[i];
 		}
 		break;
 	}
 	
 	// If we found a slash, check the major type is 'audio'
-	if (foundslash && strcmp( "audio", this->str )!=0) {
+	if (foundslash && strcmp( "audio", tmp )!=0) {
 		MAST_FATAL("MIME Type is not audio/*");
 	}
 	
 	// Copy the subtype from the position we think is the start
 	if (foundslash) {
-		this->minor = foundslash+1;
+		this->minor = strdup(foundslash+1);
 	} else {
-		this->minor = this->str;
+		this->minor = strdup(tmp);
 	}
 	
 	// Now find the end of the subtype
@@ -267,5 +241,38 @@ void MastMimeType::print( )
 			MAST_INFO("Mime Parameter: %s=%s", this->param[i]->get_name(), this->param[i]->get_value());
 		}
 	}
+}
+
+
+
+
+MastMimeTypeParam::MastMimeTypeParam( const char* name, const char* value )
+{
+	this->set_name( name );
+	this->set_value( value );
+}
+
+MastMimeTypeParam::MastMimeTypeParam( const char* string )
+{
+	// parse name=value
+
+}
+
+MastMimeTypeParam::~MastMimeTypeParam()
+{
+	if (this->name) free( this->name );
+	if (this->value) free( this->value );
+}
+
+void MastMimeTypeParam::set_name( const char* name )
+{
+	if (this->name) free( this->name );
+	this->name = strdup( name );
+}
+
+void MastMimeTypeParam::set_value( const char* value )
+{
+	if (this->value) free( this->value );
+	this->value = strdup( value );
 }
 

@@ -37,8 +37,6 @@ size_t MastCodec_L16::frames_per_packet_internal( size_t max_bytes )
 {
 	int bytes_per_frame = sizeof(int16_t) * this->channels;
 	int bytes_per_unit = SAMPLES_PER_UNIT * bytes_per_frame;
-	MAST_DEBUG("L16 bytes per frame = %d", bytes_per_frame);
-	MAST_DEBUG("L16 bytes per unit = %d", bytes_per_unit);
 	return (max_bytes / bytes_per_unit) * SAMPLES_PER_UNIT;
 }
 

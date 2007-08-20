@@ -87,7 +87,7 @@ static inline mast_sample_t ulaw_to_float( int ulawbyte )
 static inline char float_to_ulaw( mast_sample_t sample_f32 )
 {
 	int sign, exponent, mantissa;
-	int sample_s16 = sample_f32 * 0x8000;
+	int sample_s16 = (int)(sample_f32 * 0x8000f);
 	unsigned char ulawbyte;
 	int exp_lut[256] =
 		{0,0,1,1,2,2,2,2,3,3,3,3,3,3,3,3,

@@ -86,7 +86,7 @@ static inline int val_seg(int val)
 
 static inline int float_to_alaw( float sample_f32 )
 {
-	int sample_s16 = sample_f32 * 0x8000;
+	int sample_s16 = (int)(sample_f32 * 0x8000f);
 	unsigned char mask;
 	unsigned char aval;
 	int seg;
