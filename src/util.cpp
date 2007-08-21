@@ -26,6 +26,7 @@
 #include <strings.h>
 #include <signal.h>
 #include <resolv.h>
+#include <ctype.h>
 
 #include <ortp/ortp.h>
 
@@ -94,6 +95,7 @@ void mast_setup_signals()
 void mast_message_handler( int level, const char* file, int line, char *fmt, ... )
 {
 	va_list args;
+	char lastchar = fmt[ strlen(fmt)-1 ];
 	FILE *fd = stderr;
 	
 	// If debugging is enabled then display the filename and line number
@@ -115,7 +117,8 @@ void mast_message_handler( int level, const char* file, int line, char *fmt, ...
 	// Display the message
 	va_start( args, fmt );
 	vfprintf( fd, fmt, args );
-	fprintf( fd, ".\n" );
+	if (isalpha(lastchar)) fprintf( fd, "." );
+	fprintf( fd, "\n" );
 	va_end( args );
 	
 	// If it is an error, then stop
