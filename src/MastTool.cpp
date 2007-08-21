@@ -393,7 +393,7 @@ void MastTool::set_session_address( const char* in_addr )
 		if (rtp_session_set_local_addr( session, address, port )) {
 			MAST_FATAL("Failed to set local address/port (%s/%d)", address, port);
 		} else {
-			printf( "Local address: %s/%d\n", address,  port );
+			MAST_INFO( "Local address: %s/%d", address,  port );
 		}
 		
 	} else if (this->session->mode == RTP_SESSION_SENDONLY) {
@@ -402,7 +402,7 @@ void MastTool::set_session_address( const char* in_addr )
 		if (rtp_session_set_remote_addr( session, address, port )) {
 			MAST_FATAL("Failed to set remote address/port (%s/%d)", address, port);
 		} else {
-			printf( "Remote address: %s/%d\n", address,  port );
+			MAST_INFO( "Remote address: %s/%d", address,  port );
 		}
 		
 	} else {
