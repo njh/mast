@@ -147,16 +147,16 @@ static void print_file_info( SNDFILE *inputfile, SF_INFO *sfinfo )
 	// Get human readable duration of the input file
 	duration = format_duration_string( sfinfo );
 
-	printf( "---------------------------------------------------------\n");
-	printf( "%s (http://www.mega-nerd.com/libsndfile/)\n", sndlibver);
-	printf( "Input File: %s\n", g_filename );
-	printf( "Input Format: %s, %s\n", format_info.name, subformat_info.name );
-	printf( "Input Sample Rate: %d Hz\n", sfinfo->samplerate );
-	if (sfinfo->channels == 1) printf( "Input Channels: Mono\n" );
-	else if (sfinfo->channels == 2) printf( "Input Channels: Stereo\n" );
-	else printf( "Input Channels: %d\n", sfinfo->channels );
-	printf( "Input Duration: %s\n", duration );
-	printf( "---------------------------------------------------------\n");
+	MAST_INFO( "---------------------------------------------------------");
+	MAST_INFO( "%s (http://www.mega-nerd.com/libsndfile/)", sndlibver);
+	MAST_INFO( "Input File: %s", g_filename );
+	MAST_INFO( "Input Format: %s, %s", format_info.name, subformat_info.name );
+	MAST_INFO( "Input Sample Rate: %d Hz", sfinfo->samplerate );
+	if (sfinfo->channels == 1) MAST_INFO( "Input Channels: Mono" );
+	else if (sfinfo->channels == 2) MAST_INFO( "Input Channels: Stereo" );
+	else MAST_INFO( "Input Channels: %d", sfinfo->channels );
+	MAST_INFO( "Input Duration: %s", duration );
+	MAST_INFO( "---------------------------------------------------------");
 	
 	free( duration );
 }
