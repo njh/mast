@@ -87,7 +87,7 @@ static inline mast_sample_t ulaw_to_float( int ulawbyte )
 static inline char float_to_ulaw( mast_sample_t sample_f32 )
 {
 	int sign, exponent, mantissa;
-	int sample_s16 = (int)(sample_f32 * 0x8000f);
+	int sample_s16 = (int)(sample_f32 * (float)0x8000);
 	unsigned char ulawbyte;
 	int exp_lut[256] =
 		{0,0,1,1,2,2,2,2,3,3,3,3,3,3,3,3,
@@ -129,7 +129,6 @@ static inline char float_to_ulaw( mast_sample_t sample_f32 )
 size_t MastCodec_PCMU::frames_per_packet_internal( size_t max_bytes )
 {
 	int bytes_per_unit = SAMPLES_PER_UNIT * this->channels;
-	MAST_DEBUG("PCMU bytes per unit = %d", bytes_per_unit);
 	return (max_bytes / bytes_per_unit) * SAMPLES_PER_UNIT;
 }
 
@@ -152,7 +151,7 @@ size_t MastCodec_PCMU::encode_packet_internal(
 	for(i=0;i<inputsize;i++) {
 		output[i] = float_to_ulaw( input[i] );
 	}	
-	
+
 	return inputsize;
 }
 

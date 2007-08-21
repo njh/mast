@@ -86,7 +86,7 @@ static inline int val_seg(int val)
 
 static inline int float_to_alaw( float sample_f32 )
 {
-	int sample_s16 = (int)(sample_f32 * 0x8000f);
+	int sample_s16 = (int)(sample_f32 * (float)0x8000);
 	unsigned char mask;
 	unsigned char aval;
 	int seg;
@@ -115,7 +115,6 @@ static inline int float_to_alaw( float sample_f32 )
 size_t MastCodec_PCMA::frames_per_packet_internal( size_t max_bytes )
 {
 	int bytes_per_unit = SAMPLES_PER_UNIT * this->channels;
-	MAST_DEBUG("PCMA bytes per unit = %d", bytes_per_unit);
 	return (max_bytes / bytes_per_unit) * SAMPLES_PER_UNIT;
 }
 
