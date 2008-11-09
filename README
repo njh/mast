@@ -84,7 +84,7 @@ Marker Bit      : Not Set
 Payload Details
 ===============
 Mime Type       : audio/mpa
-Cock Rate       : 90000 Hz
+Clock Rate      : 90000 Hz
 
 MPEG Audio Header
 =================

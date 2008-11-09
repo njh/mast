@@ -158,7 +158,7 @@ int main(int argc, char **argv)
 		else if (pt->type==PAYLOAD_VIDEO) mime_major = "video";
 		printf("Mime Type       : %s/%s\n", mime_major, pt->mime_type);
 		
-		if (pt->clock_rate)			printf("Cock Rate       : %u Hz\n", pt->clock_rate);
+		if (pt->clock_rate)			printf("Clock Rate      : %u Hz\n", pt->clock_rate);
 		if (pt->channels)			printf("Channels        : %u\n", pt->channels);
 		if (pt->bits_per_sample)	printf("Bits per Sample : %u\n", pt->bits_per_sample);
 		if (pt->normal_bitrate) {
