@@ -1,7 +1,7 @@
 /*
  *  MAST: Multicast Audio Streaming Toolkit
  *
- *  Copyright (C) 2003-2007 Nicholas J. Humfrey <njh@ecs.soton.ac.uk>
+ *  Copyright (C) 2003-2007 Nicholas J. Humfrey <njh@aelius.com>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by

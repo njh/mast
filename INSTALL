@@ -1,6 +1,6 @@
 Installation of MAST
 ====================
-Nicholas J. Humfrey <njh@ecs.soton.ac.uk>
+Nicholas J. Humfrey <njh@aelius.com>
 
 MAST uses autoconf/automake, so should work on most POSIX systems.
 
