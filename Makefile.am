@@ -1,3 +1,5 @@
+AUTOMAKE_OPTIONS = foreign
+
 BUILT_SOURCES = VERSION
 
 VERSION: configure.ac
