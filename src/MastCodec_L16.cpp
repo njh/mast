@@ -31,6 +31,19 @@
 #define	L16_DEFAULT_SAMPLERATE		(44100)
 #define	L16_DEFAULT_CHANNELS		(2)
 
+int MastCodec_L16::set_param_internal( const char* name, const char* value )
+{
+	if (strcmp(name, "channels")==0) {
+		int channels = atoi(value);
+		if ((channels < 0) || (channels > 2)) return -2;
+		this->channels = channels;
+	} else {
+		// Unsupported parameter
+		return -1;
+	}
+
+	return 0;
+}
 
 // Calculate the number of samples per packet
 size_t MastCodec_L16::frames_per_packet_internal( size_t max_bytes )

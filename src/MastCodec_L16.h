@@ -35,6 +35,9 @@ public:
 
 protected:
 
+	// Set a codec parameter - returns 0 on success, or error number on failure
+	virtual int set_param_internal( const char* name, const char* value );
+
 	// Internal: encode a packet of audio - returns number of bytes encoded, or -1 on failure
 	virtual size_t encode_packet_internal( size_t num_frames, mast_sample_t *input, size_t out_size, u_int8_t *output );
 	
