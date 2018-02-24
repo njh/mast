@@ -37,6 +37,8 @@
 /* Globals */
 static int g_mast_running = TRUE;
 
+static char mpeg_audio_mime_type[] = "mpa";
+
 // RTP Payload Type for MPEG Audio
 PayloadType	payload_type_mpeg_audio = {
 	PAYLOAD_AUDIO_PACKETIZED, // type
@@ -45,8 +47,12 @@ PayloadType	payload_type_mpeg_audio = {
 	NULL,	// zero pattern N/A
 	0,		// pattern_length N/A
 	0,		// normal_bitrate
-	"mpa",	// MIME Type
-	0		// flags
+	mpeg_audio_mime_type, // MIME Type
+	1,		// channels
+	NULL,	// various format parameters for the incoming stream
+	NULL,	// various format parameters for the outgoing stream
+	0,		// flags
+	NULL	// user data
 };
 
 

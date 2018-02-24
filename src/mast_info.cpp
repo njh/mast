@@ -89,7 +89,7 @@ static void parse_cmd_line(int argc, char **argv, RtpSession* session)
 	if (local_port%2 == 1) local_port--;
 	
 	// Set the remote address/port
-	if (rtp_session_set_local_addr( session, local_address, local_port )) {
+	if (rtp_session_set_local_addr( session, local_address, local_port, local_port + 1 )) {
 		MAST_FATAL("Failed to set receive address/port (%s/%u)", local_address, local_port);
 	} else {
 		printf( "Receive address: %s/%u\n", local_address,  local_port );
