@@ -390,7 +390,7 @@ void MastTool::set_session_address( const char* in_addr )
 	if (this->session->mode == RTP_SESSION_RECVONLY) {
 	
 		// Set the local address/port
-		if (rtp_session_set_local_addr( session, address, port )) {
+		if (rtp_session_set_local_addr( session, address, port, port + 1 )) {
 			MAST_FATAL("Failed to set local address/port (%s/%d)", address, port);
 		} else {
 			MAST_INFO( "Local address: %s/%d", address,  port );
