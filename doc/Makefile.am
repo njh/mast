@@ -30,7 +30,7 @@ if BUILD_DOC
 INSTALL.html: ../INSTALL
 	$(ASCIIDOC) -d article -b xhtml11 -o $@ $<
 
-README.html: ../README
+README.html: ../README.md
 	$(ASCIIDOC) -d article -b xhtml11 -o $@ $<
 
 TODO.html: ../TODO
