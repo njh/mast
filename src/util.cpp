@@ -92,7 +92,7 @@ void mast_setup_signals()
 
 
 /* Handle an error and store the error message */
-void mast_message_handler( int level, const char* file, int line, char *fmt, ... )
+void mast_message_handler( int level, const char* file, int line, const char *fmt, ... )
 {
 	va_list args;
 	char lastchar = fmt[ strlen(fmt)-1 ];

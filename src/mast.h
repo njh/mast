@@ -106,7 +106,7 @@ extern PayloadType payload_type_mpeg_audio;
 
 
 // ------- util.cpp -------
-void mast_message_handler( int level, const char* file, int line, char *fmt, ... );
+void mast_message_handler( int level, const char* file, int line, const char *fmt, ... );
 int mast_still_running();
 void mast_stop_running();
 void mast_setup_signals();
