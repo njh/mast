@@ -21,7 +21,6 @@
 #ifndef	_MAST_CODEC_H_
 #define	_MAST_CODEC_H_
 
-#include <samplerate.h>
 #include "MastAudioBuffer.h"
 #include "MastMimeType.h"
 #include "mast.h"
