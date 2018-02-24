@@ -26,3 +26,18 @@ VERSION
 
 src/config.h
 src/config.h.in
+
+doc/*.1
+doc/*.1.html
+doc/asciidoctor.css
+doc/INSTALL.html
+doc/README.html
+doc/TODO.html
+
+build/
+mast_cast
+mast_filecast
+mast_info
+mast_rawcast
+mast_rawrecord
+mast_record
