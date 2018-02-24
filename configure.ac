@@ -41,11 +41,11 @@ AC_ARG_ENABLE(debug,
 
 dnl ############## Check for tools to build documentation
 
-AC_PATH_PROG( [ASCIIDOC], [asciidoc] )
-AC_SUBST( POD2MAN )
+AC_PATH_PROG( [ASCIIDOC], [asciidoctor] )
+AC_SUBST(ASCIIDOC)
 
 AC_PATH_PROG( [XMLTO], [xmlto] )
-AC_SUBST( XMLTO )
+AC_SUBST(XMLTO)
 
 if test "x$ac_cv_path_ASCIIDOC" != "x" -a "x$ac_cv_path_XMLTO" != "x"; then
 	BUILD_DOC="Yes"
