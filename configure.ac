@@ -60,9 +60,9 @@ AM_CONDITIONAL(BUILD_DOC, test x$BUILD_DOC = xYes)
 dnl ############## Library Checks
 
 dnl Check for ortp (required)
-PKG_CHECK_MODULES(ORTP, ortp >= 0.13.2, ,
+PKG_CHECK_MODULES(ORTP, ortp >= 0.22.0, ,
 	[ AC_MSG_ERROR(
-		[ Version 0.13.2 or greater of the oRTP library is required to build MAST.
+		[ Version 0.22.0 or greater of the oRTP library is required to build MAST.
 		It can be downloaded from http://www.linphone.org/ortp/ ])
 	]
 )
