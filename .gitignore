@@ -29,6 +29,7 @@ src/config.h.in
 
 doc/*.1
 doc/*.1.html
+doc/*.1.xml
 doc/asciidoctor.css
 doc/INSTALL.html
 doc/README.html
