@@ -28,22 +28,22 @@ XMLTO = @XMLTO@
 if BUILD_DOC 
 
 INSTALL.html: ../INSTALL
-	$(ASCIIDOC) -d article -b xhtml11 -o $@ $<
+	$(ASCIIDOC) -d article -o $@ $<
 
 README.html: ../README.md
-	$(ASCIIDOC) -d article -b xhtml11 -o $@ $<
+	$(ASCIIDOC) -d article -o $@ $<
 
 TODO.html: ../TODO
-	$(ASCIIDOC) -d article -b xhtml11 -o $@ $<
+	$(ASCIIDOC) -d article -o $@ $<
 
 $(HTMLMANPAGES): %.html: %.asc
-	$(ASCIIDOC) -d manpage -b xhtml11 -o $@ $<
+	$(ASCIIDOC) -d manpage -o $@ $<
 
 $(XMLMANPAGES): %.xml: %.asc
 	$(ASCIIDOC) -d manpage -b docbook -o $@ $<
 
 $(man_MANS): %: %.xml
-	$(XMLTO) man $<
+	$(XMLTO) man --skip-validation $<
 
 endif
 
