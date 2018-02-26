@@ -18,8 +18,8 @@
  */
 
 
-#ifndef	_MAST_CODEC_PCMA_H_
-#define	_MAST_CODEC_PCMA_H_
+#ifndef _MAST_CODEC_PCMA_H_
+#define _MAST_CODEC_PCMA_H_
 
 #include "MastCodec.h"
 
@@ -29,23 +29,23 @@ class MastCodec_PCMA : public MastCodec {
 
 public:
 
-	// Constructor
-	MastCodec_PCMA( MastMimeType *type );
-	
+    // Constructor
+    MastCodec_PCMA( MastMimeType *type );
+
 protected:
 
-	// Internal: encode a packet of audio - returns number of bytes encoded, or -1 on failure
-	virtual size_t encode_packet_internal( size_t num_frames, mast_sample_t *input, size_t out_size, u_int8_t *output );
-	
-	// Internal: decode a packet of audio - returns number of samples decoded, or -1 on failure
-	virtual size_t decode_packet_internal( size_t inputsize, u_int8_t *input, size_t outputsize, mast_sample_t *output );
+    // Internal: encode a packet of audio - returns number of bytes encoded, or -1 on failure
+    virtual size_t encode_packet_internal( size_t num_frames, mast_sample_t *input, size_t out_size, u_int8_t *output );
 
-	// Internal: return the number of frames per packet for the current parameters
-	virtual size_t frames_per_packet_internal( size_t max_bytes );
-	
+    // Internal: decode a packet of audio - returns number of samples decoded, or -1 on failure
+    virtual size_t decode_packet_internal( size_t inputsize, u_int8_t *input, size_t outputsize, mast_sample_t *output );
+
+    // Internal: return the number of frames per packet for the current parameters
+    virtual size_t frames_per_packet_internal( size_t max_bytes );
+
 };
 
 
 
 
-#endif	// _MAST_CODEC_PCMA_H_
+#endif // _MAST_CODEC_PCMA_H_

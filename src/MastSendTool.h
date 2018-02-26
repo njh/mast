@@ -18,8 +18,8 @@
  */
 
 
-#ifndef	_MASTSENDTOOL_H_
-#define	_MASTSENDTOOL_H_
+#ifndef _MASTSENDTOOL_H_
+#define _MASTSENDTOOL_H_
 
 #include "MastTool.h"
 #include "MastMimeType.h"
@@ -32,32 +32,40 @@ class MastSendTool : public MastTool {
 
 // Constructors
 public:
-	MastSendTool( const char* name );
-	~MastSendTool();
+    MastSendTool( const char* name );
+    ~MastSendTool();
 
 
 // Public methods
-	void set_input_channels( int in_channels ) { this->channels = in_channels; };
-	void set_input_samplerate( int in_samplerate ) { this->samplerate = in_samplerate; };
-	int get_input_channels() { return this->channels; };
-	int get_input_samplerate() { return this->samplerate; };
-	void run();
+    void set_input_channels( int in_channels ) {
+        this->channels = in_channels;
+    };
+    void set_input_samplerate( int in_samplerate ) {
+        this->samplerate = in_samplerate;
+    };
+    int get_input_channels() {
+        return this->channels;
+    };
+    int get_input_samplerate() {
+        return this->samplerate;
+    };
+    void run();
 
 // Private methods
-	void prepare();
+    void prepare();
 
 
 private:
-	MastAudioBuffer *input_buffer;
-	//MastAudioBuffer *resampled_buffer;
-	//MastResampler *resampler;
-	MastCodec *codec;				// Codec to encode the audio
-	u_int8_t *payload_buffer;		// Payload buffer for encoded audio
-	int frames_per_packet;			// Number of audio frames per packet
-	int ts;							// Current transmit timestamp
+    MastAudioBuffer *input_buffer;
+    //MastAudioBuffer *resampled_buffer;
+    //MastResampler *resampler;
+    MastCodec *codec;                // Codec to encode the audio
+    u_int8_t *payload_buffer;        // Payload buffer for encoded audio
+    int frames_per_packet;           // Number of audio frames per packet
+    int ts;                          // Current transmit timestamp
 
-	int channels;					// Number of input channels
-	int samplerate;					// Samplerate of input
+    int channels;                    // Number of input channels
+    int samplerate;                  // Samplerate of input
 
 };
 
@@ -66,4 +74,4 @@ private:
 size_t mast_fill_input_buffer( MastAudioBuffer* buffer );
 
 
-#endif	// _MASTSENDTOOL_H_
+#endif // _MASTSENDTOOL_H_

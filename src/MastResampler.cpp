@@ -30,19 +30,19 @@
 // Constructors
 MastResampler::MastResampler( int in_channels, int quality )
 {
-	int src_err = 0;
-	
-	// Initialise the resampling ration
-	this->ratio = 1.0f;
+    int src_err = 0;
 
-	// Store the number of channels
-	this->channels = in_channels;
+    // Initialise the resampling ration
+    this->ratio = 1.0f;
 
-	// Create resampling engine
-	src_state = src_new( quality, channels, &src_err );
-	if (src_state==NULL || src_err!=0) {
-		MAST_FATAL("Failed to initialise SRC resampling engine: %s", src_strerror( src_err ) );
-	}
+    // Store the number of channels
+    this->channels = in_channels;
+
+    // Create resampling engine
+    src_state = src_new( quality, channels, &src_err );
+    if (src_state==NULL || src_err!=0) {
+        MAST_FATAL("Failed to initialise SRC resampling engine: %s", src_strerror( src_err ) );
+    }
 
 
 }
@@ -51,8 +51,8 @@ MastResampler::MastResampler( int in_channels, int quality )
 // Add audio fames to the buffer
 MastResampler::~MastResampler()
 {
-	// Delete the resampling engine
-	src_delete( src_state );
+    // Delete the resampling engine
+    src_delete( src_state );
 }
 
 // Re-sample one audio buffer to another
@@ -60,43 +60,43 @@ MastResampler::resample(MastAudioBuffer *input, MastAudioBuffer *output);
 {
 
 
-	// Check that the number of channels are the same
-	if (input->get_channels() != output->get_channels()) {
-		MAST_ERROR("Number of channels in input buffer is different to the number of channels in the output buffer");
-		return;
-	}
+    // Check that the number of channels are the same
+    if (input->get_channels() != output->get_channels()) {
+        MAST_ERROR("Number of channels in input buffer is different to the number of channels in the output buffer");
+        return;
+    }
 
-/*
+    /*
 
 
-	// Is the samplerate conversion buffer big enough?
-	src_buf_len = (input_frames * ratio * 1.1);
-	if (src_buf_len > codec->src_buffer_len) {
-		codec->src_buffer = realloc( codec->src_buffer, src_buf_len*sizeof(float));
-		if (codec->src_buffer==NULL) {
-			MAST_FATAL("Failed to allocate memory for samplerate conversion");
-		}
-		codec->src_buffer_len = src_buf_len;
-	}
-	
-	// Configure the sample rate conversion
-	memset( &params, 0, sizeof(SRC_DATA) );
-	params.data_in = input;
-	params.input_frames = input_frames;
-	params.data_out = codec->src_buffer;
-	params.output_frames = codec->src_buffer_len;
-	params.src_ratio = ratio;
+        // Is the samplerate conversion buffer big enough?
+        src_buf_len = (input_frames * ratio * 1.1);
+        if (src_buf_len > codec->src_buffer_len) {
+            codec->src_buffer = realloc( codec->src_buffer, src_buf_len*sizeof(float));
+            if (codec->src_buffer==NULL) {
+                MAST_FATAL("Failed to allocate memory for samplerate conversion");
+            }
+            codec->src_buffer_len = src_buf_len;
+        }
 
-	// Perform the conversion
-	err = src_process(codec->src_state, &params );
-	if (err) {
-		MAST_FATAL("Failed to perform samplerate conversion: %s", src_strerror( err ) );
-	}
+        // Configure the sample rate conversion
+        memset( &params, 0, sizeof(SRC_DATA) );
+        params.data_in = input;
+        params.input_frames = input_frames;
+        params.data_out = codec->src_buffer;
+        params.output_frames = codec->src_buffer_len;
+        params.src_ratio = ratio;
 
-	MAST_DEBUG("input_frames=%d, input_frames_used=%d, output_frames=%d, output_frames_gen=%d",
-				params.input_frames, params.input_frames_used, params.output_frames, params.output_frames_gen );
+        // Perform the conversion
+        err = src_process(codec->src_state, &params );
+        if (err) {
+            MAST_FATAL("Failed to perform samplerate conversion: %s", src_strerror( err ) );
+        }
 
-*/
+        MAST_DEBUG("input_frames=%d, input_frames_used=%d, output_frames=%d, output_frames_gen=%d",
+                    params.input_frames, params.input_frames_used, params.output_frames, params.output_frames_gen );
+
+    */
 
 
 }

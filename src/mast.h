@@ -19,70 +19,70 @@
 
 
 
-#ifndef	_MAST_H_
-#define	_MAST_H_
+#ifndef _MAST_H_
+#define _MAST_H_
 
 #include "config.h"
 #include <ortp/ortp.h>
 
 
 // Defaults
-#define DEFAULT_RTP_SSRC			(0)
-#define DEFAULT_MULTICAST_TTL		(5)
-#define DEFAULT_PAYLOAD_LIMIT		(1450)
-#define DEFAULT_PAYLOADTYPE_MAJOR	"audio"
-#define DEFAULT_PAYLOADTYPE_MINOR	"L16"
-#define DEFAULT_CHANNELS			(2)
-#define DEFAULT_RTP_PORT			(5004)
-#define DEFAULT_TIMEOUT				(10)
-#define DEFAULT_RINGBUFFER_DURATION	(500)
+#define DEFAULT_RTP_SSRC             (0)
+#define DEFAULT_MULTICAST_TTL        (5)
+#define DEFAULT_PAYLOAD_LIMIT        (1450)
+#define DEFAULT_PAYLOADTYPE_MAJOR    "audio"
+#define DEFAULT_PAYLOADTYPE_MINOR    "L16"
+#define DEFAULT_CHANNELS             (2)
+#define DEFAULT_RTP_PORT             (5004)
+#define DEFAULT_TIMEOUT              (10)
+#define DEFAULT_RINGBUFFER_DURATION  (500)
 
 // RAT only accepts packets if they contain multiples of 160 samples
-#define SAMPLES_PER_UNIT			(160)
+#define SAMPLES_PER_UNIT             (160)
 
 // Standard string buffer size
-#define STR_BUF_SIZE				(255)
+#define STR_BUF_SIZE                 (255)
 
 // Payload type indexes
-#define RTP_GSM_PT					(3)
-#define RTP_MPEG_AUDIO_PT			(14)
+#define RTP_GSM_PT                   (3)
+#define RTP_MPEG_AUDIO_PT            (14)
 
 // GSM codec specifics
-#define	GSM_FRAME_SAMPLES			(160)
-#define GSM_FRAME_BYTES				(33)
-#define GSM_FRAME_SIGNATURE			(0xD0)
+#define GSM_FRAME_SAMPLES            (160)
+#define GSM_FRAME_BYTES              (33)
+#define GSM_FRAME_SIGNATURE          (0xD0)
 
 
 
 #ifndef TRUE
-#define TRUE	(1)
+#define TRUE     (1)
 #endif
 
 #ifndef FALSE
-#define FALSE	(0)
+#define FALSE    (0)
 #endif
 
 
 // Use by gethostname()
 #ifndef HOST_NAME_MAX
 #ifdef _POSIX_HOST_NAME_MAX
-#define HOST_NAME_MAX	_POSIX_HOST_NAME_MAX
+#define HOST_NAME_MAX    _POSIX_HOST_NAME_MAX
 #else
-#define HOST_NAME_MAX	(256)
+#define HOST_NAME_MAX      (256)
 #endif
 #endif
 
 #ifndef DOMAIN_NAME_MAX
-#define DOMAIN_NAME_MAX	(1024)
+#define DOMAIN_NAME_MAX    (1024)
 #endif
 
 
 // Message levels
-#define MSG_LEVEL_DEBUG		(1)
-#define MSG_LEVEL_INFO		(2)
-#define MSG_LEVEL_WARNING	(3)
-#define MSG_LEVEL_ERROR		(4)
-#define MSG_LEVEL_FATAL		(5)
+#define MSG_LEVEL_DEBUG      (1)
+#define MSG_LEVEL_INFO       (2)
+#define MSG_LEVEL_WARNING    (3)
+#define MSG_LEVEL_ERROR      (4)
+#define MSG_LEVEL_FATAL      (5)
 
 
 // Only display debugging messages if debugging is enabled
@@ -116,4 +116,4 @@ void mast_update_mpa_pt( mblk_t* packet );
 
 
 
-#endif	// _MAST_H_
+#endif // _MAST_H_

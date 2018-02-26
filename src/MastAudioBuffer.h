@@ -18,8 +18,8 @@
  */
 
 
-#ifndef	_MASTAUDIOBUFFER_H_
-#define	_MASTAUDIOBUFFER_H_
+#ifndef _MASTAUDIOBUFFER_H_
+#define _MASTAUDIOBUFFER_H_
 
 #include <sys/types.h>
 #include "mast.h"
@@ -29,55 +29,71 @@ class MastAudioBuffer {
 
 // Constructors
 public:
-	MastAudioBuffer(size_t frames, int samplerate, int channels);
-	~MastAudioBuffer();
+    MastAudioBuffer(size_t frames, int samplerate, int channels);
+    ~MastAudioBuffer();
 
 
 // Public methods
-	//int resize(size_t samples);
-	
-	// Return the number of channels per frame
-	int get_channels() { return this->channels; };
+    //int resize(size_t samples);
 
-	// Return the samplerate of the audio in the buffer
-	int get_samplerate() { return this->samplerate; };
-	
-	// Return the total size of the buffer (in frames)
-	size_t get_buffer_size() { return this->buffer_size; };
-	
-	// Return the number of frames available for reading
-	size_t get_read_space() { return this->buffer_used; };
-	
-	// Return amount of space (in frames) available for writing to
-	size_t get_write_space()  { return this->buffer_size - this->buffer_used; };
+    // Return the number of channels per frame
+    int get_channels() {
+        return this->channels;
+    };
 
-	// Returns pointer to location to start reading frames	
-	mast_sample_t* get_read_ptr() { return this->buffer; };
-	
-	// Returns pointer to location to start writing frames
-	mast_sample_t* get_write_ptr() { return &this->buffer[ this->buffer_used * this->channels ]; }
+    // Return the samplerate of the audio in the buffer
+    int get_samplerate() {
+        return this->samplerate;
+    };
 
-	// Some data has been added to the buffer
-	void add_frames( size_t frames );
+    // Return the total size of the buffer (in frames)
+    size_t get_buffer_size() {
+        return this->buffer_size;
+    };
 
-	// Some data has been added to the buffer
-	void remove_frames( size_t frames );
+    // Return the number of frames available for reading
+    size_t get_read_space() {
+        return this->buffer_used;
+    };
 
-	// Delete the contents of the buffer
-	void empty_buffer() { this->buffer_used = 0; };
+    // Return amount of space (in frames) available for writing to
+    size_t get_write_space()  {
+        return this->buffer_size - this->buffer_used;
+    };
+
+    // Returns pointer to location to start reading frames
+    mast_sample_t* get_read_ptr() {
+        return this->buffer;
+    };
+
+    // Returns pointer to location to start writing frames
+    mast_sample_t* get_write_ptr() {
+        return &this->buffer[ this->buffer_used * this->channels ];
+    }
+
+    // Some data has been added to the buffer
+    void add_frames( size_t frames );
+
+    // Some data has been added to the buffer
+    void remove_frames( size_t frames );
+
+    // Delete the contents of the buffer
+    void empty_buffer() {
+        this->buffer_used = 0;
+    };
 
 
 
 private:
-	int channels;
-	int samplerate;
+    int channels;
+    int samplerate;
 
-	size_t buffer_size;
-	size_t buffer_used;
+    size_t buffer_size;
+    size_t buffer_used;
 
-	mast_sample_t *buffer;
+    mast_sample_t *buffer;
 
 };
 
 
-#endif	// _MASTAUDIOBUFFER_H_
+#endif // _MASTAUDIOBUFFER_H_

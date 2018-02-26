@@ -26,55 +26,75 @@ class MPA_Header {
 
 public:
 
-	// Constructors
-	MPA_Header();
-	MPA_Header( const u_int8_t* buff );
+    // Constructors
+    MPA_Header();
+    MPA_Header( const u_int8_t* buff );
 
-	// Get parse the header of a frame of mpeg audio
-	int parse( const u_int8_t* buff );
-	
-	// Print out details of very field for debugging
-	void debug( FILE* out = stderr );
-	
-	// Summarise audio format in single line
-	void print( FILE* out = stderr );
+    // Get parse the header of a frame of mpeg audio
+    int parse( const u_int8_t* buff );
+
+    // Print out details of very field for debugging
+    void debug( FILE* out = stderr );
+
+    // Summarise audio format in single line
+    void print( FILE* out = stderr );
 
 
-	// Accessors
-	u_int32_t get_layer() { return this->layer; };
-	u_int32_t get_version() { return this->version; };
-	u_int32_t get_error_protection() { return this->error_protection; };
-	u_int32_t get_padding() { return this->padding; };
-	u_int32_t get_extension() { return this->extension; };
-	u_int32_t get_mode() { return this->mode; };
-	u_int32_t get_mode_ext() { return this->mode_ext; };
-	u_int32_t get_copyright() { return this->copyright; };
-	u_int32_t get_original() { return this->original; };
-	u_int32_t get_emphasis() { return this->emphasis; };
+    // Accessors
+    u_int32_t get_layer() {
+        return this->layer;
+    };
+    u_int32_t get_version() {
+        return this->version;
+    };
+    u_int32_t get_error_protection() {
+        return this->error_protection;
+    };
+    u_int32_t get_padding() {
+        return this->padding;
+    };
+    u_int32_t get_extension() {
+        return this->extension;
+    };
+    u_int32_t get_mode() {
+        return this->mode;
+    };
+    u_int32_t get_mode_ext() {
+        return this->mode_ext;
+    };
+    u_int32_t get_copyright() {
+        return this->copyright;
+    };
+    u_int32_t get_original() {
+        return this->original;
+    };
+    u_int32_t get_emphasis() {
+        return this->emphasis;
+    };
 
-	u_int32_t get_channels();
-	u_int32_t get_bitrate();
-	u_int32_t get_samplerate();
-	u_int32_t get_samples();
-	u_int32_t get_framesize();
-	
+    u_int32_t get_channels();
+    u_int32_t get_bitrate();
+    u_int32_t get_samplerate();
+    u_int32_t get_samples();
+    u_int32_t get_framesize();
+
 
 
 private:
 
-	u_int32_t syncword;
-	u_int32_t layer;
-	u_int32_t version;
-	u_int32_t error_protection;
-	u_int32_t bitrate_index;
-	u_int32_t samplerate_index;
-	u_int32_t padding;
-	u_int32_t extension;
-	u_int32_t mode;
-	u_int32_t mode_ext;
-	u_int32_t copyright;
-	u_int32_t original;
-	u_int32_t emphasis;
+    u_int32_t syncword;
+    u_int32_t layer;
+    u_int32_t version;
+    u_int32_t error_protection;
+    u_int32_t bitrate_index;
+    u_int32_t samplerate_index;
+    u_int32_t padding;
+    u_int32_t extension;
+    u_int32_t mode;
+    u_int32_t mode_ext;
+    u_int32_t copyright;
+    u_int32_t original;
+    u_int32_t emphasis;
 
 };
 
