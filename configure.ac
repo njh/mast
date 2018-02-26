@@ -156,7 +156,7 @@ AC_SUBST(BUILD_PROGRAMS)
 
 dnl ############## Final Output
 
-AC_CONFIG_FILES([Makefile src/Makefile doc/Makefile libgsm/Makefile])
+AC_CONFIG_FILES([Makefile src/Makefile doc/Makefile])
 
 AC_OUTPUT
 
