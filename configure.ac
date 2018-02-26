@@ -48,10 +48,10 @@ AC_PATH_PROG( [XMLTO], [xmlto] )
 AC_SUBST([XMLTO])
 
 if test "x$ac_cv_path_ASCIIDOC" != "x" -a "x$ac_cv_path_XMLTO" != "x"; then
-	BUILD_DOC="Yes"
+  BUILD_DOC="Yes"
 else
-	BUILD_DOC="No"
-	AC_MSG_WARN([Not re-building documentation because tools are missing])
+  BUILD_DOC="No"
+  AC_MSG_WARN([Not re-building documentation because tools are missing])
 fi
 AM_CONDITIONAL(BUILD_DOC, test x$BUILD_DOC = xYes)
 
@@ -61,47 +61,47 @@ dnl ############## Library Checks
 
 dnl Check for ortp (required)
 PKG_CHECK_MODULES(ORTP, ortp >= 0.22.0, ,
-	[ AC_MSG_ERROR(
-		[ Version 0.22.0 or greater of the oRTP library is required to build MAST.
-		It can be downloaded from http://www.linphone.org/ortp/ ])
-	]
+  [ AC_MSG_ERROR(
+    [ Version 0.22.0 or greater of the oRTP library is required to build MAST.
+    It can be downloaded from http://www.linphone.org/ortp/ ])
+  ]
 )
 
 dnl Check for Secret Rabbit Code (it is optional)
 PKG_CHECK_MODULES(SAMPLERATE, samplerate >= 0.1.2,
-	[ HAVE_LIBSRC="Yes" ],
-	[ HAVE_LIBSRC="No" ]
+  [ HAVE_LIBSRC="Yes" ],
+  [ HAVE_LIBSRC="No" ]
 )
 
 dnl Check for libsndfile (it is optional)
 PKG_CHECK_MODULES(SNDFILE, sndfile >= 1.0.0,
-	[ HAVE_SNDFILE="Yes" ],
-	[ HAVE_SNDFILE="No" ]
+  [ HAVE_SNDFILE="Yes" ],
+  [ HAVE_SNDFILE="No" ]
 )
 
 dnl Check for JACK (it is optional)
 PKG_CHECK_MODULES(JACK, jack,
-	[ HAVE_JACK="Yes" ],
-	[ HAVE_JACK="No" ]
+  [ HAVE_JACK="Yes" ],
+  [ HAVE_JACK="No" ]
 )
 
 dnl Check for twolame (it is optional)
 PKG_CHECK_MODULES(TwoLAME, twolame >= 0.3.10,
-	[
-		HAVE_TWOLAME="Yes"
-		AC_DEFINE_UNQUOTED( HAVE_TWOLAME, 1, [ Define if libtwolame is available ] )
-	],
-	[ HAVE_TWOLAME="No" ]
+  [
+    HAVE_TWOLAME="Yes"
+    AC_DEFINE_UNQUOTED( HAVE_TWOLAME, 1, [ Define if libtwolame is available ] )
+  ],
+  [ HAVE_TWOLAME="No" ]
 )
 AM_CONDITIONAL([HAVE_TWOLAME], [test x$HAVE_TWOLAME = xYes])
 
 dnl Check for libgsm (it is optional)
 AC_CHECK_LIB([gsm], [gsm_create],
-	[
-		HAVE_GSM="Yes"
-		AC_DEFINE_UNQUOTED( HAVE_GSM, 1, [ Define if libgsm is available ] )
-	],
-	[ HAVE_GSM="No" ]
+  [
+    HAVE_GSM="Yes"
+    AC_DEFINE_UNQUOTED( HAVE_GSM, 1, [ Define if libgsm is available ] )
+  ],
+  [ HAVE_GSM="No" ]
 )
 AM_CONDITIONAL([HAVE_GSM], [test x$HAVE_GSM = xYes])
 
@@ -129,11 +129,11 @@ CXXFLAGS="$CFLAGS $ORTP_CFLAGS"
 LDFLAGS="$LDFLAGS $ORTP_LIBS"
 
 if test x$Debugging = xEnabled; then
-	CFLAGS="$CFLAGS -g -Wunused -Wall -Werror"
-	CXXFLAGS="$CXXFLAGS -g -Wunused -Wall -Werror"
+  CFLAGS="$CFLAGS -g -Wunused -Wall -Werror"
+  CXXFLAGS="$CXXFLAGS -g -Wunused -Wall -Werror"
 else
-	CFLAGS="$CFLAGS -O2"
-	CXXFLAGS="$CXXFLAGS -O2"
+  CFLAGS="$CFLAGS -O2"
+  CXXFLAGS="$CXXFLAGS -O2"
 fi
 
 
@@ -143,11 +143,11 @@ dnl ############## Decide what to build
 BUILD_PROGRAMS="mast_info mast_rawcast mast_rawrecord"
 
 if test x$HAVE_JACK = "xYes" -a x$HAVE_LIBSRC = "xYes"; then
-	BUILD_PROGRAMS="$BUILD_PROGRAMS mast_cast"
+  BUILD_PROGRAMS="$BUILD_PROGRAMS mast_cast"
 fi
 
 if test x$HAVE_SNDFILE = "xYes" -a x$HAVE_LIBSRC = "xYes"; then
-	BUILD_PROGRAMS="$BUILD_PROGRAMS mast_filecast mast_record"
+  BUILD_PROGRAMS="$BUILD_PROGRAMS mast_filecast mast_record"
 fi
 
 AC_SUBST(BUILD_PROGRAMS)
