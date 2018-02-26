@@ -115,7 +115,7 @@ size_t mast_fill_input_buffer( MastAudioBuffer* buffer )
 		}
 	}
 		
-	if (total_read < 0) {
+	if (total_read == 0) {
 		MAST_ERROR("Failed to read from file: %s", sf_strerror( g_input_file ) );
 	}
 
