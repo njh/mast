@@ -7,7 +7,7 @@ install:
   - sudo apt-get update -qq
   - sudo apt-get install -y build-essential libtool pkg-config
   - sudo apt-get install -y asciidoctor xmlto
-  - sudo apt-get install -y libortp-dev libsndfile1-dev libtwolame-dev libsamplerate0-dev
+  - sudo apt-get install -y libortp-dev libsndfile1-dev libtwolame-dev libsamplerate0-dev libgsm1-dev
   - sudo apt-get install -y jackd2 libjack-jackd2-dev 
 
 script:

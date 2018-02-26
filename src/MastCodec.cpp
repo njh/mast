@@ -55,7 +55,9 @@ MastCodec* MastCodec::new_codec( MastMimeType* type )
 	}
 
 	// There must be a way of doing this using an loop/array of classes in C++
+#ifdef HAVE_GSM
 	if (strcmp( subtype, "GSM")==0) return new MastCodec_GSM( type );
+#endif
 	else if (strcmp( subtype, "L16")==0) return new MastCodec_L16( type );
 	else if (strcmp( subtype, "LPC")==0) return new MastCodec_LPC( type );
 #ifdef HAVE_TWOLAME

@@ -95,6 +95,16 @@ PKG_CHECK_MODULES(TwoLAME, twolame >= 0.3.10,
 )
 AM_CONDITIONAL([HAVE_TWOLAME], [test x$HAVE_TWOLAME = xYes])
 
+dnl Check for libgsm (it is optional)
+AC_CHECK_LIB([gsm], [gsm_create],
+	[
+		HAVE_GSM="Yes"
+		AC_DEFINE_UNQUOTED( HAVE_GSM, 1, [ Define if libgsm is available ] )
+	],
+	[ HAVE_GSM="No" ]
+)
+AM_CONDITIONAL([HAVE_GSM], [test x$HAVE_GSM = xYes])
+
 
 
 

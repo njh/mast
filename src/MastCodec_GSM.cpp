@@ -25,8 +25,8 @@
 #include "MastCodec_GSM.h"
 #include "mast.h"
 
+// Needed for 'src_float_to_short_array'
 #include <samplerate.h>
-#include "../libgsm/gsm.h"
 
 #define	GSM_DEFAULT_CHANNELS		(1)
 #define	GSM_DEFAULT_SAMPLERATE		(8000)

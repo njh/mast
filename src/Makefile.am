@@ -33,11 +33,14 @@ libmastcodecs_a_SOURCES = \
 
 MAST_CODEC_LIBS = \
 	libmastcodecs.a \
-	-lsamplerate \
-	../libgsm/libgsm.a
+	-lsamplerate
 
 if HAVE_TWOLAME
 MAST_CODEC_LIBS += -ltwolame
+endif
+
+if HAVE_GSM
+MAST_CODEC_LIBS += -lgsm
 endif
 
 

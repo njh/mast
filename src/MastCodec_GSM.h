@@ -22,8 +22,12 @@
 #define	_MAST_CODEC_GSM_H_
 
 #include "MastCodec.h"
-#include "../libgsm/gsm.h"
 
+#ifdef HAVE_GSM
+
+extern "C" {
+  #include <gsm.h>
+};
 
 class MastCodec_GSM : public MastCodec {
 
@@ -51,6 +55,7 @@ private:
 };
 
 
+#endif
 
 
 #endif	// _MAST_CODEC_GSM_H_

@@ -6,7 +6,7 @@ VERSION: configure.ac
 	echo "${PACKAGE_NAME}" > VERSION; \
 	echo "${PACKAGE_VERSION}" >> VERSION
 
-SUBDIRS = libgsm src doc
+SUBDIRS = src doc
 EXTRA_DIST = VERSION TODO autogen.sh
 
 # Copy README.md to README when building distribution
