@@ -32,6 +32,7 @@
 #define GSM_DEFAULT_SAMPLERATE  (8000)
 
 
+#ifdef HAVE_GSM
 
 // Calculate the number of samples per packet
 size_t MastCodec_GSM::frames_per_packet_internal( size_t max_bytes )
@@ -150,3 +151,5 @@ MastCodec_GSM::MastCodec_GSM( MastMimeType *type)
     this->apply_mime_type_params( type );
 
 }
+
+#endif

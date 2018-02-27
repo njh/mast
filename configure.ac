@@ -173,6 +173,7 @@ echo "
   Jack Support ........... $HAVE_JACK
   Libsamplerate support .. $HAVE_LIBSRC
   Libsndfile support ..... $HAVE_SNDFILE
+  Libgsm support ......... $HAVE_GSM
   MPEG Audio Support ..... $HAVE_TWOLAME
   
 Next type 'make' and then 'make install'."
