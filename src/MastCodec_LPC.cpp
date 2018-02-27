@@ -11,8 +11,6 @@
  *
  *  Each LPC frame is 14 bytes / 160 samples long
  *
- *  $Id$
- *
  */
 
 #include <stdio.h>

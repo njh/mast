@@ -13,10 +13,7 @@
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
  *
- *  $Id$
- *
  */
-
 
 #ifndef _MAST_CODEC_H_
 #define _MAST_CODEC_H_

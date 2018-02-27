@@ -13,10 +13,7 @@
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
  *
- *  $Id$
- *
  */
-
 
 #ifndef _MASTAUDIOBUFFER_H_
 #define _MASTAUDIOBUFFER_H_
