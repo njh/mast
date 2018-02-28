@@ -15,8 +15,8 @@
  *
  */
 
-#ifndef _MAST_MPA_HEADER_H_
-#define _MAST_MPA_HEADER_H_
+#ifndef MAST_MPA_HEADER_H
+#define MAST_MPA_HEADER_H
 
 
 class MPA_Header {

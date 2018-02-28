@@ -15,8 +15,8 @@
  *
  */
 
-#ifndef _MASTTOOL_H_
-#define _MASTTOOL_H_
+#ifndef MASTTOOL_H
+#define MASTTOOL_H
 
 #include <ortp/ortp.h>
 

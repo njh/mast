@@ -15,8 +15,8 @@
  *
  */
 
-#ifndef _MAST_CODEC_PCMA_H_
-#define _MAST_CODEC_PCMA_H_
+#ifndef MAST_CODEC_PCMA_H
+#define MAST_CODEC_PCMA_H
 
 #include "MastCodec.h"
 

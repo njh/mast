@@ -15,8 +15,8 @@
  *
  */
 
-#ifndef _MAST_MIME_TYPE_H_
-#define _MAST_MIME_TYPE_H_
+#ifndef MAST_MIME_TYPE_H
+#define MAST_MIME_TYPE_H
 
 
 

@@ -15,8 +15,8 @@
  *
  */
 
-#ifndef _MAST_H_
-#define _MAST_H_
+#ifndef MAST_H
+#define MAST_H
 
 #include "config.h"
 #include <ortp/ortp.h>

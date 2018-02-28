@@ -15,8 +15,8 @@
  *
  */
 
-#ifndef _MASTRESAMPLER_H_
-#define _MASTRESAMPLER_H_
+#ifndef MASTRESAMPLER_H
+#define MASTRESAMPLER_H
 
 #include <sys/types.h>
 #include "MastAudioBuffer.h"

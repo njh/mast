@@ -15,8 +15,8 @@
  *
  */
 
-#ifndef _MASTSENDTOOL_H_
-#define _MASTSENDTOOL_H_
+#ifndef MASTSENDTOOL_H
+#define MASTSENDTOOL_H
 
 #include "MastTool.h"
 #include "MastMimeType.h"

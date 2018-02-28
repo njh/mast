@@ -15,8 +15,8 @@
  *
  */
 
-#ifndef _MASTAUDIOBUFFER_H_
-#define _MASTAUDIOBUFFER_H_
+#ifndef MASTAUDIOBUFFER_H
+#define MASTAUDIOBUFFER_H
 
 #include <sys/types.h>
 #include "mast.h"

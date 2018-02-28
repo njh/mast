@@ -15,8 +15,8 @@
  *
  */
 
-#ifndef _MAST_CODEC_GSM_H_
-#define _MAST_CODEC_GSM_H_
+#ifndef MAST_CODEC_GSM_H
+#define MAST_CODEC_GSM_H
 
 #include "MastCodec.h"
 

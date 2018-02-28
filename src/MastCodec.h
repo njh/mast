@@ -15,8 +15,8 @@
  *
  */
 
-#ifndef _MAST_CODEC_H_
-#define _MAST_CODEC_H_
+#ifndef MAST_CODEC_H
+#define MAST_CODEC_H
 
 #include "MastAudioBuffer.h"
 #include "MastMimeType.h"
