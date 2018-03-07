@@ -9,7 +9,7 @@ man_MANS = \
 	mast_rawrecord.1
 	
 
-HTMLPAGES =  README.html INSTALL.html TODO.html
+HTMLPAGES =  README.html INSTALL.html
 HTMLMANPAGES = $(man_MANS:%=%.html)
 XMLMANPAGES = $(man_MANS:%=%.xml)
 ASCMANPAGES = $(man_MANS:%=%.asc)
@@ -31,9 +31,6 @@ INSTALL.html: ../INSTALL
 	$(ASCIIDOC) -d article -o $@ $<
 
 README.html: ../README.md
-	$(ASCIIDOC) -d article -o $@ $<
-
-TODO.html: ../TODO
 	$(ASCIIDOC) -d article -o $@ $<
 
 $(HTMLMANPAGES): %.html: %.asc

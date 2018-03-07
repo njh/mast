@@ -33,7 +33,6 @@ doc/*.1.xml
 doc/asciidoctor.css
 doc/INSTALL.html
 doc/README.html
-doc/TODO.html
 
 build/
 mast_cast
