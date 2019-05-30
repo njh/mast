@@ -6,7 +6,7 @@ VERSION: configure.ac
 	echo "${PACKAGE_NAME}" > VERSION; \
 	echo "${PACKAGE_VERSION}" >> VERSION
 
-SUBDIRS = src doc
+SUBDIRS = src
 EXTRA_DIST = VERSION autogen.sh
 
 # Copy README.md to README when building distribution
