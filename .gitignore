@@ -5,6 +5,8 @@
 *.la
 *.lo
 *.o
+*.log
+*.trs
 autom4te.cache
 *.m4
 config.guess
@@ -41,3 +43,6 @@ mast_info
 mast_rawcast
 mast_rawrecord
 mast_record
+
+/tests/*_check_*.c
+/tests/*_check_*.cmd

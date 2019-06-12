@@ -1,0 +1,5 @@
+
+#suite Utils
+
+#test test_basic
+ck_assert(1);
