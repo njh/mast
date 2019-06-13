@@ -37,12 +37,9 @@ doc/INSTALL.html
 doc/README.html
 
 build/
-mast_cast
-mast_filecast
-mast_info
-mast_rawcast
-mast_rawrecord
-mast_record
+
+# Built binaries
+/src/mast-sap-client
 
 /tests/*_check_*.c
 /tests/*_check_*.cmd
