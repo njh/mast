@@ -124,7 +124,7 @@ AC_SUBST(BUILD_PROGRAMS)
 
 dnl ############## Final Output
 
-AC_CONFIG_FILES([Makefile src/Makefile doc/Makefile tests/Makefile])
+AC_CONFIG_FILES([Makefile src/Makefile tests/Makefile])
 
 AC_OUTPUT
 
