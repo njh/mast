@@ -7,7 +7,7 @@ VERSION: configure.ac
 	echo "${PACKAGE_VERSION}" >> VERSION
 
 SUBDIRS = src tests
-EXTRA_DIST = VERSION autogen.sh
+EXTRA_DIST = VERSION
 
 test: check
 
