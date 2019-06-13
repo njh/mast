@@ -14,6 +14,7 @@
 #include <string.h>
 #include <stdarg.h>
 #include <stdlib.h>
+#include <time.h>
 
 int running = TRUE;
 int exit_code = 0;
