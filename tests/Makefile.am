@@ -1,6 +1,3 @@
-AM_CFLAGS = -I$(top_srcdir)/src $(CHECK_CFLAGS)
-AM_LDFLAGS = $(CHECK_LIBS)
-
 check_PROGRAMS = 10_check_utils.cmd
 TESTS = $(check_PROGRAMS)
 
@@ -8,5 +5,7 @@ TESTS = $(check_PROGRAMS)
 	checkmk $< > $@ || rm -f $@
 
 10_check_utils_cmd_SOURCES = 10_check_utils.c
+10_check_utils_cmd_CFLAGS = @CHECK_CFLAGS@
+10_check_utils_cmd_LDADD = @CHECK_LIBS@
 
 CLEANFILES = 10_check_utils.c
