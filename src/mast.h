@@ -26,6 +26,30 @@
 
 
 
+// ------- SAP packet handling ---------
+
+#define MAST_SDP_MIME_TYPE   "application/sdp"
+
+enum
+{
+  MAST_SAP_MESSAGE_ANNOUNCE = 0,
+  MAST_SAP_MESSAGE_DELETE = 1
+};
+
+typedef struct
+{
+   uint8_t message_type;
+   uint16_t message_id_hash;
+
+   // FIXME: add originating source address
+
+   char sdp[2048];
+} mast_sap_t;
+
+
+int mast_sap_parse(const uint8_t* data, size_t data_len, mast_sap_t* sap);
+
+
 // ------- Utilities ---------
 
 void setup_signal_hander();

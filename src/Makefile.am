@@ -4,4 +4,5 @@ bin_PROGRAMS = mast-sap-client
 mast_sap_client_SOURCES = \
 	sap-client.c \
 	utils.c \
+	sap.c \
 	mast.h

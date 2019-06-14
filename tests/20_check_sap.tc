@@ -1,0 +1,21 @@
+
+#include "mast.h"
+#suite SAP
+
+#test test_mast_parse_sap
+const unsigned char data[] = {
+	0x20,             // Flags (SAPv1)
+	0x00,             // Auth Len
+	0x4f, 0x50,       // Message ID hash
+	192, 168, 10, 10, // Originating Source
+	'a', 'p', 'p', 'l', 'i', 'c', 'a', 't', 'i', 'o', 'n', '/', 's', 'd', 'p', '\0',
+	'v', '=', '0', '\n'
+};
+
+mast_sap_t sap;
+int result = mast_sap_parse(data, sizeof(data), &sap);
+
+ck_assert_uint_eq(result, 0);
+ck_assert_uint_eq(sap.message_type, MAST_SAP_MESSAGE_ANNOUNCE);
+ck_assert_uint_eq(sap.message_id_hash, 0x4f50);
+ck_assert_str_eq(sap.sdp, "v=0\n");
