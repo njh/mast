@@ -1,6 +1,5 @@
 #include "mast.h"
 #include <string.h>
-#include <stdio.h>
 
 int mast_sap_parse(const uint8_t* data, size_t data_len, mast_sap_t* sap)
 {
@@ -9,36 +8,34 @@ int mast_sap_parse(const uint8_t* data, size_t data_len, mast_sap_t* sap)
 
   if (data_len < 12) {
     // FIXME: pick a better minimum packet length
-    printf("Packet is too short\n");
+    mast_debug("Error: received SAP packet is too short");
     return 1;
   }
 
   if (((data[0] & 0x20) >> 5) != 1) {
-    printf("SAP Version is not 1\n");
+    mast_debug("Error: received SAP Version is not 1");
     return 1;
   }
 
   if (((data[0] & 0x10) >> 4) == 0) {
-    printf("Address type is IPv4\n");
+    // FIXME: copy over IPv4 address
     offset += 4;
   } else {
-    printf("Address type is IPv6\n");
+    // FIXME: copy over IPv6 address
     offset += 16;
-    // FIXME: add support for IPv6
-    return 1;
   }
 
   // Store the message type (announce or delete)
   sap->message_type = ((data[0] & 0x04) >> 2);
 
   if (((data[0] & 0x02) >> 1) == 1) {
-    printf("SAP packet is encrypted\n");
+    mast_debug("Error: received SAP packet is encrypted");
     return 1;
   }
 
-  // FIXME: add support for compression
+  // FIXME: add support for SAP packet compression (using zlib)
   if (((data[0] & 0x01) >> 0) == 1) {
-    printf("SAP packet is compressed\n");
+    mast_debug("Error: received SAP packet is compressed");
     return 1;
   }
 
@@ -57,7 +54,7 @@ int mast_sap_parse(const uint8_t* data, size_t data_len, mast_sap_t* sap)
   } else if (mime_type[0] == 'v' && mime_type[1] == '=' && mime_type[2] == '0') {
     // No MIME Type field
   } else {
-    printf("Invalid Mime type: %s\n", mime_type);
+    mast_debug("Error: unsupported MIME type in SAP packet: %s", mime_type);
     return 1;
   }
 
@@ -67,8 +64,6 @@ int mast_sap_parse(const uint8_t* data, size_t data_len, mast_sap_t* sap)
   // Ensure that the SDP is null terminated
   // FIXME: do we need to worry about the buffer size?
   sap->sdp[data_len - offset] = '\0';
-
-  // FIXME: now parse SDP?
 
   return 0;
 }
