@@ -16,6 +16,9 @@
 #include <sys/types.h>
 #include <sys/time.h>
 
+#include <sys/socket.h>
+#include <netinet/in.h>
+
 #ifndef TRUE
 #define TRUE  (1)
 #endif
@@ -26,9 +29,34 @@
 
 
 
+typedef struct
+{
+    int fd;
+    int is_multicast;
+
+    struct sockaddr_storage saddr;
+
+    union {
+        struct ipv6_mreq imr6;
+        struct ip_mreq imr;
+    };
+
+} mast_socket_t;
+
+
+int mast_socket_open(mast_socket_t* sock, const char* address, const char* port, const char *ifname);
+int mast_socket_recv(mast_socket_t* sock, void* data, unsigned int len);
+void mast_socket_close(mast_socket_t* sock);
+
+
+
 // ------- SAP packet handling ---------
 
-#define MAST_SDP_MIME_TYPE   "application/sdp"
+#define MAST_SAP_ADDRESS_LOCAL  "239.255.255.255"
+#define MAST_SAP_ADDRESS_ORG    "239.195.255.255"
+#define MAST_SAP_ADDRESS_GLOBAL "224.2.127.254"
+#define MAST_SAP_PORT           "9875"
+#define MAST_SDP_MIME_TYPE      "application/sdp"
 
 enum
 {
