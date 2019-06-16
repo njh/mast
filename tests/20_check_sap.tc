@@ -1,19 +1,16 @@
 
 #include "mast.h"
+#include "hext.h"
+
 #suite SAP
 
-#test test_mast_parse_sap
-const unsigned char data[] = {
-	0x20,             // Flags (SAPv1)
-	0x00,             // Auth Len
-	0x4f, 0x50,       // Message ID hash
-	192, 168, 10, 10, // Originating Source
-	'a', 'p', 'p', 'l', 'i', 'c', 'a', 't', 'i', 'o', 'n', '/', 's', 'd', 'p', '\0',
-	'v', '=', '0', '\n'
-};
+#test test_mast_sap_parse
+uint8_t buffer[1024];
+
+int len = hext_filename_to_buffer("fixtures/sap_minimal_valid.hext", buffer, sizeof(buffer));
 
 mast_sap_t sap;
-int result = mast_sap_parse(data, sizeof(data), &sap);
+int result = mast_sap_parse(buffer, len, &sap);
 
 ck_assert_uint_eq(result, 0);
 ck_assert_uint_eq(sap.message_type, MAST_SAP_MESSAGE_ANNOUNCE);

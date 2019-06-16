@@ -44,7 +44,6 @@ int mast_sap_parse(const uint8_t* data, size_t data_len, mast_sap_t* sap)
 
   // Store the Message ID Hash
   sap->message_id_hash = (((uint16_t)data[2] << 8) | (uint16_t)data[3]);
-  printf("ID1=0x%x ID2=%x  combined=%x\n", data[2], data[3], sap->message_id_hash);
 
   // Add on the authentication data length
   offset += (data[1] * 4);

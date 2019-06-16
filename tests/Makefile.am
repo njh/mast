@@ -13,6 +13,8 @@ TESTS = $(check_PROGRAMS)
 
 20_check_sap_cmd_SOURCES = \
   20_check_sap.c \
+  hext.c \
+  hext.h \
   $(top_srcdir)/src/sap.c \
   $(top_srcdir)/src/utils.c \
   $(top_srcdir)/src/mast.h
