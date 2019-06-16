@@ -1,0 +1,10 @@
+21       # Flags (SAPv1)
+00       # Auth Len
+4f50     # Message ID hash
+.192.168.10.10  # Originating Source
+"application/sdp\0"
+
+# Compressed "v=0\n" using gzip -9
+1f 8b 08 00 00 00 00 00
+00 03 2b b3 35 e0 02 00
+72 89 30 7c 04 00 00 00
