@@ -60,18 +60,18 @@ void mast_socket_close(mast_socket_t* sock);
 
 enum
 {
-  MAST_SAP_MESSAGE_ANNOUNCE = 0,
-  MAST_SAP_MESSAGE_DELETE = 1
+    MAST_SAP_MESSAGE_ANNOUNCE = 0,
+    MAST_SAP_MESSAGE_DELETE = 1
 };
 
 typedef struct
 {
-   uint8_t message_type;
-   uint16_t message_id_hash;
 
    // FIXME: add originating source address
+    uint8_t message_type;
+    uint16_t message_id_hash;
 
-   char sdp[2048];
+    char sdp[2048];
 } mast_sap_t;
 
 

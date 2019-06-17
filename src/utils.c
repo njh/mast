@@ -27,8 +27,12 @@ static void termination_handler(int signum)
 {
     running = FALSE;
     switch(signum) {
-        case SIGTERM: mast_info("Got termination signal"); break;
-        case SIGINT:  mast_info("Got interupt signal"); break;
+    case SIGTERM:
+        mast_info("Got termination signal");
+        break;
+    case SIGINT:
+        mast_info("Got interupt signal");
+        break;
     }
     signal(signum, termination_handler);
 }

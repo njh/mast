@@ -128,11 +128,11 @@ static int sdp_parse_line(char* line, mast_sdp_t* sdp, int line_num)
 {
     // Remove whitespace from the end of the line
     for(int i=strlen(line) - 1; i>0; i--) {
-      if (isspace(line[i])) {
-        line[i] = '\0';
-      } else {
-        break;
-      }
+        if (isspace(line[i])) {
+            line[i] = '\0';
+        } else {
+            break;
+        }
     }
 
     if (line_num == 1 && strcmp("v=0", line) != 0) {
