@@ -2,6 +2,7 @@
 
   sap-client.c
 
+  MAST: Multicast Audio Streaming Toolkit
   Copyright (C) 2019  Nicholas Humfrey
   License: MIT
 

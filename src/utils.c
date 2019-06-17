@@ -1,9 +1,11 @@
 /*
+
   utils.c
 
-  MAST
-  Copyright (C) 2018  Nicholas Humfrey
+  MAST: Multicast Audio Streaming Toolkit
+  Copyright (C) 2019  Nicholas Humfrey
   License: MIT
+
 */
 
 #include "config.h"
