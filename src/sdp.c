@@ -126,7 +126,14 @@ static void sdp_attribute_parse(mast_sdp_t *sdp, char* line, int line_num)
 
 static int sdp_parse_line(char* line, mast_sdp_t* sdp, int line_num)
 {
-    // FIXME: remove whitespace from the end of the line
+    // Remove whitespace from the end of the line
+    for(int i=strlen(line) - 1; i>0; i--) {
+      if (isspace(line[i])) {
+        line[i] = '\0';
+      } else {
+        break;
+      }
+    }
 
     if (line_num == 1 && strcmp("v=0", line) != 0) {
         mast_warn("First line of SDP is not v=0", line_num);
@@ -191,13 +198,11 @@ int mast_sdp_parse(const uint8_t* data, size_t data_len, mast_sdp_t* sdp)
         // Find the end of the line
         end = 0;
         for (int i = start; i < data_len; i++) {
-            if (data[i] == '\r' || data[i] == '\n') {
+            if (data[i] == '\n') {
                 end = i;
                 break;
             }
         }
-
-        // FIXME: cope with windows line endings
 
         if (end == 0) {
             mast_warn("Failed to find the end of line %d", line_num);
@@ -225,33 +230,3 @@ int mast_sdp_parse(const uint8_t* data, size_t data_len, mast_sdp_t* sdp)
     // Success
     return 0;
 }
-
-//     while(!feof(file)) {
-//         char line[1024];
-//         char *result;
-//         int i;
-//
-//         result = fgets(line, sizeof(line), file);
-//         if (result == NULL)
-//             break;
-//
-//         // Remove whitespace from the end of the line
-//         for(i=strlen(line); i > 0; i--) {
-//             if (isspace(line[i]) || line[i] == '\0') {
-//                 line[i] = '\0';
-//             } else {
-//                 break;
-//             }
-//         }
-//
-//         if (strlen(line) < 3) {
-//             mast_warn("Invalid line in SDP file: line is too short");
-//             continue;
-//         }
-//
-//         if (line[1] != '=') {
-//             mast_warn("Invalid line in SDP file: second character of line isn't =");
-//             continue;
-//         }
-//
-//     }

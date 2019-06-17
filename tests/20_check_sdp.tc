@@ -13,7 +13,7 @@ static int read_into_buffer(const char* filename) {
   return bytes;
 }
 
-#test test_mast_sdp_parse
+#test test_mast_sdp_parse_lf
 int len = read_into_buffer("fixtures/aes67-multicast-example.sdp");
 mast_sdp_t sdp;
 int result = mast_sdp_parse(buffer, len, &sdp);
@@ -29,4 +29,23 @@ ck_assert_int_eq(sdp.payload_type, 96);
 ck_assert_int_eq(sdp.sample_size, 24);
 ck_assert_int_eq(sdp.sample_rate, 48000);
 ck_assert_int_eq(sdp.channel_count, 8);
+ck_assert_int_eq(sdp.packet_duration, 1);
+
+
+#test test_mast_sdp_parse_crlf
+int len = read_into_buffer("fixtures/dante-aes67-1.sdp");
+mast_sdp_t sdp;
+int result = mast_sdp_parse(buffer, len, &sdp);
+
+ck_assert_uint_eq(result, 0);
+ck_assert_str_eq(sdp.address, "239.65.125.63");
+ck_assert_str_eq(sdp.port, "5004");
+ck_assert_str_eq(sdp.session_id, "1423986");
+ck_assert_str_eq(sdp.session_origin, "169.254.98.63");
+ck_assert_str_eq(sdp.session_name, "AOIP44-serial-1614 : 2");
+ck_assert_str_eq(sdp.information, "2 channels: TxChan 0, TxChan 1");
+ck_assert_int_eq(sdp.payload_type, 97);
+ck_assert_int_eq(sdp.sample_size, 24);
+ck_assert_int_eq(sdp.sample_rate, 48000);
+ck_assert_int_eq(sdp.channel_count, 2);
 ck_assert_int_eq(sdp.packet_duration, 1);
