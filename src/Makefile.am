@@ -6,4 +6,5 @@ mast_sap_client_SOURCES = \
 	utils.c \
 	socket.c \
 	sap.c \
+	sdp.c \
 	mast.h

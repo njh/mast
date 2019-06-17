@@ -1,4 +1,4 @@
-check_PROGRAMS = 10_check_utils.cmd 20_check_sap.cmd
+check_PROGRAMS = 10_check_utils.cmd 20_check_sap.cmd 20_check_sdp.cmd
 TESTS = $(check_PROGRAMS)
 
 .tc.c:
@@ -20,6 +20,16 @@ TESTS = $(check_PROGRAMS)
   $(top_srcdir)/src/mast.h
 20_check_sap_cmd_CFLAGS = @CHECK_CFLAGS@
 20_check_sap_cmd_LDADD = @CHECK_LIBS@
+
+20_check_sdp_cmd_SOURCES = \
+  20_check_sdp.c \
+  hext.c \
+  hext.h \
+  $(top_srcdir)/src/sdp.c \
+  $(top_srcdir)/src/utils.c \
+  $(top_srcdir)/src/mast.h
+20_check_sdp_cmd_CFLAGS = @CHECK_CFLAGS@
+20_check_sdp_cmd_LDADD = @CHECK_LIBS@
 
 CLEANFILES = \
   $(check_PROGRAMS:%.cmd=%.c) \

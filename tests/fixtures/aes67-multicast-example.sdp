@@ -1,0 +1,12 @@
+v=0
+o=- 1311738121 1311738121 IN IP4 192.168.1.1
+s=Stage left I/O
+c=IN IP4 239.0.0.1/32
+t=0 0
+m=audio 5004 RTP/AVP 96
+i=Channels 1-8
+a=rtpmap:96 L24/48000/8
+a=recvonly
+a=ptime:1
+a=ts-refclk:ptp=IEEE1588-2008:39-A7-94-FF-FE-07-CB-D0:0
+a=mediaclk:direct=963214424

@@ -1,0 +1,32 @@
+
+#include "mast.h"
+#include "hext.h"
+
+#suite SDP
+
+uint8_t buffer[1024];
+
+static int read_into_buffer(const char* filename) {
+  FILE* file = fopen(filename, "rb");
+  int bytes = fread(buffer, 1, sizeof(buffer), file);
+  fclose(file);
+  return bytes;
+}
+
+#test test_mast_sdp_parse
+int len = read_into_buffer("fixtures/aes67-multicast-example.sdp");
+mast_sdp_t sdp;
+int result = mast_sdp_parse(buffer, len, &sdp);
+
+ck_assert_uint_eq(result, 0);
+ck_assert_str_eq(sdp.address, "239.0.0.1");
+ck_assert_str_eq(sdp.port, "5004");
+ck_assert_str_eq(sdp.session_id, "1311738121");
+ck_assert_str_eq(sdp.session_origin, "192.168.1.1");
+ck_assert_str_eq(sdp.session_name, "Stage left I/O");
+ck_assert_str_eq(sdp.information, "Channels 1-8");
+ck_assert_int_eq(sdp.payload_type, 96);
+ck_assert_int_eq(sdp.sample_size, 24);
+ck_assert_int_eq(sdp.sample_rate, 48000);
+ck_assert_int_eq(sdp.channel_count, 8);
+ck_assert_int_eq(sdp.packet_duration, 1);

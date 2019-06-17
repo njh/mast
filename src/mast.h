@@ -56,7 +56,6 @@ void mast_socket_close(mast_socket_t* sock);
 #define MAST_SAP_ADDRESS_ORG    "239.195.255.255"
 #define MAST_SAP_ADDRESS_GLOBAL "224.2.127.254"
 #define MAST_SAP_PORT           "9875"
-#define MAST_SDP_MIME_TYPE      "application/sdp"
 
 enum
 {
@@ -76,6 +75,32 @@ typedef struct
 
 
 int mast_sap_parse(const uint8_t* data, size_t data_len, mast_sap_t* sap);
+
+
+// ------- SDP handling ---------
+
+#define MAST_SDP_MIME_TYPE      "application/sdp"
+
+typedef struct
+{
+    char address[256];
+    char port[6];
+
+    char session_id[256];
+    char session_origin[256];
+    char session_name[256];
+    char information[256];
+
+    int payload_type;
+    int sample_size;
+    int sample_rate;
+    int channel_count;
+    int packet_duration;
+
+} mast_sdp_t;
+
+
+int mast_sdp_parse(const uint8_t* data, size_t data_len, mast_sdp_t* sdp);
 
 
 // ------- Utilities ---------
