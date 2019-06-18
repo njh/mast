@@ -6,4 +6,4 @@
 ck_assert_int_eq(mast_directory_exists("/"), TRUE);
 
 #test directory_exists_random
-ck_assert_int_eq(mast_directory_existsmast_directory_exists("/VeeX8ohsie"), FALSE);
+ck_assert_int_eq(mast_directory_exists("/VeeX8ohsie"), FALSE);
