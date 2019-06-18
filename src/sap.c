@@ -10,6 +10,7 @@
 
 #include "mast.h"
 #include <string.h>
+#include <arpa/inet.h>
 
 int mast_sap_parse(const uint8_t* data, size_t data_len, mast_sap_t* sap)
 {
@@ -28,10 +29,10 @@ int mast_sap_parse(const uint8_t* data, size_t data_len, mast_sap_t* sap)
     }
 
     if (((data[0] & 0x10) >> 4) == 0) {
-        // FIXME: copy over IPv4 address
+        inet_ntop(AF_INET, &data[4], sap->message_source, sizeof(sap->message_source));
         offset += 4;
     } else {
-        // FIXME: copy over IPv6 address
+        inet_ntop(AF_INET6, &data[4], sap->message_source, sizeof(sap->message_source));
         offset += 16;
     }
 

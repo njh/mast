@@ -66,10 +66,9 @@ enum
 
 typedef struct
 {
-
-   // FIXME: add originating source address
     uint8_t message_type;
     uint16_t message_id_hash;
+    char message_source[INET6_ADDRSTRLEN];
 
     char sdp[2048];
 } mast_sap_t;
