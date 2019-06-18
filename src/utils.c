@@ -104,21 +104,21 @@ void mast_log(mast_log_level level, const char *fmt, ...)
 
 int mast_directory_exists(const char* path)
 {
-	DIR* dir = opendir(path);
-	if (dir) {
-		/* Directory exists. */
-		closedir(dir);
-		return TRUE;
-	} else if (ENOENT == errno) {
-		/* Directory does not exist. */
-		return FALSE;
-	} else {
-		/* opendir() failed for some other reason. */
-		mast_error(
-			"checking if directory '%s' exists: %s",
-			path,
-			strerror(errno)
-		);
-		return FALSE;
-	}
+    DIR* dir = opendir(path);
+    if (dir) {
+        /* Directory exists. */
+        closedir(dir);
+        return TRUE;
+    } else if (ENOENT == errno) {
+        /* Directory does not exist. */
+        return FALSE;
+    } else {
+        /* opendir() failed for some other reason. */
+        mast_error(
+            "checking if directory '%s' exists: %s",
+            path,
+            strerror(errno)
+        );
+        return FALSE;
+    }
 }
