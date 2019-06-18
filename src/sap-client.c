@@ -18,18 +18,93 @@
 
 
 // Globals
-mast_socket_t sock;
+const char *address = MAST_SAP_ADDRESS_LOCAL;
+const char *port = MAST_SAP_PORT;
+const char *ifname = NULL;
+
+static void usage()
+{
+    fprintf(stderr, "mast-sap-client version %s\n\n", PACKAGE_VERSION);
+    fprintf(stderr, "Usage: mast-sap-client [options] [<dir>]\n");
+    fprintf(stderr, "   -a <address>    Multicast address to listen on (default %s)\n", address);
+    fprintf(stderr, "   -p <port>       Port number to lisen on (default %s)\n", port);
+    fprintf(stderr, "   -i <interface>  Network interface to listen on\n");
+    fprintf(stderr, "   -v              Enable verbose mode\n");
+    fprintf(stderr, "   -q              Enable quiet mode\n");
+
+    exit(EXIT_FAILURE);
+}
+
+
+static void parse_opts(int argc, char **argv)
+{
+    int ch;
+
+    // Parse the options/switches
+    while ((ch = getopt(argc, argv, "a:p:i:vq?h")) != -1) {
+        switch (ch) {
+        case 'a':
+            address = optarg;
+            break;
+        case 'p':
+            port = optarg;
+            break;
+        case 'i':
+            ifname = optarg;
+            break;
+        case 'v':
+            verbose = TRUE;
+            break;
+        case 'q':
+            quiet = TRUE;
+            break;
+        case '?':
+        case 'h':
+        default:
+            usage();
+        }
+    }
+
+    // Validate parameters
+    if (quiet && verbose) {
+        mast_error("Can't be quiet and verbose at the same time.");
+        usage();
+    }
+}
+
+static void recieve_packet(mast_socket_t *sock)
+{
+    uint8_t packet[2048];
+    int result;
+    mast_sap_t sap;
+
+    int packet_len = mast_socket_recv(sock, packet, sizeof(packet));
+    if (packet_len > 0) {
+        mast_debug("Received: %d bytes", packet_len);
+
+        result = mast_sap_parse(packet, packet_len, &sap);
+        if (result == 0) {
+            mast_sdp_t sdp;
+            result = mast_sdp_parse(sap.sdp, &sdp);
+            if (result == 0) {
+                mast_info(
+                    "SAP Announce: %s - %s/%s [L%d/%d/%d]",
+                    sdp.session_name,
+                    sdp.address, sdp.port,
+                    sdp.sample_size, sdp.sample_rate, sdp.channel_count
+                );
+            }
+        }
+    }
+}
 
 
 int main(int argc, char *argv[])
 {
-    const char *address = MAST_SAP_ADDRESS_LOCAL;
-    const char *port = MAST_SAP_PORT;
-    const char *ifname = NULL;
+    mast_socket_t sock;
     int result;
 
-    verbose++;
-
+    parse_opts(argc, argv);
     setup_signal_hander();
 
     result = mast_socket_open(&sock, address, port, ifname);
@@ -38,18 +113,7 @@ int main(int argc, char *argv[])
     }
 
     while(running) {
-        uint8_t packet[2048];
-        mast_sap_t sap;
-
-        int packet_len = mast_socket_recv(&sock, packet, sizeof(packet));
-        if (packet_len > 0) {
-            mast_debug("Received: %d bytes", packet_len);
-
-            int result = mast_sap_parse(packet, packet_len, &sap);
-            if (result == 0) {
-                printf("Got SAP: %s\n", sap.sdp);
-            }
-        }
+        recieve_packet(&sock);
     }
 
     mast_socket_close(&sock);
