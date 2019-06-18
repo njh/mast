@@ -136,5 +136,6 @@ void mast_log(mast_log_level level, const char *fmt, ...);
 #define mast_error( ... ) \
 		mast_log(mast_LOG_ERROR, __VA_ARGS__ )
 
+int mast_directory_exists(const char* path);
 
 #endif
