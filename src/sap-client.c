@@ -13,6 +13,8 @@
 #include <string.h>
 #include <unistd.h>
 #include <signal.h>
+#include <limits.h>
+#include <errno.h>
 
 #include "mast.h"
 
@@ -21,6 +23,7 @@
 const char *address = MAST_SAP_ADDRESS_LOCAL;
 const char *port = MAST_SAP_PORT;
 const char *ifname = NULL;
+const char *dir = NULL;
 
 static void usage()
 {
@@ -64,11 +67,64 @@ static void parse_opts(int argc, char **argv)
         }
     }
 
+    // Check remaining arguments
+    argc -= optind;
+    argv += optind;
+    if (argc == 1) {
+        dir = argv[0];
+    } else if (argc > 1) {
+        usage();
+    }
+
+    // Check that the directory exists
+    if (dir && !mast_directory_exists(dir)) {
+        mast_error("Directory to write SDP files to doesn't exist.");
+        exit(EXIT_FAILURE);
+    }
+
     // Validate parameters
     if (quiet && verbose) {
         mast_error("Can't be quiet and verbose at the same time.");
         usage();
     }
+}
+
+static int sdp_filepath(mast_sdp_t *sdp, char* filepath, int filepath_max_len)
+{
+    return snprintf(
+               filepath, filepath_max_len,
+               "%s/%s-%s.sdp",
+               dir,
+               sdp->session_origin,
+               sdp->session_id
+           );
+}
+
+static void write_sdp_file(mast_sap_t *sap, const char *filepath)
+{
+    FILE *file;
+    int result;
+
+    file = fopen(filepath, "wb");
+    if (!file) {
+        mast_error(
+            "Failed to open SDP file '%s' for writing: %s",
+            filepath,
+            strerror(errno)
+        );
+        return;
+    }
+
+    result = fwrite(sap->sdp, strlen(sap->sdp), 1, file);
+    if (result != 1) {
+        mast_error(
+            "Failed to write to SDP file '%s': %s",
+            filepath,
+            strerror(errno)
+        );
+    }
+
+    fclose(file);
 }
 
 static void receive_sap_packet(mast_socket_t *sock)
@@ -98,6 +154,25 @@ static void receive_sap_packet(mast_socket_t *sock)
         sdp.address, sdp.port,
         sdp.sample_size, sdp.sample_rate, sdp.channel_count
     );
+
+
+    if (dir) {
+        char filepath[PATH_MAX];
+        sdp_filepath(&sdp, filepath, PATH_MAX-1);
+
+        if (sap.message_type == MAST_SAP_MESSAGE_ANNOUNCE) {
+            write_sdp_file(&sap, filepath);
+        } else if (sap.message_type == MAST_SAP_MESSAGE_DELETE) {
+            result = unlink(filepath);
+            if (result) {
+                mast_error(
+                    "Failed to delete SDP file '%s': %s",
+                    filepath,
+                    strerror(errno)
+                );
+            }
+        }
+    }
 }
 
 
