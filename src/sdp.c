@@ -185,20 +185,21 @@ static int sdp_parse_line(char* line, mast_sdp_t* sdp, int line_num)
 }
 
 
-int mast_sdp_parse(const uint8_t* data, size_t data_len, mast_sdp_t* sdp)
+int mast_sdp_parse(const char* str, mast_sdp_t* sdp)
 {
     char line_buffer[255];
     size_t start = 0;
     size_t end = 0;
+    size_t str_len = strlen(str);
     int line_num = 1;
 
     memset(sdp, 0, sizeof(mast_sdp_t));
 
-    while (start < data_len) {
+    while (start < str_len) {
         // Find the end of the line
         end = 0;
-        for (int i = start; i < data_len; i++) {
-            if (data[i] == '\n') {
+        for (int i = start; i < str_len; i++) {
+            if (str[i] == '\n') {
                 end = i;
                 break;
             }
@@ -215,7 +216,7 @@ int mast_sdp_parse(const uint8_t* data, size_t data_len, mast_sdp_t* sdp)
                 mast_warn("Ingoring line %d because it is too long", line_num);
                 break;
             } else {
-                memcpy(line_buffer, &data[start], line_len);
+                memcpy(line_buffer, &str[start], line_len);
                 line_buffer[line_len] = '\0';
 
                 result = sdp_parse_line(line_buffer, sdp, line_num);

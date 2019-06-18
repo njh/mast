@@ -100,7 +100,7 @@ typedef struct
 } mast_sdp_t;
 
 
-int mast_sdp_parse(const uint8_t* data, size_t data_len, mast_sdp_t* sdp);
+int mast_sdp_parse(const char* str, mast_sdp_t* sdp);
 
 
 // ------- Utilities ---------

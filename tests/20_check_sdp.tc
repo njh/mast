@@ -4,19 +4,20 @@
 
 #suite SDP
 
-uint8_t buffer[1024];
+char buffer[1024];
 
 static int read_into_buffer(const char* filename) {
   FILE* file = fopen(filename, "rb");
   int bytes = fread(buffer, 1, sizeof(buffer), file);
   fclose(file);
+  buffer[bytes] = '\0';
   return bytes;
 }
 
 #test test_mast_sdp_parse_lf
-int len = read_into_buffer("fixtures/aes67-multicast-example.sdp");
+read_into_buffer("fixtures/aes67-multicast-example.sdp");
 mast_sdp_t sdp;
-int result = mast_sdp_parse(buffer, len, &sdp);
+int result = mast_sdp_parse(buffer, &sdp);
 
 ck_assert_uint_eq(result, 0);
 ck_assert_str_eq(sdp.address, "239.0.0.1");
@@ -33,9 +34,9 @@ ck_assert_int_eq(sdp.packet_duration, 1);
 
 
 #test test_mast_sdp_parse_crlf
-int len = read_into_buffer("fixtures/dante-aes67-1.sdp");
+read_into_buffer("fixtures/dante-aes67-1.sdp");
 mast_sdp_t sdp;
-int result = mast_sdp_parse(buffer, len, &sdp);
+int result = mast_sdp_parse(buffer, &sdp);
 
 ck_assert_uint_eq(result, 0);
 ck_assert_str_eq(sdp.address, "239.65.125.63");
