@@ -72,30 +72,33 @@ static void parse_opts(int argc, char **argv)
     }
 }
 
-static void recieve_packet(mast_socket_t *sock)
+static void receive_sap_packet(mast_socket_t *sock)
 {
     uint8_t packet[2048];
-    int result;
     mast_sap_t sap;
+	mast_sdp_t sdp;
+    const char* verb;
+    int packet_len, result;
 
-    int packet_len = mast_socket_recv(sock, packet, sizeof(packet));
-    if (packet_len > 0) {
-        mast_debug("Received: %d bytes", packet_len);
+    packet_len = mast_socket_recv(sock, packet, sizeof(packet));
+    if (packet_len <= 0) return;
+	mast_debug("Received: %d bytes", packet_len);
 
-        result = mast_sap_parse(packet, packet_len, &sap);
-        if (result == 0) {
-            mast_sdp_t sdp;
-            result = mast_sdp_parse(sap.sdp, &sdp);
-            if (result == 0) {
-                mast_info(
-                    "SAP Announce: %s - %s/%s [L%d/%d/%d]",
-                    sdp.session_name,
-                    sdp.address, sdp.port,
-                    sdp.sample_size, sdp.sample_rate, sdp.channel_count
-                );
-            }
-        }
-    }
+    // Parse the SAP packet
+	result = mast_sap_parse(packet, packet_len, &sap);
+	if (result) return;
+	verb = (sap.message_type == MAST_SAP_MESSAGE_ANNOUNCE) ? "Announce" : "Delete";
+
+    // Then parse the SDP content
+	result = mast_sdp_parse(sap.sdp, &sdp);
+	if (result) return;
+	
+	mast_info(
+		"SAP %s: %s - %s/%s [L%d/%d/%d]",
+		verb, sdp.session_name,
+		sdp.address, sdp.port,
+		sdp.sample_size, sdp.sample_rate, sdp.channel_count
+	);
 }
 
 
@@ -113,7 +116,7 @@ int main(int argc, char *argv[])
     }
 
     while(running) {
-        recieve_packet(&sock);
+        receive_sap_packet(&sock);
     }
 
     mast_socket_close(&sock);
