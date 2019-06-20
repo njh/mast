@@ -189,34 +189,34 @@ static int sdp_parse_line(char* line, mast_sdp_t* sdp, int line_num)
 
 int mast_sdp_parse_file(const char* filename, mast_sdp_t* sdp)
 {
-	char buffer[2048];
+    char buffer[2048];
     int bytes;
 
-	// FIXME: check for errors
-	FILE* file = fopen(filename, "rb");
-	if (!file) {
-	   mast_error(
-	   	  "Failed to open SDP file '%s': %s",
-	   	  filename,
-	   	  strerror(errno)
-	   );
-	   return -1;
-	}
+    // Open the file for reading
+    FILE* file = fopen(filename, "rb");
+    if (!file) {
+        mast_error(
+            "Failed to open SDP file '%s': %s",
+            filename,
+            strerror(errno)
+        );
+        return -1;
+    }
 
     // Read as much as we can into the buffer
-	bytes = fread(buffer, 1, sizeof(buffer)-1, file);
-	if (bytes <= 0) {
-	   mast_error(
-	   	  "Error reading from SDP file '%s': %s",
-	   	  filename,
-	   	  strerror(errno)
-	   );
-	   return -1;
-	}
+    bytes = fread(buffer, 1, sizeof(buffer)-1, file);
+    if (bytes <= 0) {
+        mast_error(
+            "Error reading from SDP file '%s': %s",
+            filename,
+            strerror(errno)
+        );
+        return -1;
+    }
 
     // Now parse the SDP string
-	buffer[bytes] = '\0';
-	return mast_sdp_parse_string(buffer, sdp);
+    buffer[bytes] = '\0';
+    return mast_sdp_parse_string(buffer, sdp);
 }
 
 int mast_sdp_parse_string(const char* str, mast_sdp_t* sdp)
