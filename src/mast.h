@@ -17,6 +17,8 @@
 
 #include <sys/socket.h>
 #include <netinet/in.h>
+#include <net/if.h>
+#include <netdb.h>
 
 #ifndef TRUE
 #define TRUE  (1)
@@ -119,8 +121,8 @@ int mast_sap_parse(const uint8_t* data, size_t data_len, mast_sap_t* sap);
 
 typedef struct
 {
-    char address[256];
-    char port[6];
+    char address[NI_MAXHOST];
+    char port[NI_MAXSERV];
 
     char session_id[256];
     char session_origin[256];
