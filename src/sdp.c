@@ -65,7 +65,7 @@ static void sdp_connection_parse(mast_sdp_t *sdp, char* line, int line_num)
     }
 
     if (addr) {
-        strcpy(sdp->address, addr);
+        mast_sdp_set_address(sdp, addr);
     } else {
         mast_error("Failed to parse connection address on line %d", line_num);
     }
@@ -83,7 +83,7 @@ static void sdp_media_parse(mast_sdp_t *sdp, char* line, int line_num)
     }
 
     if (port == NULL || strlen(port) > 2) {
-        strcpy(sdp->port, port);
+        mast_sdp_set_port(sdp, port);
     } else {
         mast_error("Invalid connection port: %s", port);
     }
@@ -95,7 +95,7 @@ static void sdp_media_parse(mast_sdp_t *sdp, char* line, int line_num)
     if (fmt == NULL || strlen(fmt) > 2) {
         mast_error("SDP media format is not valid: %s", fmt);
     } else {
-        sdp->payload_type = atoi(fmt);
+        mast_sdp_set_payload_type(sdp, atoi(fmt));
     }
 }
 
@@ -112,12 +112,7 @@ static void sdp_attribute_parse(mast_sdp_t *sdp, char* line, int line_num)
             char *sample_rate = strsep(&line, "/");
             char *channel_count = strsep(&line, "/");
 
-            if (format && format[0] == 'L') {
-                sdp->sample_size = atoi(&format[1]);
-            } else {
-                mast_warn("Unknown sample format: %s", format);
-                sdp->sample_size = 0;
-            }
+            if (format) mast_sdp_set_sample_format(sdp, format);
             if (sample_rate) sdp->sample_rate = atoi(sample_rate);
             if (channel_count) sdp->channel_count = atoi(channel_count);
         }
@@ -264,4 +259,65 @@ int mast_sdp_parse_string(const char* str, mast_sdp_t* sdp)
 
     // Success
     return 0;
+}
+
+void mast_sdp_set_defaults(mast_sdp_t *sdp)
+{
+    memset(sdp, 0, sizeof(mast_sdp_t));
+
+    mast_sdp_set_port(sdp, MAST_DEFAULT_PORT);
+
+    sdp->payload_type = -1;
+    sdp->sample_rate = MAST_DEFAULT_SAMPLE_RATE;
+    sdp->sample_size = MAST_DEFAULT_SAMPLE_SIZE;
+    sdp->channel_count = MAST_DEFAULT_CHANNEL_COUNT;
+}
+
+void mast_sdp_set_address(mast_sdp_t *sdp, const char *address)
+{
+    if (address && strlen(address) > 1) {
+        strncpy(sdp->address, address, sizeof(sdp->address)-1);
+    } else {
+        sdp->address[0] = '\0';
+    }
+}
+
+void mast_sdp_set_port(mast_sdp_t *sdp, const char *port)
+{
+    if (port && strlen(port) > 1) {
+        strncpy(sdp->port, port, sizeof(sdp->port)-1);
+    } else {
+        sdp->port[0] = '\0';
+    }
+}
+
+void mast_sdp_set_sample_format(mast_sdp_t *sdp, const char *fmt)
+{
+    if (strcmp(fmt, "L16") == 0) {
+        sdp->sample_size = 16;
+    } else if (strcmp(fmt, "L24") == 0) {
+        sdp->sample_size = 24;
+    } else if (strcmp(fmt, "L32") == 0) {
+        sdp->sample_size = 32;
+    } else {
+        mast_error("Unsupported audio sample format: %s", fmt);
+        exit(-1);
+    }
+}
+
+void mast_sdp_set_payload_type(mast_sdp_t *sdp, int payload_type)
+{
+    sdp->payload_type = payload_type;
+
+    if (payload_type == 10) {
+        sdp->sample_size = 16;
+        sdp->sample_rate = 44100;
+        sdp->channel_count = 2;
+    } else if (payload_type == 11) {
+        sdp->sample_size = 16;
+        sdp->sample_rate = 44100;
+        sdp->channel_count = 1;
+    } else if (payload_type < 96) {
+        mast_error("Unsupported static payload type: %d", payload_type);
+    }
 }

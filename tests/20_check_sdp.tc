@@ -89,3 +89,51 @@ ck_assert_int_eq(sdp.sample_size, 24);
 ck_assert_int_eq(sdp.sample_rate, 48000);
 ck_assert_int_eq(sdp.channel_count, 2);
 ck_assert_int_eq(sdp.packet_duration, 0);
+
+
+
+#test test_defaults
+mast_sdp_t sdp;
+mast_sdp_set_defaults(&sdp);
+ck_assert(sdp.address[0] == '\0');
+ck_assert_str_eq(sdp.port, "5004");
+ck_assert_int_eq(sdp.payload_type, -1);
+ck_assert_int_eq(sdp.sample_size, 24);
+ck_assert_int_eq(sdp.sample_rate, 48000);
+ck_assert_int_eq(sdp.channel_count, 2);
+
+#test test_set_address
+mast_sdp_t sdp;
+mast_sdp_set_defaults(&sdp);
+mast_sdp_set_address(&sdp, "127.0.0.1");
+ck_assert_str_eq(sdp.address, "127.0.0.1");
+mast_sdp_set_address(&sdp, NULL);
+ck_assert(sdp.address[0] == '\0');
+
+#test test_set_port
+mast_sdp_t sdp;
+mast_sdp_set_defaults(&sdp);
+mast_sdp_set_port(&sdp, "5004");
+ck_assert_str_eq(sdp.port, "5004");
+mast_sdp_set_port(&sdp, NULL);
+ck_assert(sdp.port[0] == '\0');
+
+#test test_set_sample_format_L16
+mast_sdp_t sdp;
+mast_sdp_set_sample_format(&sdp, "L16");
+ck_assert_int_eq(sdp.sample_size, 16);
+
+#test test_set_sample_format_L24
+mast_sdp_t sdp;
+mast_sdp_set_sample_format(&sdp, "L24");
+ck_assert_int_eq(sdp.sample_size, 24);
+
+#test test_set_sample_format_L32
+mast_sdp_t sdp;
+mast_sdp_set_sample_format(&sdp, "L32");
+ck_assert_int_eq(sdp.sample_size, 32);
+
+// FIXME: Travis does not support this
+// #test-exit(-1) test_set_sample_format_PCM
+// mast_sdp_t sdp;
+// mast_sdp_set_sample_format(&sdp, "PCM");
