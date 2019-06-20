@@ -129,7 +129,8 @@ typedef struct
 } mast_sdp_t;
 
 
-int mast_sdp_parse(const char* str, mast_sdp_t* sdp);
+int mast_sdp_parse_string(const char* str, mast_sdp_t* sdp);
+int mast_sdp_parse_file(const char* filename, mast_sdp_t* sdp);
 
 
 // ------- Utilities ---------

@@ -145,7 +145,7 @@ static void receive_sap_packet(mast_socket_t *sock)
     verb = (sap.message_type == MAST_SAP_MESSAGE_ANNOUNCE) ? "Announce" : "Delete";
 
     // Then parse the SDP content
-    result = mast_sdp_parse(sap.sdp, &sdp);
+    result = mast_sdp_parse_string(sap.sdp, &sdp);
     if (result) return;
 
     mast_info(

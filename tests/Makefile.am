@@ -1,3 +1,7 @@
+AM_CFLAGS = @CHECK_CFLAGS@ \
+            -DFIXTURE_DIR=\"$(srcdir)/fixtures/\" \
+            -I$(top_srcdir)/src
+
 check_PROGRAMS = \
   10_check_utils.cmd \
   20_check_rtp.cmd \
@@ -13,7 +17,6 @@ TESTS = $(check_PROGRAMS)
   10_check_utils.c \
   $(top_srcdir)/src/utils.c \
   $(top_srcdir)/src/mast.h
-10_check_utils_cmd_CFLAGS = @CHECK_CFLAGS@
 10_check_utils_cmd_LDADD = @CHECK_LIBS@
 
 20_check_rtp_cmd_SOURCES = \
@@ -24,7 +27,6 @@ TESTS = $(check_PROGRAMS)
   $(top_srcdir)/src/socket.c \
   $(top_srcdir)/src/utils.c \
   $(top_srcdir)/src/mast.h
-20_check_rtp_cmd_CFLAGS = @CHECK_CFLAGS@
 20_check_rtp_cmd_LDADD = @CHECK_LIBS@
 
 20_check_sap_cmd_SOURCES = \
@@ -34,7 +36,6 @@ TESTS = $(check_PROGRAMS)
   $(top_srcdir)/src/sap.c \
   $(top_srcdir)/src/utils.c \
   $(top_srcdir)/src/mast.h
-20_check_sap_cmd_CFLAGS = @CHECK_CFLAGS@
 20_check_sap_cmd_LDADD = @CHECK_LIBS@
 
 20_check_sdp_cmd_SOURCES = \
@@ -44,7 +45,6 @@ TESTS = $(check_PROGRAMS)
   $(top_srcdir)/src/sdp.c \
   $(top_srcdir)/src/utils.c \
   $(top_srcdir)/src/mast.h
-20_check_sdp_cmd_CFLAGS = @CHECK_CFLAGS@
 20_check_sdp_cmd_LDADD = @CHECK_LIBS@
 
 CLEANFILES = \
