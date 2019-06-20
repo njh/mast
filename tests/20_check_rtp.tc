@@ -1,0 +1,30 @@
+#include <stdlib.h>
+#include <unistd.h>
+
+#include "hext.h"
+#include "mast.h"
+
+#suite RTP Packet
+
+#test test_parse
+mast_rtp_packet_t packet;
+packet.length = hext_filename_to_buffer("fixtures/rtp_mini_packet.hext", packet.buffer, sizeof(packet.buffer));
+ck_assert_int_eq(packet.length, 24);
+
+mast_rtp_parse(&packet);
+ck_assert_int_eq(packet.version, 2);
+ck_assert_int_eq(packet.padding, 0);
+ck_assert_int_eq(packet.extension, 0);
+ck_assert_int_eq(packet.csrc_count, 0);
+ck_assert_int_eq(packet.marker, 0);
+ck_assert_int_eq(packet.payload_type, 97);
+
+ck_assert_int_eq(packet.sequence, 60948);
+ck_assert_int_eq(packet.timestamp, 2721190476);
+ck_assert_int_eq(packet.ssrc, 0xe9f8d833);
+
+ck_assert_int_eq(packet.payload_length, 12);
+ck_assert_int_eq(packet.payload[0], 0xf8);
+ck_assert_int_eq(packet.payload[1], 0x88);
+ck_assert_int_eq(packet.payload[2], 0x63);
+ck_assert_int_eq(packet.payload[3], 0xf8);

@@ -1,11 +1,9 @@
 /*
-
   mast.h
 
   MAST: Multicast Audio Streaming Toolkit
   Copyright (C) 2019  Nicholas Humfrey
   License: MIT
-
 */
 
 #include "config.h"
@@ -29,6 +27,7 @@
 #endif
 
 
+// ------- Network Sockets ---------
 
 typedef struct
 {
@@ -48,6 +47,36 @@ typedef struct
 int mast_socket_open(mast_socket_t* sock, const char* address, const char* port, const char *ifname);
 int mast_socket_recv(mast_socket_t* sock, void* data, unsigned int len);
 void mast_socket_close(mast_socket_t* sock);
+
+
+// ------- RTP packet handling ---------
+
+#define RTP_MAX_PAYLOAD     (1440)
+#define RTP_HEADER_LENGTH   (12)
+
+typedef struct
+{
+    uint8_t version;
+    uint8_t padding;
+    uint8_t extension;
+    uint8_t csrc_count;
+    uint8_t marker;
+    uint8_t payload_type;
+
+    uint16_t sequence;
+    uint32_t timestamp;
+    uint32_t ssrc;
+
+    uint16_t payload_length;
+    uint8_t *payload;
+
+    uint16_t length;
+    uint8_t buffer[1500];
+
+} mast_rtp_packet_t;
+
+int mast_rtp_parse( mast_rtp_packet_t* packet );
+int mast_rtp_recv( mast_socket_t* socket, mast_rtp_packet_t* packet );
 
 
 

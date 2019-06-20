@@ -1,0 +1,8 @@
+80           # Version, padding, extension, CSRC count
+61           # Marker and payload type
+ee14         # Sequence
+a2 32 12 4c  # Timestamp
+e9 f8 d8 33  # SSRC
+
+# Payload
+f8 88 63 f8 58 ef f5 7b 2c f5 34 e7
