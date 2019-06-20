@@ -69,3 +69,23 @@ int result;
 
 result = mast_sdp_parse_file(FIXTURE_DIR "doesnt_exist.sdp", &sdp);
 ck_assert_uint_eq(result, -1);
+
+
+
+#test test_sdp_xnode
+mast_sdp_t sdp;
+int result;
+
+result = mast_sdp_parse_file(FIXTURE_DIR "xnode-l24-48000-2.sdp", &sdp);
+ck_assert_uint_eq(result, 0);
+ck_assert_str_eq(sdp.address, "239.192.10.5");
+ck_assert_str_eq(sdp.port, "5004");
+ck_assert_str_eq(sdp.session_id, "1");
+ck_assert_str_eq(sdp.session_origin, "10.10.10.5");
+ck_assert_str_eq(sdp.session_name, "Channel 501");
+ck_assert_str_eq(sdp.information, "");
+ck_assert_int_eq(sdp.payload_type, 96);
+ck_assert_int_eq(sdp.sample_size, 24);
+ck_assert_int_eq(sdp.sample_rate, 48000);
+ck_assert_int_eq(sdp.channel_count, 2);
+ck_assert_int_eq(sdp.packet_duration, 0);
