@@ -47,6 +47,20 @@ TESTS = $(check_PROGRAMS)
   $(top_srcdir)/src/mast.h
 20_check_sdp_cmd_LDADD = @CHECK_LIBS@
 
+EXTRA_DIST = \
+  aes67-multicast-example.sdp \
+  dante-aes67-1.sdp \
+  rtp_mini_packet.hext \
+  sap_minimal_compressed.hext \
+  sap_minimal_encrypted.hext \
+  sap_minimal_ipv6_origin.hext \
+  sap_minimal_no_mime.hext \
+  sap_minimal_unknown_mime.hext \
+  sap_minimal_valid.hext \
+  sap_too_short.hext \
+  sap_wrong_version.hext \
+  xnode-l24-48000-2.sdp
+
 CLEANFILES = \
   $(check_PROGRAMS:%.cmd=%.c) \
   $(check_PROGRAMS:%.cmd=%.log) \
