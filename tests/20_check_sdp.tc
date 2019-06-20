@@ -61,3 +61,11 @@ ck_assert_int_eq(sdp.sample_size, 24);
 ck_assert_int_eq(sdp.sample_rate, 48000);
 ck_assert_int_eq(sdp.channel_count, 2);
 ck_assert_int_eq(sdp.packet_duration, 1);
+
+
+#test test_mast_sdp_parse_file_doesnt_exist
+mast_sdp_t sdp;
+int result;
+
+result = mast_sdp_parse_file(FIXTURE_DIR "doesnt_exist.sdp", &sdp);
+ck_assert_uint_eq(result, -1);
