@@ -26,6 +26,7 @@ TESTS = $(check_PROGRAMS)
   $(top_srcdir)/src/rtp.c \
   $(top_srcdir)/src/socket.c \
   $(top_srcdir)/src/utils.c \
+  $(top_srcdir)/src/bytestoint.h \
   $(top_srcdir)/src/mast.h
 20_check_rtp_cmd_LDADD = @CHECK_LIBS@
 

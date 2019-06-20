@@ -20,6 +20,9 @@
 #include <net/if.h>
 #include <netdb.h>
 
+#include <sndfile.h>
+
+
 #ifndef TRUE
 #define TRUE  (1)
 #endif
@@ -146,6 +149,12 @@ void mast_sdp_set_payload_type(mast_sdp_t *sdp, int payload_type);
 void mast_sdp_set_sample_format(mast_sdp_t *sdp, const char *fmt);
 void mast_sdp_set_port(mast_sdp_t *sdp, const char *port);
 void mast_sdp_set_address(mast_sdp_t *sdp, const char *address);
+
+
+// ------- Audio File Writing ---------
+
+SNDFILE *mast_writer_open(const char* path, mast_sdp_t *sdp);
+void mast_writer_write(SNDFILE *file, uint8_t* payload, int payload_length);
 
 
 // ------- Utilities ---------
