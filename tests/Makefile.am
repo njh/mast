@@ -49,18 +49,18 @@ TESTS = $(check_PROGRAMS)
 20_check_sdp_cmd_LDADD = @CHECK_LIBS@
 
 EXTRA_DIST = \
-  aes67-multicast-example.sdp \
-  dante-aes67-1.sdp \
-  rtp_mini_packet.hext \
-  sap_minimal_compressed.hext \
-  sap_minimal_encrypted.hext \
-  sap_minimal_ipv6_origin.hext \
-  sap_minimal_no_mime.hext \
-  sap_minimal_unknown_mime.hext \
-  sap_minimal_valid.hext \
-  sap_too_short.hext \
-  sap_wrong_version.hext \
-  xnode-l24-48000-2.sdp
+  fixtures/aes67-multicast-example.sdp \
+  fixtures/dante-aes67-1.sdp \
+  fixtures/rtp_mini_packet.hext \
+  fixtures/sap_minimal_compressed.hext \
+  fixtures/sap_minimal_encrypted.hext \
+  fixtures/sap_minimal_ipv6_origin.hext \
+  fixtures/sap_minimal_no_mime.hext \
+  fixtures/sap_minimal_unknown_mime.hext \
+  fixtures/sap_minimal_valid.hext \
+  fixtures/sap_too_short.hext \
+  fixtures/sap_wrong_version.hext \
+  fixtures/xnode-l24-48000-2.sdp
 
 CLEANFILES = \
   $(check_PROGRAMS:%.cmd=%.c) \
