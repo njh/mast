@@ -18,6 +18,8 @@ SNDFILE * mast_writer_open(const char* path, mast_sdp_t *sdp)
 {
     SF_INFO sfinfo;
 
+	mast_info("Opening output file: %s", path);
+
     sfinfo.format = SF_FORMAT_WAV | SF_ENDIAN_FILE;
     sfinfo.samplerate = sdp->sample_rate;
     sfinfo.channels = sdp->channel_count;

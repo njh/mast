@@ -17,17 +17,19 @@
 
 // Globals
 const char * ifname = NULL;
+const char* filename = "recording.wav";
 mast_sdp_t sdp;
 
 static void usage()
 {
     fprintf(stderr, "MAST Recorder version %s\n\n", PACKAGE_VERSION);
     fprintf(stderr, "Usage: mast-recorder [options] [<file.sdp>]\n");
+    fprintf(stderr, "   -o <filename>  Output file name (default %s)\n", filename);
     fprintf(stderr, "   -a <address>   IP Address\n");
     fprintf(stderr, "   -i <iface>     Interface Name to listen on\n");
     fprintf(stderr, "   -p <port>      Port Number (default %s)\n", MAST_DEFAULT_PORT);
     fprintf(stderr, "   -r <rate>      Sample Rate (default %d)\n", MAST_DEFAULT_SAMPLE_RATE);
-    fprintf(stderr, "   -f <format>    Audio Format (default L%d)\n", MAST_DEFAULT_SAMPLE_SIZE);
+    fprintf(stderr, "   -f <format>    Input Sample Format (default L%d)\n", MAST_DEFAULT_SAMPLE_SIZE);
     fprintf(stderr, "   -c <channels>  Channel Count (default %d)\n", MAST_DEFAULT_CHANNEL_COUNT);
     fprintf(stderr, "   -v             Verbose Logging\n");
     fprintf(stderr, "   -q             Quiet Logging\n");
@@ -40,8 +42,11 @@ static void parse_opts(int argc, char **argv)
     int ch;
 
     // Parse the options/switches
-    while ((ch = getopt(argc, argv, "a:p:i:r:f:c:vq?h")) != -1) {
+    while ((ch = getopt(argc, argv, "o:a:p:i:r:f:c:vq?h")) != -1) {
         switch (ch) {
+        case 'o':
+            filename = optarg;
+            break;
         case 'a':
             mast_sdp_set_address(&sdp, optarg);
             break;
@@ -115,11 +120,6 @@ int main(int argc, char *argv[])
         return EXIT_FAILURE;
     }
 
-    file = mast_writer_open("recording.wav", &sdp);
-    if (file == NULL) {
-        mast_error("Failed to open output file");
-    }
-
     while(running) {
         mast_rtp_packet_t packet;
 
@@ -136,7 +136,15 @@ int main(int argc, char *argv[])
 
         mast_debug("RTP packet ts=%lu seq=%u", packet.timestamp, packet.sequence);
 
-        mast_writer_write(file, packet.payload, packet.payload_length);
+        if (!file) {
+			file = mast_writer_open(filename, &sdp);
+		}
+
+		if (file) {
+            mast_writer_write(file, packet.payload, packet.payload_length);
+		} else {
+		    mast_error("Failed to open output file");
+		}
     }
 
     if (file) {
