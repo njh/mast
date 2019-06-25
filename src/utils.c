@@ -122,3 +122,35 @@ int mast_directory_exists(const char* path)
         return FALSE;
     }
 }
+
+
+const char* mast_encoding_names[MAST_ENCODING_MAX] = {
+    [MAST_ENCODING_L8] = "L8",
+    [MAST_ENCODING_L16] = "L16",
+    [MAST_ENCODING_L24] = "L24",
+    [MAST_ENCODING_PCMU] = "PCMU",
+    [MAST_ENCODING_PCMA] = "PCMA",
+    [MAST_ENCODING_G722] = "G722",
+    [MAST_ENCODING_GSM] = "GSM"
+};
+
+
+const char* mast_encoding_name(int encoding)
+{
+    if (encoding > 0 && encoding < MAST_ENCODING_MAX) {
+        return mast_encoding_names[encoding];
+    } else {
+        return NULL;
+    }
+}
+
+int mast_encoding_lookup(const char* name)
+{
+    int i;
+
+    for(i=0; i< MAST_ENCODING_MAX; i++) {
+        if (strcmp(mast_encoding_names[i], name) == 0)
+            return i;
+    }
+    return -1;
+}

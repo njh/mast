@@ -32,9 +32,9 @@
 #endif
 
 
-#define MAST_DEFAULT_PORT  "5004"
-#define MAST_DEFAULT_SAMPLE_RATE  48000
-#define MAST_DEFAULT_SAMPLE_SIZE  24
+#define MAST_DEFAULT_PORT           "5004"
+#define MAST_DEFAULT_SAMPLE_RATE    48000
+#define MAST_DEFAULT_ENCODING       MAST_ENCODING_L24
 #define MAST_DEFAULT_CHANNEL_COUNT  2
 
 
@@ -133,7 +133,7 @@ typedef struct
     char information[256];
 
     int payload_type;
-    int sample_size;
+    int encoding;
     int sample_rate;
     int channel_count;
     int packet_duration;
@@ -146,7 +146,6 @@ int mast_sdp_parse_file(const char* filename, mast_sdp_t* sdp);
 
 void mast_sdp_set_defaults(mast_sdp_t *sdp);
 void mast_sdp_set_payload_type(mast_sdp_t *sdp, int payload_type);
-void mast_sdp_set_sample_format(mast_sdp_t *sdp, const char *fmt);
 void mast_sdp_set_port(mast_sdp_t *sdp, const char *port);
 void mast_sdp_set_address(mast_sdp_t *sdp, const char *address);
 
@@ -158,6 +157,17 @@ void mast_writer_write(SNDFILE *file, uint8_t* payload, int payload_length);
 
 
 // ------- Utilities ---------
+
+enum {
+    MAST_ENCODING_L8,
+    MAST_ENCODING_L16,
+    MAST_ENCODING_L24,
+    MAST_ENCODING_PCMU,   // G.711 - uLaw
+    MAST_ENCODING_PCMA,   // G.711 - aLaw
+    MAST_ENCODING_G722,   // SB-ADPCM
+    MAST_ENCODING_GSM,
+    MAST_ENCODING_MAX
+} mast_encodings;
 
 void setup_signal_hander();
 extern int running;
@@ -191,5 +201,8 @@ void mast_log(mast_log_level level, const char *fmt, ...);
 		mast_log(mast_LOG_ERROR, __VA_ARGS__ )
 
 int mast_directory_exists(const char* path);
+
+const char* mast_encoding_name(int encoding);
+int mast_encoding_lookup(const char* name);
 
 #endif

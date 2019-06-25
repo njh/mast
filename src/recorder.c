@@ -29,7 +29,7 @@ static void usage()
     fprintf(stderr, "   -i <iface>     Interface Name to listen on\n");
     fprintf(stderr, "   -p <port>      Port Number (default %s)\n", MAST_DEFAULT_PORT);
     fprintf(stderr, "   -r <rate>      Sample Rate (default %d)\n", MAST_DEFAULT_SAMPLE_RATE);
-    fprintf(stderr, "   -f <format>    Input Sample Format (default L%d)\n", MAST_DEFAULT_SAMPLE_SIZE);
+    fprintf(stderr, "   -e <encoding>  Encoding (default %s)\n", mast_encoding_name(MAST_DEFAULT_ENCODING));
     fprintf(stderr, "   -c <channels>  Channel Count (default %d)\n", MAST_DEFAULT_CHANNEL_COUNT);
     fprintf(stderr, "   -v             Verbose Logging\n");
     fprintf(stderr, "   -q             Quiet Logging\n");
@@ -60,7 +60,8 @@ static void parse_opts(int argc, char **argv)
             sdp.sample_rate = atoi(optarg);
             break;
         case 'f':
-            mast_sdp_set_sample_format(&sdp, optarg);
+            sdp.encoding = mast_encoding_lookup(optarg);
+            if (sdp.encoding < 0) mast_error("Invalid encoding format: %s", optarg);
             break;
         case 'c':
             sdp.channel_count = atoi(optarg);
@@ -110,9 +111,9 @@ int main(int argc, char *argv[])
     setup_signal_hander();
 
     mast_info(
-        "Recording: %s [L%d/%d/%d]",
+        "Recording: %s [%s/%d/%d]",
         sdp.session_name,
-        sdp.sample_size, sdp.sample_rate, sdp.channel_count
+        mast_encoding_name(sdp.encoding), sdp.sample_rate, sdp.channel_count
     );
 
     result = mast_socket_open(&sock, sdp.address, sdp.port, ifname);

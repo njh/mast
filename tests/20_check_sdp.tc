@@ -17,7 +17,7 @@ ck_assert_str_eq(sdp.session_origin, "");
 ck_assert_str_eq(sdp.session_name, "");
 ck_assert_str_eq(sdp.information, "");
 ck_assert_int_eq(sdp.payload_type, 0);
-ck_assert_int_eq(sdp.sample_size, 0);
+ck_assert_int_eq(sdp.encoding, -1);
 ck_assert_int_eq(sdp.sample_rate, 0);
 ck_assert_int_eq(sdp.channel_count, 0);
 ck_assert_int_eq(sdp.packet_duration, 0);
@@ -37,7 +37,7 @@ ck_assert_str_eq(sdp.session_origin, "192.168.1.1");
 ck_assert_str_eq(sdp.session_name, "Stage left I/O");
 ck_assert_str_eq(sdp.information, "Channels 1-8");
 ck_assert_int_eq(sdp.payload_type, 96);
-ck_assert_int_eq(sdp.sample_size, 24);
+ck_assert_int_eq(sdp.encoding, MAST_ENCODING_L24);
 ck_assert_int_eq(sdp.sample_rate, 48000);
 ck_assert_int_eq(sdp.channel_count, 8);
 ck_assert_int_eq(sdp.packet_duration, 1);
@@ -57,7 +57,7 @@ ck_assert_str_eq(sdp.session_origin, "169.254.98.63");
 ck_assert_str_eq(sdp.session_name, "AOIP44-serial-1614 : 2");
 ck_assert_str_eq(sdp.information, "2 channels: TxChan 0, TxChan 1");
 ck_assert_int_eq(sdp.payload_type, 97);
-ck_assert_int_eq(sdp.sample_size, 24);
+ck_assert_int_eq(sdp.encoding, MAST_ENCODING_L24);
 ck_assert_int_eq(sdp.sample_rate, 48000);
 ck_assert_int_eq(sdp.channel_count, 2);
 ck_assert_int_eq(sdp.packet_duration, 1);
@@ -85,7 +85,7 @@ ck_assert_str_eq(sdp.session_origin, "10.10.10.5");
 ck_assert_str_eq(sdp.session_name, "Channel 501");
 ck_assert_str_eq(sdp.information, "");
 ck_assert_int_eq(sdp.payload_type, 96);
-ck_assert_int_eq(sdp.sample_size, 24);
+ck_assert_int_eq(sdp.encoding, MAST_ENCODING_L24);
 ck_assert_int_eq(sdp.sample_rate, 48000);
 ck_assert_int_eq(sdp.channel_count, 2);
 ck_assert_int_eq(sdp.packet_duration, 0);
@@ -98,7 +98,7 @@ mast_sdp_set_defaults(&sdp);
 ck_assert(sdp.address[0] == '\0');
 ck_assert_str_eq(sdp.port, "5004");
 ck_assert_int_eq(sdp.payload_type, -1);
-ck_assert_int_eq(sdp.sample_size, 24);
+ck_assert_int_eq(sdp.encoding, MAST_ENCODING_L24);
 ck_assert_int_eq(sdp.sample_rate, 48000);
 ck_assert_int_eq(sdp.channel_count, 2);
 
@@ -117,23 +117,3 @@ mast_sdp_set_port(&sdp, "5004");
 ck_assert_str_eq(sdp.port, "5004");
 mast_sdp_set_port(&sdp, NULL);
 ck_assert(sdp.port[0] == '\0');
-
-#test test_set_sample_format_L16
-mast_sdp_t sdp;
-mast_sdp_set_sample_format(&sdp, "L16");
-ck_assert_int_eq(sdp.sample_size, 16);
-
-#test test_set_sample_format_L24
-mast_sdp_t sdp;
-mast_sdp_set_sample_format(&sdp, "L24");
-ck_assert_int_eq(sdp.sample_size, 24);
-
-#test test_set_sample_format_L32
-mast_sdp_t sdp;
-mast_sdp_set_sample_format(&sdp, "L32");
-ck_assert_int_eq(sdp.sample_size, 32);
-
-// FIXME: Travis does not support this
-// #test-exit(-1) test_set_sample_format_PCM
-// mast_sdp_t sdp;
-// mast_sdp_set_sample_format(&sdp, "PCM");

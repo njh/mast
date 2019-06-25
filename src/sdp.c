@@ -108,11 +108,11 @@ static void sdp_attribute_parse(mast_sdp_t *sdp, char* line, int line_num)
         char *pt = strsep(&line, " ");
 
         if (pt && atoi(pt) == sdp->payload_type) {
-            char *format = strsep(&line, "/");
+            char *encoding = strsep(&line, "/");
             char *sample_rate = strsep(&line, "/");
             char *channel_count = strsep(&line, "/");
 
-            if (format) mast_sdp_set_sample_format(sdp, format);
+            if (encoding) sdp->encoding = mast_encoding_lookup(encoding);
             if (sample_rate) sdp->sample_rate = atoi(sample_rate);
             if (channel_count) sdp->channel_count = atoi(channel_count);
         }
@@ -223,6 +223,7 @@ int mast_sdp_parse_string(const char* str, mast_sdp_t* sdp)
     int line_num = 1;
 
     memset(sdp, 0, sizeof(mast_sdp_t));
+    sdp->encoding = -1;
 
     while (start < str_len) {
         // Find the end of the line
@@ -269,7 +270,7 @@ void mast_sdp_set_defaults(mast_sdp_t *sdp)
 
     sdp->payload_type = -1;
     sdp->sample_rate = MAST_DEFAULT_SAMPLE_RATE;
-    sdp->sample_size = MAST_DEFAULT_SAMPLE_SIZE;
+    sdp->encoding = MAST_DEFAULT_ENCODING;
     sdp->channel_count = MAST_DEFAULT_CHANNEL_COUNT;
 }
 
@@ -291,30 +292,16 @@ void mast_sdp_set_port(mast_sdp_t *sdp, const char *port)
     }
 }
 
-void mast_sdp_set_sample_format(mast_sdp_t *sdp, const char *fmt)
-{
-    if (strcmp(fmt, "L16") == 0) {
-        sdp->sample_size = 16;
-    } else if (strcmp(fmt, "L24") == 0) {
-        sdp->sample_size = 24;
-    } else if (strcmp(fmt, "L32") == 0) {
-        sdp->sample_size = 32;
-    } else {
-        mast_error("Unsupported audio sample format: %s", fmt);
-        exit(-1);
-    }
-}
-
 void mast_sdp_set_payload_type(mast_sdp_t *sdp, int payload_type)
 {
     sdp->payload_type = payload_type;
 
     if (payload_type == 10) {
-        sdp->sample_size = 16;
+        sdp->encoding = MAST_ENCODING_L16;
         sdp->sample_rate = 44100;
         sdp->channel_count = 2;
     } else if (payload_type == 11) {
-        sdp->sample_size = 16;
+        sdp->encoding = MAST_ENCODING_L16;
         sdp->sample_rate = 44100;
         sdp->channel_count = 1;
     } else if (payload_type < 96) {

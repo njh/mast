@@ -18,24 +18,21 @@ SNDFILE * mast_writer_open(const char* path, mast_sdp_t *sdp)
 {
     SF_INFO sfinfo;
 
-	mast_info("Opening output file: %s", path);
+    mast_info("Opening output file: %s", path);
 
     sfinfo.format = SF_FORMAT_WAV | SF_ENDIAN_FILE;
     sfinfo.samplerate = sdp->sample_rate;
     sfinfo.channels = sdp->channel_count;
 
-    switch (sdp->sample_size) {
-    case 16:
+    switch (sdp->encoding) {
+    case MAST_ENCODING_L16:
         sfinfo.format |= SF_FORMAT_PCM_16;
         break;
-    case 24:
+    case MAST_ENCODING_L24:
         sfinfo.format |= SF_FORMAT_PCM_24;
         break;
-    case 32:
-        sfinfo.format |= SF_FORMAT_PCM_32;
-        break;
     default:
-        mast_error("Unsupported sample size: %d", sdp->sample_size);
+        mast_error("Unsupported encoding: %s", mast_encoding_name(sdp->encoding));
         return NULL;
         break;
     }

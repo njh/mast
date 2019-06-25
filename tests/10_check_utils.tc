@@ -7,3 +7,23 @@ ck_assert_int_eq(mast_directory_exists("/"), TRUE);
 
 #test directory_exists_random
 ck_assert_int_eq(mast_directory_exists("/VeeX8ohsie"), FALSE);
+
+
+#test test_mast_encoding_lookup_L16
+ck_assert_int_eq(mast_encoding_lookup("L16"), MAST_ENCODING_L16);
+
+#test test_mast_encoding_lookup_L24
+ck_assert_int_eq(mast_encoding_lookup("L24"), MAST_ENCODING_L24);
+
+#test test_mast_encoding_lookup_unknown
+ck_assert_int_eq(mast_encoding_lookup("UNKNOWN"), -1);
+
+
+#test test_mast_encoding_name_L16
+ck_assert_str_eq(mast_encoding_name(MAST_ENCODING_L16), "L16");
+
+#test test_mast_encoding_name_L24
+ck_assert_str_eq(mast_encoding_name(MAST_ENCODING_L24), "L24");
+
+#test test_mast_encoding_name_invalid
+ck_assert_ptr_eq(mast_encoding_name(-1), NULL);

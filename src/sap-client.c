@@ -149,10 +149,10 @@ static void receive_sap_packet(mast_socket_t *sock)
     if (result) return;
 
     mast_info(
-        "SAP %s: %s - %s/%s [L%d/%d/%d]",
+        "SAP %s: %s - %s/%s [%s/%d/%d]",
         verb, sdp.session_name,
         sdp.address, sdp.port,
-        sdp.sample_size, sdp.sample_rate, sdp.channel_count
+        mast_encoding_name(sdp.encoding), sdp.sample_rate, sdp.channel_count
     );
 
 
