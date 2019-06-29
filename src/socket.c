@@ -44,8 +44,13 @@
 #endif
 #endif
 
+enum {
+    DO_BIND_SOCKET,
+    DONT_BIND_SOCKET
+};
 
-static int _bind_socket(mast_socket_t *sock, const char* address, const char* port)
+
+static int _create_socket(mast_socket_t *sock, int flags, const char* address, const char* port)
 {
     struct addrinfo hints, *res, *cur;
     int error = -1;
@@ -84,7 +89,7 @@ static int _bind_socket(mast_socket_t *sock, const char* address, const char* po
             }
 #endif
 
-            if (bind(sock->fd, cur->ai_addr, cur->ai_addrlen) == 0) {
+            if (flags == DONT_BIND_SOCKET || bind(sock->fd, cur->ai_addr, cur->ai_addrlen) == 0) {
                 // Success!
                 memcpy( &sock->saddr, cur->ai_addr, cur->ai_addrlen );
                 retval = 0;
@@ -104,7 +109,6 @@ static int _bind_socket(mast_socket_t *sock, const char* address, const char* po
 
 static int _is_multicast(struct sockaddr_storage *addr)
 {
-
     switch (addr->ss_family) {
     case AF_INET: {
         struct sockaddr_in *addr4=(struct sockaddr_in *)addr;
@@ -160,7 +164,7 @@ static int _get_interface_ipv4_addr(const char* ifname, struct in_addr *addr)
 }
 
 
-static int _join_group( mast_socket_t *sock, const char* ifname)
+static int _lookup_interface( mast_socket_t *sock, const char* ifname)
 {
     unsigned int if_index = 0;
     int retval = -1;
@@ -187,12 +191,6 @@ static int _join_group( mast_socket_t *sock, const char* ifname)
         retval = _get_interface_ipv4_addr( ifname, &sock->imr.imr_interface);
         if (retval) {
             mast_error("Failed to get IPv4 address of network interface");
-        } else {
-            retval = setsockopt(sock->fd, IPPROTO_IP, IP_ADD_MEMBERSHIP,
-                                &sock->imr, sizeof(sock->imr));
-            if (retval < 0) {
-                mast_warn("IP_ADD_MEMBERSHIP failed: %s", strerror(errno));
-            }
         }
         break;
 
@@ -203,15 +201,42 @@ static int _join_group( mast_socket_t *sock, const char* ifname)
                sizeof(struct in6_addr));
 
         sock->imr6.ipv6mr_interface = if_index;
+        break;
 
-        retval = setsockopt(sock->fd, IPPROTO_IPV6, IPV6_ADD_MEMBERSHIP,
-                            &sock->imr6, sizeof(sock->imr6));
-
-        if (retval < 0) {
-            mast_warn("IPV6_ADD_MEMBERSHIP failed: %s", strerror(errno));
-        }
+    default:
+        mast_error("Unknown socket address family: %d", sock->saddr.ss_family);
+        retval = -1;
         break;
     }
+
+    return retval;
+}
+
+static int _join_group( mast_socket_t *sock, const char* ifname)
+{
+    int retval = -1;
+
+    if (_lookup_interface(sock, ifname))
+        return -1;
+
+    switch (sock->saddr.ss_family) {
+    case AF_INET:
+        retval = setsockopt(sock->fd, IPPROTO_IP, IP_ADD_MEMBERSHIP,
+                            &sock->imr, sizeof(sock->imr));
+        if (retval < 0)
+            mast_warn("IP_ADD_MEMBERSHIP failed: %s", strerror(errno));
+        break;
+
+    case AF_INET6:
+        retval = setsockopt(sock->fd, IPPROTO_IPV6, IPV6_ADD_MEMBERSHIP,
+                            &sock->imr6, sizeof(sock->imr6));
+        if (retval < 0)
+            mast_warn("IPV6_ADD_MEMBERSHIP failed: %s", strerror(errno));
+        break;
+    }
+
+    if (retval == 0)
+        sock->joined_group = TRUE;
 
     return retval;
 }
@@ -222,55 +247,146 @@ static int _leave_group( mast_socket_t* sock )
     int retval = -1;
 
     switch (sock->saddr.ss_family) {
-    case AF_INET: {
-        retval= setsockopt(sock->fd, IPPROTO_IP, IP_DROP_MEMBERSHIP,
-                           &(sock->imr), sizeof(sock->imr));
-        if (retval<-1)
-            perror("IP_DROP_MEMBERSHIP failed");
-    }
-    break;
+    case AF_INET:
+        retval = setsockopt(sock->fd, IPPROTO_IP, IP_DROP_MEMBERSHIP,
+                            &(sock->imr), sizeof(sock->imr));
+        if (retval<0)
+            mast_warn("IP_DROP_MEMBERSHIP failed: %s", strerror(errno));
+        break;
 
-    case AF_INET6: {
-        retval= setsockopt(sock->fd, IPPROTO_IPV6, IPV6_DROP_MEMBERSHIP,
-                           &(sock->imr6), sizeof(sock->imr6));
-        if (retval<-1)
-            perror("IPV6_DROP_MEMBERSHIP failed");
-    }
-    break;
-
+    case AF_INET6:
+        retval = setsockopt(sock->fd, IPPROTO_IPV6, IPV6_DROP_MEMBERSHIP,
+                            &(sock->imr6), sizeof(sock->imr6));
+        if (retval<0)
+            mast_warn("IPV6_DROP_MEMBERSHIP failed: %s", strerror(errno));
+        break;
     }
 
     return retval;
 }
 
 
-int mast_socket_open(mast_socket_t* sock, const char* address, const char* port, const char *ifname)
+static int _set_multicast_interface( mast_socket_t* sock, const char* ifname )
 {
+    int retval = -1;
+
+    if (_lookup_interface(sock, ifname))
+        return -1;
+
+    switch (sock->saddr.ss_family) {
+    case AF_INET:
+        retval = setsockopt(sock->fd, IPPROTO_IP, IP_MULTICAST_IF,
+                            &sock->imr.imr_interface, sizeof(sock->imr.imr_interface));
+        if (retval < 0)
+            mast_warn("IP_MULTICAST_IF failed: %s", strerror(errno));
+        break;
+
+    case AF_INET6:
+        retval = setsockopt(sock->fd, IPPROTO_IPV6, IPV6_MULTICAST_IF,
+                            &sock->imr6.ipv6mr_interface, sizeof(sock->imr6.ipv6mr_interface));
+        if (retval < 0)
+            mast_warn("IPV6_MULTICAST_IF failed: %s", strerror(errno));
+        break;
+    }
+
+    return retval;
+}
+
+
+static int _set_multicast_hops( mast_socket_t* sock, int hops )
+{
+    int retval = -1;
+
+    switch (sock->saddr.ss_family) {
+    case AF_INET:
+        retval = setsockopt(sock->fd, IPPROTO_IP, IP_MULTICAST_TTL, &hops, sizeof(hops));
+        if (retval < 0)
+            mast_warn("IP_MULTICAST_TTL failed: %s", strerror(errno));
+        break;
+
+    case AF_INET6:
+        retval = setsockopt(sock->fd, IPPROTO_IPV6, IPV6_MULTICAST_HOPS, &hops, sizeof(hops));
+        if (retval < 0)
+            mast_warn("IPV6_MULTICAST_HOPS failed: %s", strerror(errno));
+        break;
+    }
+
+    return retval;
+}
+
+
+static int _set_multicast_loopback(mast_socket_t* sock, char loop )
+{
+    int retval = -1;
+
+    switch (sock->saddr.ss_family) {
+    case AF_INET:
+        retval = setsockopt(sock->fd, IPPROTO_IP, IP_MULTICAST_LOOP, &loop, sizeof(loop));
+        if (retval < 0)
+            mast_warn("IP_MULTICAST_LOOP failed: %s", strerror(errno));
+        break;
+
+    case AF_INET6:
+        retval = setsockopt(sock->fd, IPPROTO_IPV6, IPV6_MULTICAST_LOOP, &loop, sizeof(loop));
+        if (retval < 0)
+            mast_warn("IPV6_MULTICAST_LOOP failed: %s", strerror(errno));
+        break;
+    }
+
+    return retval;
+}
+
+
+int mast_socket_open_recv(mast_socket_t* sock, const char* address, const char* port, const char *ifname)
+{
+    int is_multicast;
+
     // Initialise
     memset(sock, 0, sizeof(mast_socket_t));
-    sock->fd = 0;
-    sock->is_multicast = 0;	// not joined yet
 
     mast_info("Opening socket: %s/%s", address, port);
-
-    if (_bind_socket(sock, address, port)) {
-        mast_error("Failed to open socket.");
+    if (_create_socket(sock, DO_BIND_SOCKET, address, port)) {
+        mast_error("Failed to open socket for receiving.");
         return -1;
     }
 
     // Join multicast group ?
-    sock->is_multicast = _is_multicast( &sock->saddr );
-    if (sock->is_multicast == 1) {
-
+    is_multicast = _is_multicast( &sock->saddr );
+    if (is_multicast == 1) {
         mast_debug("Joining multicast group");
         if (_join_group(sock, ifname)) {
-            sock->is_multicast = 0;
             mast_socket_close(sock);
             return -1;
         }
 
-    } else if (sock->is_multicast != 0) {
-        mast_error("Error checking if address is multicast");
+    } else if (is_multicast != 0) {
+        mast_warn("Error checking if address is multicast");
+    }
+
+    return 0;
+}
+
+int mast_socket_open_send(mast_socket_t* sock, const char* address, const char* port, const char *ifname)
+{
+    int is_multicast;
+
+    // Initialise
+    memset(sock, 0, sizeof(mast_socket_t));
+
+    mast_info("Opening transmit socket: %s/%s", address, port);
+    if (_create_socket(sock, DONT_BIND_SOCKET, address, port)) {
+        mast_error("Failed to open socket for sending.");
+        return -1;
+    }
+
+    // Set multicast socket options?
+    is_multicast = _is_multicast( &sock->saddr );
+    if (is_multicast == 1) {
+        _set_multicast_interface(sock, ifname);
+        _set_multicast_hops(sock, 255);
+        _set_multicast_loopback(sock, TRUE);
+    } else if (is_multicast != 0) {
+        mast_warn("Error checking if address is multicast");
     }
 
     return 0;
@@ -308,12 +424,33 @@ int mast_socket_recv( mast_socket_t* sock, void* data, unsigned  int len)
 }
 
 
+int mast_socket_send( mast_socket_t* sock, void* data, unsigned  int len)
+{
+    mast_debug("Sending %d byte packet", len);
+
+    int nbytes = sendto(
+                     sock->fd,
+                     data, len,
+                     0, // Flags
+                     (struct sockaddr*)&(sock->saddr),
+                     sizeof(struct sockaddr_in)
+                 );
+    if (nbytes < 0) {
+        perror("sendto");
+        return 1;
+    }
+
+    return nbytes;
+}
+
+
 void mast_socket_close(mast_socket_t* sock )
 {
     // Drop Multicast membership
-    if (sock->is_multicast)
+    if (sock->joined_group)
     {
         _leave_group( sock );
+        sock->joined_group = 0;
     }
 
     // Close the sockets

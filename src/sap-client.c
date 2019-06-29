@@ -184,7 +184,7 @@ int main(int argc, char *argv[])
     parse_opts(argc, argv);
     setup_signal_hander();
 
-    result = mast_socket_open(&sock, address, port, ifname);
+    result = mast_socket_open_recv(&sock, address, port, ifname);
     if (result) {
         return EXIT_FAILURE;
     }

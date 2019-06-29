@@ -116,7 +116,7 @@ int main(int argc, char *argv[])
         mast_encoding_name(sdp.encoding), sdp.sample_rate, sdp.channel_count
     );
 
-    result = mast_socket_open(&sock, sdp.address, sdp.port, ifname);
+    result = mast_socket_open_recv(&sock, sdp.address, sdp.port, ifname);
     if (result) {
         return EXIT_FAILURE;
     }

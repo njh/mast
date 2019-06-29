@@ -44,7 +44,7 @@
 typedef struct
 {
     int fd;
-    int is_multicast;
+    int joined_group;
 
     struct sockaddr_storage saddr;
 
@@ -56,8 +56,10 @@ typedef struct
 } mast_socket_t;
 
 
-int mast_socket_open(mast_socket_t* sock, const char* address, const char* port, const char *ifname);
+int mast_socket_open_recv(mast_socket_t* sock, const char* address, const char* port, const char *ifname);
+int mast_socket_open_send(mast_socket_t* sock, const char* address, const char* port, const char *ifname);
 int mast_socket_recv(mast_socket_t* sock, void* data, unsigned int len);
+int mast_socket_send(mast_socket_t* sock, void* data, unsigned int len);
 void mast_socket_close(mast_socket_t* sock);
 
 
