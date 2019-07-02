@@ -12,7 +12,7 @@ int len = hext_filename_to_buffer(FIXTURE_DIR "sap_minimal_valid.hext", buffer, 
 mast_sap_t sap;
 int result = mast_sap_parse(buffer, len, &sap);
 
-ck_assert_uint_eq(result, 0);
+ck_assert_int_eq(result, 0);
 ck_assert_uint_eq(sap.message_type, MAST_SAP_MESSAGE_ANNOUNCE);
 ck_assert_uint_eq(sap.message_id_hash, 0x4f50);
 ck_assert_str_eq(sap.sdp, "v=0\r\n");
@@ -23,7 +23,7 @@ int len = hext_filename_to_buffer(FIXTURE_DIR "sap_minimal_no_mime.hext", buffer
 mast_sap_t sap;
 int result = mast_sap_parse(buffer, len, &sap);
 
-ck_assert_uint_eq(result, 0);
+ck_assert_int_eq(result, 0);
 ck_assert_uint_eq(sap.message_type, MAST_SAP_MESSAGE_ANNOUNCE);
 ck_assert_uint_eq(sap.message_id_hash, 0x4f50);
 ck_assert_str_eq(sap.message_source, "192.168.10.10");
@@ -34,7 +34,7 @@ ck_assert_str_eq(sap.sdp, "v=0\r\n");
 int len = hext_filename_to_buffer(FIXTURE_DIR "sap_minimal_ipv6_origin.hext", buffer, sizeof(buffer));
 mast_sap_t sap;
 int result = mast_sap_parse(buffer, len, &sap);
-ck_assert_uint_eq(result, 0);
+ck_assert_int_eq(result, 0);
 ck_assert_uint_eq(sap.message_type, MAST_SAP_MESSAGE_ANNOUNCE);
 ck_assert_uint_eq(sap.message_id_hash, 0x4f50);
 ck_assert_str_eq(sap.message_source, "2001:db8:85a3::8a2e:370:7334");
@@ -45,28 +45,28 @@ ck_assert_str_eq(sap.sdp, "v=0\r\n");
 int len = hext_filename_to_buffer(FIXTURE_DIR "sap_minimal_unknown_mime.hext", buffer, sizeof(buffer));
 mast_sap_t sap;
 int result = mast_sap_parse(buffer, len, &sap);
-ck_assert_uint_eq(result, 1);
+ck_assert_int_eq(result, 1);
 
 
 #test test_mast_sap_parse_too_short
 int len = hext_filename_to_buffer(FIXTURE_DIR "sap_too_short.hext", buffer, sizeof(buffer));
 mast_sap_t sap;
 int result = mast_sap_parse(buffer, len, &sap);
-ck_assert_uint_eq(result, 1);
+ck_assert_int_eq(result, 1);
 
 
 #test test_mast_sap_wrong_version
 int len = hext_filename_to_buffer(FIXTURE_DIR "sap_wrong_version.hext", buffer, sizeof(buffer));
 mast_sap_t sap;
 int result = mast_sap_parse(buffer, len, &sap);
-ck_assert_uint_eq(result, 1);
+ck_assert_int_eq(result, 1);
 
 
 #test test_mast_sap_encrypted
 int len = hext_filename_to_buffer(FIXTURE_DIR "sap_minimal_encrypted.hext", buffer, sizeof(buffer));
 mast_sap_t sap;
 int result = mast_sap_parse(buffer, len, &sap);
-ck_assert_uint_eq(result, 1);
+ck_assert_int_eq(result, 1);
 
 
 #test test_mast_sap_compressed
@@ -74,4 +74,5 @@ verbose = 1;
 int len = hext_filename_to_buffer(FIXTURE_DIR "sap_minimal_compressed.hext", buffer, sizeof(buffer));
 mast_sap_t sap;
 int result = mast_sap_parse(buffer, len, &sap);
-ck_assert_uint_eq(result, 1);
+ck_assert_int_eq(result, 1);
+
