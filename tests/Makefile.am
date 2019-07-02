@@ -35,6 +35,7 @@ TESTS = $(check_PROGRAMS)
   hext.c \
   hext.h \
   $(top_srcdir)/src/sap.c \
+  $(top_srcdir)/src/socket.c \
   $(top_srcdir)/src/utils.c \
   $(top_srcdir)/src/mast.h
 20_check_sap_cmd_LDADD = @CHECK_LIBS@

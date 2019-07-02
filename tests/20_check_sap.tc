@@ -4,7 +4,7 @@
 
 #suite SAP
 
-uint8_t buffer[1024];
+uint8_t buffer[MAST_SAP_MAX_LEN];
 
 
 #test test_mast_sap_parse
@@ -14,7 +14,7 @@ int result = mast_sap_parse(buffer, len, &sap);
 
 ck_assert_int_eq(result, 0);
 ck_assert_uint_eq(sap.message_type, MAST_SAP_MESSAGE_ANNOUNCE);
-ck_assert_uint_eq(sap.message_id_hash, 0x4f50);
+ck_assert_uint_eq(sap.message_id_hash, 0xc6d3);
 ck_assert_str_eq(sap.sdp, "v=0\r\n");
 
 
@@ -75,4 +75,27 @@ int len = hext_filename_to_buffer(FIXTURE_DIR "sap_minimal_compressed.hext", buf
 mast_sap_t sap;
 int result = mast_sap_parse(buffer, len, &sap);
 ck_assert_int_eq(result, 1);
+
+
+
+#test test_mast_sap_generate
+const char* sdp = "v=0\r\n";
+uint8_t result[MAST_SAP_MAX_LEN];
+int result_len, expect_len;
+
+expect_len = hext_filename_to_buffer(FIXTURE_DIR "sap_minimal_valid.hext", buffer, sizeof(buffer));
+
+result_len = mast_sap_generate(NULL, sdp, MAST_SAP_MESSAGE_ANNOUNCE, result, sizeof(result));
+ck_assert_int_eq(result_len, expect_len);
+ck_assert_mem_eq(result, buffer, expect_len);
+
+
+#test test_mast_sap_generate_buffer_too_small
+const char* sdp = "v=0\r\n";
+uint8_t buffer[MAST_SAP_MAX_LEN];
+int result;
+
+result = mast_sap_generate(NULL, sdp, MAST_SAP_MESSAGE_ANNOUNCE, buffer, 10);
+ck_assert_int_eq(result, -1);
+
 

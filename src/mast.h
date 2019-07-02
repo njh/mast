@@ -101,6 +101,9 @@ int mast_rtp_recv( mast_socket_t* socket, mast_rtp_packet_t* packet );
 #define MAST_SAP_ADDRESS_GLOBAL "224.2.127.254"
 #define MAST_SAP_PORT           "9875"
 
+#define MAST_SAP_MAX_HEADER     (36)
+#define MAST_SAP_MAX_LEN        (MAST_SAP_MAX_HEADER + MAST_SDP_MAX_LEN)
+
 enum
 {
     MAST_SAP_MESSAGE_ANNOUNCE = 0,
@@ -118,11 +121,14 @@ typedef struct
 
 
 int mast_sap_parse(const uint8_t* data, size_t data_len, mast_sap_t* sap);
+int mast_sap_generate(mast_socket_t *sock, const char* sdp, uint8_t message_type, uint8_t *buffer, size_t buffer_len);
+int mast_sap_send_sdp_string(mast_socket_t *sock, const char* sdp, uint8_t message_type);
 
 
 // ------- SDP handling ---------
 
 #define MAST_SDP_MIME_TYPE      "application/sdp"
+#define MAST_SDP_MAX_LEN        (2048)
 
 typedef struct
 {

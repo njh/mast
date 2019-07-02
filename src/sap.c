@@ -50,11 +50,11 @@ int mast_sap_parse(const uint8_t* data, size_t data_len, mast_sap_t* sap)
         return 1;
     }
 
-    // Store the Message ID Hash
-    sap->message_id_hash = (((uint16_t)data[2] << 8) | (uint16_t)data[3]);
-
     // Add on the authentication data length
     offset += (data[1] * 4);
+
+    // Store the Message ID Hash
+    sap->message_id_hash = (((uint16_t)data[2] << 8) | (uint16_t)data[3]);
 
     // Check the MIME type
     const char *mime_type = (char*)&data[offset];
@@ -77,4 +77,68 @@ int mast_sap_parse(const uint8_t* data, size_t data_len, mast_sap_t* sap)
     sap->sdp[data_len - offset] = '\0';
 
     return 0;
+}
+
+static uint16_t _crc16(const uint8_t* data, size_t data_len) {
+    uint8_t x;
+    uint16_t crc = 0xFFFF;
+
+    while (data_len--) {
+        x = crc >> 8 ^ *data++;
+        x ^= x >> 4;
+        crc = (crc << 8) ^ ((uint16_t)(x << 12)) ^ ((uint16_t)(x <<5)) ^ ((uint16_t)x);
+    }
+
+    return crc;
+}
+
+int mast_sap_generate(mast_socket_t *sock, const char* sdp, uint8_t message_type, uint8_t *buffer, size_t buffer_len)
+{
+    size_t sdp_len = strlen(sdp);
+    uint16_t message_hash = _crc16((const uint8_t*)sdp, sdp_len);
+    int pos = 0;
+    uint8_t flags = 0;
+
+    if (sdp_len + 1 + MAST_SAP_MAX_HEADER > buffer_len) {
+        // Buffer isn't big enough
+        return -1;
+    }
+
+    flags |= (0x1 << 5); // SAP Version 1
+    if (message_type == MAST_SAP_MESSAGE_DELETE) {
+        flags |= (0x1 << 2);
+    }
+
+    buffer[pos++] = flags;
+    buffer[pos++] = 0;  // Authentication Len
+    buffer[pos++] = (message_hash & 0xFF00) >> 8;
+    buffer[pos++] = (message_hash & 0x00FF);
+
+    buffer[pos++] = 192;  // Origin IP
+    buffer[pos++] = 168;
+    buffer[pos++] = 10;
+    buffer[pos++] = 10;
+
+    // Add the MIME type
+    strcpy((char*)&buffer[pos], MAST_SDP_MIME_TYPE);
+    pos += sizeof(MAST_SDP_MIME_TYPE);
+
+    // Finally the SDP payload
+    strcpy((char*)&buffer[pos], sdp);
+    pos += sdp_len;
+
+    return pos;
+}
+
+int mast_sap_send_sdp_string(mast_socket_t *sock, const char* sdp, uint8_t message_type)
+{
+    uint8_t packet[MAST_SAP_MAX_LEN];
+    int len;
+
+    len = mast_sap_generate(sock, sdp, message_type, packet, sizeof(packet));
+    if (len > 0) {
+        return mast_socket_send(sock, packet, len);
+    } else {
+        return len;
+    }
 }
