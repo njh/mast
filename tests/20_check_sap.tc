@@ -15,7 +15,7 @@ int result = mast_sap_parse(buffer, len, &sap);
 ck_assert_uint_eq(result, 0);
 ck_assert_uint_eq(sap.message_type, MAST_SAP_MESSAGE_ANNOUNCE);
 ck_assert_uint_eq(sap.message_id_hash, 0x4f50);
-ck_assert_str_eq(sap.sdp, "v=0\n");
+ck_assert_str_eq(sap.sdp, "v=0\r\n");
 
 
 #test test_mast_sap_parse_no_mime
@@ -27,7 +27,7 @@ ck_assert_uint_eq(result, 0);
 ck_assert_uint_eq(sap.message_type, MAST_SAP_MESSAGE_ANNOUNCE);
 ck_assert_uint_eq(sap.message_id_hash, 0x4f50);
 ck_assert_str_eq(sap.message_source, "192.168.10.10");
-ck_assert_str_eq(sap.sdp, "v=0\n");
+ck_assert_str_eq(sap.sdp, "v=0\r\n");
 
 
 #test test_mast_sap_ipv6_origin
@@ -38,7 +38,7 @@ ck_assert_uint_eq(result, 0);
 ck_assert_uint_eq(sap.message_type, MAST_SAP_MESSAGE_ANNOUNCE);
 ck_assert_uint_eq(sap.message_id_hash, 0x4f50);
 ck_assert_str_eq(sap.message_source, "2001:db8:85a3::8a2e:370:7334");
-ck_assert_str_eq(sap.sdp, "v=0\n");
+ck_assert_str_eq(sap.sdp, "v=0\r\n");
 
 
 #test test_mast_sap_parse_unknown_mime

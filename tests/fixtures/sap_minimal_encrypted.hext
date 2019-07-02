@@ -3,4 +3,4 @@
 4f50     # Message ID hash
 .192.168.10.10  # Originating Source
 "application/sdp\0"
-"v=0\n"
+"v=0\r\n"

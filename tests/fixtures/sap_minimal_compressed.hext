@@ -4,7 +4,7 @@
 .192.168.10.10  # Originating Source
 "application/sdp\0"
 
-# Compressed "v=0\n" using gzip -9
-1f 8b 08 00 00 00 00 00
-00 03 2b b3 35 e0 02 00
-72 89 30 7c 04 00 00 00
+# zlib compressed SDP payload created using:
+# echo -ne "v=0\r\n" | zlib-flate -compress | od -t x1 -An
+78 9c 2b b3 35 e0 e5 02
+00 03 fb 00 fb
