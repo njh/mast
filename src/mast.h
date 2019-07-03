@@ -45,8 +45,10 @@ typedef struct
 {
     int fd;
     int joined_group;
+    unsigned int if_index;
 
-    struct sockaddr_storage saddr;
+    struct sockaddr_storage dest_addr;
+    struct sockaddr_storage src_addr;
 
     union {
         struct ipv6_mreq imr6;

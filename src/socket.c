@@ -91,7 +91,7 @@ static int _create_socket(mast_socket_t *sock, int flags, const char* address, c
 
             if (flags == DONT_BIND_SOCKET || bind(sock->fd, cur->ai_addr, cur->ai_addrlen) == 0) {
                 // Success!
-                memcpy( &sock->saddr, cur->ai_addr, cur->ai_addrlen );
+                memcpy( &sock->dest_addr, cur->ai_addr, cur->ai_addrlen );
                 retval = 0;
                 break;
             }
@@ -128,15 +128,27 @@ static int _is_multicast(struct sockaddr_storage *addr)
     }
 }
 
-static int _get_interface_ipv4_addr(const char* ifname, struct in_addr *addr)
+static int _sockaddr_len(sa_family_t family)
+{
+    switch(family) {
+    case AF_INET:
+        return sizeof(struct sockaddr_in);
+    case AF_INET6:
+        return sizeof(struct sockaddr_in6);
+    default:
+        return -1;
+    }
+}
+
+static int _get_interface_address(const char* ifname, sa_family_t family, struct sockaddr_storage* addr)
 {
     struct ifaddrs *addrs, *cur;
     int retval = -1;
     int foundAddress = FALSE;
 
     if (ifname == NULL || strlen(ifname) < 1) {
-        addr->s_addr = INADDR_ANY;
-        return 0;
+        mast_error("No interface given");
+        return -1;
     }
 
     // Get a linked list of all the interfaces
@@ -148,11 +160,14 @@ static int _get_interface_ipv4_addr(const char* ifname, struct in_addr *addr)
     // Iterate through each of the interfaces
     for(cur = addrs; cur; cur = cur->ifa_next)
     {
-        if (cur->ifa_addr && cur->ifa_addr->sa_family == AF_INET) {
+        if (cur->ifa_addr && cur->ifa_addr->sa_family == family) {
+            // FIXME: ignore Temporary interfaces or PtoP
             if (strcmp(cur->ifa_name, ifname) == 0) {
-                struct sockaddr_in *sockaddr = (struct sockaddr_in *)cur->ifa_addr;
-                addr->s_addr = sockaddr->sin_addr.s_addr;
-                foundAddress = TRUE;
+                size_t addr_len = _sockaddr_len(cur->ifa_addr->sa_family);
+                if (addr_len > 0) {
+                    memcpy(addr, cur->ifa_addr, addr_len);
+                    foundAddress = TRUE;
+                }
                 break;
             }
         }
@@ -166,13 +181,16 @@ static int _get_interface_ipv4_addr(const char* ifname, struct in_addr *addr)
 
 static int _lookup_interface( mast_socket_t *sock, const char* ifname)
 {
-    unsigned int if_index = 0;
     int retval = -1;
+
+    sock->if_index = 0;
+
+    mast_debug("Looking up interface: %s", ifname);
 
     // If a network interface name was given, check it exists
     if (ifname != NULL && strlen(ifname) > 0) {
-        if_index = if_nametoindex(ifname);
-        if (if_index == 0) {
+        sock->if_index = if_nametoindex(ifname);
+        if (sock->if_index == 0) {
             if (errno == ENXIO) {
                 mast_error("Network interface not found: %s", ifname);
                 return -1;
@@ -182,44 +200,52 @@ static int _lookup_interface( mast_socket_t *sock, const char* ifname)
         }
     }
 
-    switch (sock->saddr.ss_family) {
-    case AF_INET:
-
-        sock->imr.imr_multiaddr.s_addr=
-            ((struct sockaddr_in*)&sock->saddr)->sin_addr.s_addr;
-
-        retval = _get_interface_ipv4_addr( ifname, &sock->imr.imr_interface);
-        if (retval) {
-            mast_error("Failed to get IPv4 address of network interface");
-        }
-        break;
-
-    case AF_INET6:
-
-        memcpy(&sock->imr6.ipv6mr_multiaddr,
-               &(((struct sockaddr_in6*)&sock->saddr)->sin6_addr),
-               sizeof(struct in6_addr));
-
-        sock->imr6.ipv6mr_interface = if_index;
-        break;
-
-    default:
-        mast_error("Unknown socket address family: %d", sock->saddr.ss_family);
-        retval = -1;
-        break;
+    retval = _get_interface_address(ifname, sock->dest_addr.ss_family, &sock->src_addr);
+    if (retval) {
+        mast_warn("Failed to get address of network interface");
     }
+
 
     return retval;
 }
 
-static int _join_group( mast_socket_t *sock, const char* ifname)
+static void _set_imr(mast_socket_t *sock)
+{
+    switch (sock->dest_addr.ss_family) {
+    case AF_INET:
+        memset(&sock->imr, 0, sizeof(sock->imr));
+        memcpy(&sock->imr.imr_multiaddr,
+               &((struct sockaddr_in*)&sock->dest_addr)->sin_addr,
+               sizeof(struct in_addr));
+
+        memcpy(&sock->imr.imr_interface,
+               &((struct sockaddr_in*)&sock->src_addr)->sin_addr,
+               sizeof(struct in_addr));
+        break;
+
+    case AF_INET6:
+        memset(&sock->imr6, 0, sizeof(sock->imr6));
+        memcpy(&sock->imr6.ipv6mr_multiaddr,
+               &((struct sockaddr_in6*)&sock->dest_addr)->sin6_addr,
+               sizeof(struct in6_addr));
+
+        sock->imr6.ipv6mr_interface = sock->if_index;
+
+        break;
+
+    default:
+        mast_error("Unknown socket address family: %d", sock->dest_addr.ss_family);
+        break;
+    }
+}
+
+static int _join_group( mast_socket_t *sock )
 {
     int retval = -1;
 
-    if (_lookup_interface(sock, ifname))
-        return -1;
+    _set_imr(sock);
 
-    switch (sock->saddr.ss_family) {
+    switch (sock->dest_addr.ss_family) {
     case AF_INET:
         retval = setsockopt(sock->fd, IPPROTO_IP, IP_ADD_MEMBERSHIP,
                             &sock->imr, sizeof(sock->imr));
@@ -246,7 +272,9 @@ static int _leave_group( mast_socket_t* sock )
 {
     int retval = -1;
 
-    switch (sock->saddr.ss_family) {
+    _set_imr(sock);
+
+    switch (sock->dest_addr.ss_family) {
     case AF_INET:
         retval = setsockopt(sock->fd, IPPROTO_IP, IP_DROP_MEMBERSHIP,
                             &(sock->imr), sizeof(sock->imr));
@@ -266,14 +294,13 @@ static int _leave_group( mast_socket_t* sock )
 }
 
 
-static int _set_multicast_interface( mast_socket_t* sock, const char* ifname )
+static int _set_multicast_interface( mast_socket_t* sock )
 {
     int retval = -1;
 
-    if (_lookup_interface(sock, ifname))
-        return -1;
+    _set_imr(sock);
 
-    switch (sock->saddr.ss_family) {
+    switch (sock->dest_addr.ss_family) {
     case AF_INET:
         retval = setsockopt(sock->fd, IPPROTO_IP, IP_MULTICAST_IF,
                             &sock->imr.imr_interface, sizeof(sock->imr.imr_interface));
@@ -297,7 +324,7 @@ static int _set_multicast_hops( mast_socket_t* sock, int hops )
 {
     int retval = -1;
 
-    switch (sock->saddr.ss_family) {
+    switch (sock->dest_addr.ss_family) {
     case AF_INET:
         retval = setsockopt(sock->fd, IPPROTO_IP, IP_MULTICAST_TTL, &hops, sizeof(hops));
         if (retval < 0)
@@ -319,7 +346,7 @@ static int _set_multicast_loopback(mast_socket_t* sock, char loop )
 {
     int retval = -1;
 
-    switch (sock->saddr.ss_family) {
+    switch (sock->dest_addr.ss_family) {
     case AF_INET:
         retval = setsockopt(sock->fd, IPPROTO_IP, IP_MULTICAST_LOOP, &loop, sizeof(loop));
         if (retval < 0)
@@ -350,11 +377,14 @@ int mast_socket_open_recv(mast_socket_t* sock, const char* address, const char* 
         return -1;
     }
 
+    // Work out what interface to receive packets on
+    _lookup_interface(sock, ifname);
+
     // Join multicast group ?
-    is_multicast = _is_multicast( &sock->saddr );
+    is_multicast = _is_multicast( &sock->dest_addr );
     if (is_multicast == 1) {
         mast_debug("Joining multicast group");
-        if (_join_group(sock, ifname)) {
+        if (_join_group(sock)) {
             mast_socket_close(sock);
             return -1;
         }
@@ -379,10 +409,13 @@ int mast_socket_open_send(mast_socket_t* sock, const char* address, const char* 
         return -1;
     }
 
+    // Work out what interface to send packets on
+    _lookup_interface(sock, ifname);
+
     // Set multicast socket options?
-    is_multicast = _is_multicast( &sock->saddr );
+    is_multicast = _is_multicast( &sock->dest_addr );
     if (is_multicast == 1) {
-        _set_multicast_interface(sock, ifname);
+        _set_multicast_interface(sock);
         _set_multicast_hops(sock, 255);
         _set_multicast_loopback(sock, TRUE);
     } else if (is_multicast != 0) {
@@ -432,12 +465,12 @@ int mast_socket_send( mast_socket_t* sock, void* data, unsigned  int len)
                      sock->fd,
                      data, len,
                      0, // Flags
-                     (struct sockaddr*)&(sock->saddr),
-                     sizeof(struct sockaddr_in)
+                     (struct sockaddr*)&sock->dest_addr,
+                     _sockaddr_len(sock->dest_addr.ss_family)
                  );
-    if (nbytes < 0) {
-        perror("sendto");
-        return 1;
+    if (nbytes <= 0) {
+        mast_warn("sending packet failed: %s", strerror(errno));
+        return nbytes;
     }
 
     return nbytes;
