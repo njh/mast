@@ -87,7 +87,8 @@ expect_len = hext_filename_to_buffer(FIXTURE_DIR "sap_minimal_valid.hext", buffe
 
 result_len = mast_sap_generate(NULL, sdp, MAST_SAP_MESSAGE_ANNOUNCE, result, sizeof(result));
 ck_assert_int_eq(result_len, expect_len);
-ck_assert_mem_eq(result, buffer, expect_len);
+// FIXME: check on Travis doesn't support ck_assert_mem_eq
+ck_assert(memcmp(result, buffer, expect_len) == 0);
 
 
 #test test_mast_sap_generate_buffer_too_small
