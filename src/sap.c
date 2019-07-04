@@ -105,7 +105,7 @@ int mast_sap_generate(mast_socket_t *sock, const char* sdp, uint8_t message_type
         return -1;
     }
 
-    buffer[pos++] |= (0x1 << 5); // SAP Version 1
+    buffer[pos++] = (0x1 << 5); // SAP Version 1
     if (message_type == MAST_SAP_MESSAGE_DELETE) {
         // SAP Flag: T=1
         buffer[0] |= (0x1 << 2);

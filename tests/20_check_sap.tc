@@ -94,6 +94,7 @@ inet_pton(AF_INET, "192.168.10.10", &((struct sockaddr_in*)&sock.src_addr)->sin_
 result_len = mast_sap_generate(&sock, sdp, MAST_SAP_MESSAGE_ANNOUNCE, result, sizeof(result));
 ck_assert_int_eq(result_len, expect_len);
 // FIXME: check on Travis doesn't support ck_assert_mem_eq
+//ck_assert_mem_eq(result, buffer, expect_len);
 ck_assert(memcmp(result, buffer, expect_len) == 0);
 
 
