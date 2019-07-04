@@ -10,7 +10,9 @@
 
 #include "mast.h"
 #include <string.h>
+
 #include <arpa/inet.h>
+#include <netinet/ip.h>
 
 int mast_sap_parse(const uint8_t* data, size_t data_len, mast_sap_t* sap)
 {
@@ -97,27 +99,34 @@ int mast_sap_generate(mast_socket_t *sock, const char* sdp, uint8_t message_type
     size_t sdp_len = strlen(sdp);
     uint16_t message_hash = _crc16((const uint8_t*)sdp, sdp_len);
     int pos = 0;
-    uint8_t flags = 0;
 
     if (sdp_len + 1 + MAST_SAP_MAX_HEADER > buffer_len) {
         // Buffer isn't big enough
         return -1;
     }
 
-    flags |= (0x1 << 5); // SAP Version 1
+    buffer[pos++] |= (0x1 << 5); // SAP Version 1
     if (message_type == MAST_SAP_MESSAGE_DELETE) {
-        flags |= (0x1 << 2);
+        // SAP Flag: T=1
+        buffer[0] |= (0x1 << 2);
     }
 
-    buffer[pos++] = flags;
     buffer[pos++] = 0;  // Authentication Len
     buffer[pos++] = (message_hash & 0xFF00) >> 8;
     buffer[pos++] = (message_hash & 0x00FF);
 
-    buffer[pos++] = 192;  // Origin IP
-    buffer[pos++] = 168;
-    buffer[pos++] = 10;
-    buffer[pos++] = 10;
+    if (sock->src_addr.ss_family == AF_INET) {
+        struct sockaddr_in *sin = (struct sockaddr_in*)&sock->src_addr;
+        memcpy(&buffer[pos], &sin->sin_addr, sizeof(sin->sin_addr));
+        pos += sizeof(sin->sin_addr);
+    } else if (sock->src_addr.ss_family == AF_INET6) {
+        struct sockaddr_in6* sin6 = (struct sockaddr_in6*)&sock->src_addr;
+        memcpy(&buffer[pos], &sin6->sin6_addr, sizeof(sin6->sin6_addr));
+        pos += sizeof(sin6->sin6_addr);
+        buffer[0] |= (0x1 << 4);  // SAP Flag: A=1
+    } else {
+        return -1;
+    }
 
     // Add the MIME type
     strcpy((char*)&buffer[pos], MAST_SDP_MIME_TYPE);
