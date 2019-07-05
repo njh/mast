@@ -161,7 +161,7 @@ static int _get_interface_address(const char* ifname, sa_family_t family, struct
     for(cur = addrs; cur; cur = cur->ifa_next)
     {
         if (cur->ifa_addr && cur->ifa_addr->sa_family == family) {
-            // FIXME: ignore Temporary interfaces or PtoP
+            // FIXME: ignore link-local and temporary IPv6 addresses?
             if (strcmp(cur->ifa_name, ifname) == 0) {
                 size_t addr_len = _sockaddr_len(cur->ifa_addr->sa_family);
                 if (addr_len > 0) {
@@ -179,32 +179,81 @@ static int _get_interface_address(const char* ifname, sa_family_t family, struct
 }
 
 
+static int _choose_best_interface(sa_family_t family, char* ifname)
+{
+    struct ifaddrs *addrs, *cur;
+    int retval = -1;
+
+    // Get a linked list of all the interfaces
+    retval = getifaddrs(&addrs);
+    if (retval < 0) {
+        return retval;
+    }
+
+    // Iterate through each of the interfaces
+    for(cur = addrs; cur; cur = cur->ifa_next)
+    {
+        // Check if address is for right family
+        if (cur->ifa_addr == NULL || cur->ifa_addr->sa_family != family)
+            continue;
+
+        // Ignore loopback and point-to-point network interfaces
+		if ((cur->ifa_flags & IFF_LOOPBACK) || (cur->ifa_flags & IFF_POINTOPOINT))
+			continue;
+
+        // Ignore interfaces that arn't up and running
+		if (!(cur->ifa_flags & IFF_RUNNING))
+		    continue;
+
+		// FIXME: find a way to avoid Wifi interfaces
+		// FIXME: Could we prefer network interfaces that support IFCAP_AV?
+
+        // Found one!
+		retval = 0;
+		strncpy(ifname, cur->ifa_name, IFNAMSIZ);
+		break;
+    }
+
+    freeifaddrs(addrs);
+
+    return retval;
+}
+
 static int _lookup_interface( mast_socket_t *sock, const char* ifname)
 {
+    char chosen_ifname[IFNAMSIZ];
     int retval = -1;
 
     sock->if_index = 0;
 
-    mast_debug("Looking up interface: %s", ifname);
-
-    // If a network interface name was given, check it exists
-    if (ifname != NULL && strlen(ifname) > 0) {
-        sock->if_index = if_nametoindex(ifname);
-        if (sock->if_index == 0) {
-            if (errno == ENXIO) {
-                mast_error("Network interface not found: %s", ifname);
-                return -1;
-            } else {
-                mast_error("Error looking up interface: %s", strerror(errno));
-            }
-        }
+    // Choose an interface, if none given
+    if (ifname == NULL || strlen(ifname) == 0) {
+		retval = _choose_best_interface(sock->dest_addr.ss_family, chosen_ifname);
+		if (retval)
+		    return retval;
+		ifname = chosen_ifname;
     }
 
+    mast_debug("Looking up interface: %s", ifname);
+
+    // Check the interface exists, and store the interface index
+	sock->if_index = if_nametoindex(ifname);
+	if (sock->if_index == 0) {
+		if (errno == ENXIO) {
+			mast_error("Network interface not found: %s", ifname);
+			return -1;
+		} else {
+			mast_error("Error looking up interface: %s", strerror(errno));
+		}
+	}
+
+    // Get the address for the interface
     retval = _get_interface_address(ifname, sock->dest_addr.ss_family, &sock->src_addr);
     if (retval) {
         mast_warn("Failed to get address of network interface");
     }
 
+    mast_info("Using network interface: %s", ifname);
 
     return retval;
 }
