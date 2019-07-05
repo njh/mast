@@ -38,7 +38,7 @@ mast_sap_t sap;
 int result = mast_sap_parse(buffer, len, &sap);
 ck_assert_int_eq(result, 0);
 ck_assert_uint_eq(sap.message_type, MAST_SAP_MESSAGE_ANNOUNCE);
-ck_assert_uint_eq(sap.message_id_hash, 0x4f50);
+ck_assert_uint_eq(sap.message_id_hash, 0xc6d3);
 ck_assert_str_eq(sap.message_source, "2001:db8:85a3::8a2e:370:7334");
 ck_assert_str_eq(sap.sdp, "v=0\r\n");
 
@@ -90,6 +90,24 @@ expect_len = hext_filename_to_buffer(FIXTURE_DIR "sap_minimal_valid.hext", buffe
 memset(&sock, 0, sizeof(sock));
 sock.src_addr.ss_family = AF_INET;
 inet_pton(AF_INET, "192.168.10.10", &((struct sockaddr_in*)&sock.src_addr)->sin_addr);
+
+result_len = mast_sap_generate(&sock, sdp, MAST_SAP_MESSAGE_ANNOUNCE, result, sizeof(result));
+ck_assert_int_eq(result_len, expect_len);
+// FIXME: check on Travis doesn't support ck_assert_mem_eq
+//ck_assert_mem_eq(result, buffer, expect_len);
+ck_assert(memcmp(result, buffer, expect_len) == 0);
+
+
+#test test_mast_sap_generate_ipv6
+mast_socket_t sock;
+const char* sdp = "v=0\r\n";
+uint8_t result[MAST_SAP_MAX_LEN];
+int result_len, expect_len;
+
+expect_len = hext_filename_to_buffer(FIXTURE_DIR "sap_minimal_ipv6_origin.hext", buffer, sizeof(buffer));
+memset(&sock, 0, sizeof(sock));
+sock.src_addr.ss_family = AF_INET6;
+inet_pton(AF_INET6, "2001:db8:85a3::8a2e:370:7334", &((struct sockaddr_in6*)&sock.src_addr)->sin6_addr);
 
 result_len = mast_sap_generate(&sock, sdp, MAST_SAP_MESSAGE_ANNOUNCE, result, sizeof(result));
 ck_assert_int_eq(result_len, expect_len);
