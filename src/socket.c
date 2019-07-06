@@ -219,9 +219,28 @@ static int _choose_best_interface(sa_family_t family, char* ifname)
     return retval;
 }
 
+static void format_sockaddr(struct sockaddr_storage* ss, char *dst, socklen_t size)
+{
+    switch (ss->ss_family) {
+    case AF_INET:
+        inet_ntop(AF_INET, &(((struct sockaddr_in*)ss)->sin_addr), dst, size);
+        break;
+
+    case AF_INET6:
+        inet_ntop(AF_INET6, &(((struct sockaddr_in6*)ss)->sin6_addr), dst, size);
+        break;
+
+    default:
+        mast_warn("Unknown socket address family: %d", ss->ss_family);
+        strncpy(dst, "UNKNOWN", size);
+        break;
+    }
+}
+
 static int _lookup_interface( mast_socket_t *sock, const char* ifname)
 {
     char chosen_ifname[IFNAMSIZ];
+    char ipaddr[INET6_ADDRSTRLEN];
     int retval = -1;
 
     sock->if_index = 0;
@@ -253,7 +272,8 @@ static int _lookup_interface( mast_socket_t *sock, const char* ifname)
         mast_warn("Failed to get address of network interface");
     }
 
-    mast_info("Using network interface: %s", ifname);
+    format_sockaddr(&sock->src_addr, ipaddr, sizeof(ipaddr));
+    mast_info("Using network interface: %s (%s)", ifname, ipaddr);
 
     return retval;
 }
