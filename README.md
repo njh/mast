@@ -1,6 +1,7 @@
 MAST - Multicast Audio Streaming Toolkit
 ========================================
-Nicholas J. Humfrey
+
+[![Build Status](https://travis-ci.org/njh/mast.svg?branch=master)](https://travis-ci.org/njh/mast)
 
 
 What is MAST ?
