@@ -198,20 +198,20 @@ static int _choose_best_interface(sa_family_t family, char* ifname)
             continue;
 
         // Ignore loopback and point-to-point network interfaces
-		if ((cur->ifa_flags & IFF_LOOPBACK) || (cur->ifa_flags & IFF_POINTOPOINT))
-			continue;
+        if ((cur->ifa_flags & IFF_LOOPBACK) || (cur->ifa_flags & IFF_POINTOPOINT))
+            continue;
 
         // Ignore interfaces that arn't up and running
-		if (!(cur->ifa_flags & IFF_RUNNING))
-		    continue;
+        if (!(cur->ifa_flags & IFF_RUNNING))
+            continue;
 
-		// FIXME: find a way to avoid Wifi interfaces
-		// FIXME: Could we prefer network interfaces that support IFCAP_AV?
+        // FIXME: find a way to avoid Wifi interfaces
+        // FIXME: Could we prefer network interfaces that support IFCAP_AV?
 
         // Found one!
-		retval = 0;
-		strncpy(ifname, cur->ifa_name, IFNAMSIZ);
-		break;
+        retval = 0;
+        strncpy(ifname, cur->ifa_name, IFNAMSIZ);
+        break;
     }
 
     freeifaddrs(addrs);
@@ -247,24 +247,24 @@ static int _lookup_interface( mast_socket_t *sock, const char* ifname)
 
     // Choose an interface, if none given
     if (ifname == NULL || strlen(ifname) == 0) {
-		retval = _choose_best_interface(sock->dest_addr.ss_family, chosen_ifname);
-		if (retval)
-		    return retval;
-		ifname = chosen_ifname;
+        retval = _choose_best_interface(sock->dest_addr.ss_family, chosen_ifname);
+        if (retval)
+            return retval;
+        ifname = chosen_ifname;
     }
 
     mast_debug("Looking up interface: %s", ifname);
 
     // Check the interface exists, and store the interface index
-	sock->if_index = if_nametoindex(ifname);
-	if (sock->if_index == 0) {
-		if (errno == ENXIO) {
-			mast_error("Network interface not found: %s", ifname);
-			return -1;
-		} else {
-			mast_error("Error looking up interface: %s", strerror(errno));
-		}
-	}
+    sock->if_index = if_nametoindex(ifname);
+    if (sock->if_index == 0) {
+        if (errno == ENXIO) {
+            mast_error("Network interface not found: %s", ifname);
+            return -1;
+        } else {
+            mast_error("Error looking up interface: %s", strerror(errno));
+        }
+    }
 
     // Get the address for the interface
     retval = _get_interface_address(ifname, sock->dest_addr.ss_family, &sock->src_addr);

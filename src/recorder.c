@@ -138,14 +138,14 @@ int main(int argc, char *argv[])
         mast_debug("RTP packet ts=%lu seq=%u", packet.timestamp, packet.sequence);
 
         if (!file) {
-			file = mast_writer_open(filename, &sdp);
-		}
+            file = mast_writer_open(filename, &sdp);
+        }
 
-		if (file) {
+        if (file) {
             mast_writer_write(file, packet.payload, packet.payload_length);
-		} else {
-		    mast_error("Failed to open output file");
-		}
+        } else {
+            mast_error("Failed to open output file");
+        }
     }
 
     if (file) {

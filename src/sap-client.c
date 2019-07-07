@@ -27,7 +27,7 @@ const char *dir = NULL;
 
 static void usage()
 {
-    fprintf(stderr, "mast-sap-client version %s\n\n", PACKAGE_VERSION);
+    fprintf(stderr, "MAST SAP Client version %s\n\n", PACKAGE_VERSION);
     fprintf(stderr, "Usage: mast-sap-client [options] [<dir>]\n");
     fprintf(stderr, "   -a <address>    Multicast address to listen on (default %s)\n", address);
     fprintf(stderr, "   -p <port>       Port number to lisen on (default %s)\n", port);
