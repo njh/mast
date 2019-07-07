@@ -210,6 +210,8 @@ void mast_log(mast_log_level level, const char *fmt, ...);
 #define mast_error( ... ) \
 		mast_log(mast_LOG_ERROR, __VA_ARGS__ )
 
+int mast_read_file_string(const char* filename, char* buffer, size_t buffer_len);
+
 int mast_directory_exists(const char* path);
 
 const char* mast_encoding_name(int encoding);

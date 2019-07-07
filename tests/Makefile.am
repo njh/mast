@@ -61,6 +61,7 @@ EXTRA_DIST = \
   fixtures/sap_minimal_valid.hext \
   fixtures/sap_too_short.hext \
   fixtures/sap_wrong_version.hext \
+  fixtures/test.txt \
   fixtures/xnode-l24-48000-2.sdp
 
 CLEANFILES = \

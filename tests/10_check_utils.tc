@@ -2,6 +2,18 @@
 
 #suite Utils
 
+#test test_mast_read_file_string
+char buffer[1024] = "";
+int result = mast_read_file_string(FIXTURE_DIR "test.txt", buffer, sizeof(buffer));
+ck_assert_int_eq(result, 0);
+ck_assert_str_eq(buffer, "Hello World\n");
+
+#test test_mast_read_file_string_not_found
+char buffer[1024] = "";
+int result = mast_read_file_string(FIXTURE_DIR "notfound.txt", buffer, sizeof(buffer));
+ck_assert_int_eq(result, -1);
+ck_assert_str_eq(buffer, "");
+
 #test directory_exists_root
 ck_assert_int_eq(mast_directory_exists("/"), TRUE);
 

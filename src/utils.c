@@ -101,6 +101,45 @@ void mast_log(mast_log_level level, const char *fmt, ...)
     }
 }
 
+int mast_read_file_string(const char* filename, char* buffer, size_t buffer_len)
+{
+    int bytes;
+    int retcode = -1;
+
+    // Open the file for reading
+    FILE* file = fopen(filename, "rb");
+    if (!file) {
+        mast_error(
+            "Failed to open file '%s': %s",
+            filename,
+            strerror(errno)
+        );
+        return retcode;
+    }
+
+    // Read as much as we can into the buffer
+    bytes = fread(buffer, 1, buffer_len - 1, file);
+    if (bytes <= 0) {
+        mast_error(
+            "Error reading from file '%s': %s",
+            filename,
+            strerror(errno)
+        );
+        
+    // FIXME: check that buffer wasn't too small
+
+    } else {
+        // Terminate the string
+        buffer[bytes] = '\0';
+        retcode = 0;
+    }
+
+    fclose(file);
+
+    return retcode;
+}
+
+
 
 int mast_directory_exists(const char* path)
 {
