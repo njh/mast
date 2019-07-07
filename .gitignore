@@ -39,6 +39,7 @@ doc/README.html
 build/
 
 # Built binaries
+/src/mast-info
 /src/mast-sap-client
 /src/mast-sap-server
 /src/mast-recorder

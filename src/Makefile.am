@@ -1,5 +1,13 @@
 
-bin_PROGRAMS = mast-sap-client mast-sap-server mast-recorder
+bin_PROGRAMS = mast-info mast-sap-client mast-sap-server mast-recorder
+
+mast_info_SOURCES = \
+	info.c \
+	utils.c \
+	rtp.c \
+	socket.c \
+	sdp.c \
+	mast.h
 
 mast_sap_client_SOURCES = \
 	sap-client.c \
