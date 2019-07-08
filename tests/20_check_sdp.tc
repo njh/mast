@@ -21,6 +21,7 @@ ck_assert_int_eq(sdp.encoding, -1);
 ck_assert_int_eq(sdp.sample_rate, 0);
 ck_assert_int_eq(sdp.channel_count, 0);
 ck_assert_float_eq(sdp.packet_duration, 0);
+ck_assert_str_eq(sdp.ptp_gmid, "");
 
 
 
@@ -41,6 +42,7 @@ ck_assert_int_eq(sdp.encoding, MAST_ENCODING_L24);
 ck_assert_int_eq(sdp.sample_rate, 48000);
 ck_assert_int_eq(sdp.channel_count, 8);
 ck_assert_float_eq(sdp.packet_duration, 1);
+ck_assert_str_eq(sdp.ptp_gmid, "39-A7-94-FF-FE-07-CB-D0");
 
 
 
@@ -61,6 +63,7 @@ ck_assert_int_eq(sdp.encoding, MAST_ENCODING_L24);
 ck_assert_int_eq(sdp.sample_rate, 48000);
 ck_assert_int_eq(sdp.channel_count, 2);
 ck_assert_float_eq(sdp.packet_duration, 1);
+ck_assert_str_eq(sdp.ptp_gmid, "00-00-00-FF-FE-00-00-00");
 
 
 #test test_mast_sdp_parse_file_doesnt_exist
@@ -89,6 +92,7 @@ ck_assert_int_eq(sdp.encoding, MAST_ENCODING_L24);
 ck_assert_int_eq(sdp.sample_rate, 48000);
 ck_assert_int_eq(sdp.channel_count, 2);
 ck_assert_float_eq(sdp.packet_duration, 0);
+ck_assert_str_eq(sdp.ptp_gmid, "54-58-10-FF-FE-62-13-45");
 
 
 #test test_sdp_parse_livewire_stl
@@ -109,7 +113,27 @@ ck_assert_int_eq(sdp.encoding, MAST_ENCODING_L24);
 ck_assert_int_eq(sdp.sample_rate, 48000);
 ck_assert_int_eq(sdp.channel_count, 2);
 ck_assert_float_eq(sdp.packet_duration, 5.442);
+ck_assert_str_eq(sdp.ptp_gmid, "");
 
+
+#test test_sdp_parse_ntp_clock
+mast_sdp_t sdp;
+int result;
+
+result = mast_sdp_parse_file(FIXTURE_DIR "rfc7273-example-4.8.1.sdp", &sdp);
+ck_assert_uint_eq(result, 0);
+ck_assert_str_eq(sdp.address, "233.252.0.1");
+ck_assert_str_eq(sdp.port, "49170");
+ck_assert_str_eq(sdp.session_id, "2890844526");
+ck_assert_str_eq(sdp.session_origin, "192.0.2.1");
+ck_assert_str_eq(sdp.session_name, "SDP Seminar");
+ck_assert_str_eq(sdp.information, "A Seminar on the session description protocol");
+ck_assert_int_eq(sdp.payload_type, 10);
+ck_assert_int_eq(sdp.encoding, MAST_ENCODING_L16);
+ck_assert_int_eq(sdp.sample_rate, 44100);
+ck_assert_int_eq(sdp.channel_count, 2);
+ck_assert_float_eq(sdp.packet_duration, 0);
+ck_assert_str_eq(sdp.ptp_gmid, "");
 
 
 #test test_defaults
@@ -121,6 +145,7 @@ ck_assert_int_eq(sdp.payload_type, -1);
 ck_assert_int_eq(sdp.encoding, MAST_ENCODING_L24);
 ck_assert_int_eq(sdp.sample_rate, 48000);
 ck_assert_int_eq(sdp.channel_count, 2);
+ck_assert_str_eq(sdp.ptp_gmid, "");
 
 #test test_set_address
 mast_sdp_t sdp;

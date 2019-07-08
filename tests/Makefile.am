@@ -53,6 +53,7 @@ EXTRA_DIST = \
   fixtures/aes67-multicast-example.sdp \
   fixtures/dante-aes67-1.sdp \
   fixtures/livewire-stl.sdp \
+  fixtures/rfc7273-example-4.8.1.sdp \
   fixtures/rtp_mini_packet.hext \
   fixtures/sap_minimal_compressed.hext \
   fixtures/sap_minimal_encrypted.hext \

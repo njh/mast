@@ -148,6 +148,7 @@ typedef struct
     int channel_count;
     float packet_duration;
 
+    char ptp_gmid[24];
 } mast_sdp_t;
 
 

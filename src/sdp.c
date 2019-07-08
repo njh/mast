@@ -118,6 +118,27 @@ static void sdp_attribute_parse(mast_sdp_t *sdp, char* line, int line_num)
         }
     } else if (strcmp(attr, "ptime") == 0) {
         sdp->packet_duration = atof(line);
+    } else if (strcmp(attr, "ts-refclk") == 0) {
+        char *clksrc_type = strsep(&line, "=");
+        char *ptp_version = strsep(&line, ":");
+        char *ptp_gmid = strsep(&line, ":");
+        char *ptp_domain = strsep(&line, ":");
+
+        if (clksrc_type && strcmp(clksrc_type, "ptp") == 0) {
+            if (ptp_version && strcmp(ptp_version, "IEEE1588-2008") != 0) {
+                mast_warn("PTP version is not IEEE1588-2008: %s", ptp_version);
+            }
+
+            if (ptp_gmid) {
+                strcpy(sdp->ptp_gmid, ptp_gmid);
+            }
+
+            if (ptp_domain && strcmp(ptp_domain, "0") != 0) {
+                mast_warn("PTP domain is not 0: %s", ptp_version);
+            }
+        } else {
+            mast_warn("SDP Clock Source is not PTP");
+        }
     }
 }
 
@@ -186,11 +207,11 @@ int mast_sdp_parse_file(const char* filename, mast_sdp_t* sdp)
 {
     char buffer[MAST_SDP_MAX_LEN];
     int result = mast_read_file_string(filename, buffer, sizeof(buffer));
-	if (result)
-	    return result;
+    if (result)
+        return result;
 
-	// Now parse the SDP string
-	return mast_sdp_parse_string(buffer, sdp);
+    // Now parse the SDP string
+    return mast_sdp_parse_string(buffer, sdp);
 }
 
 int mast_sdp_parse_string(const char* str, mast_sdp_t* sdp)
