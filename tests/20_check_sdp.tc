@@ -20,7 +20,7 @@ ck_assert_int_eq(sdp.payload_type, 0);
 ck_assert_int_eq(sdp.encoding, -1);
 ck_assert_int_eq(sdp.sample_rate, 0);
 ck_assert_int_eq(sdp.channel_count, 0);
-ck_assert_int_eq(sdp.packet_duration, 0);
+ck_assert_float_eq(sdp.packet_duration, 0);
 
 
 
@@ -40,7 +40,7 @@ ck_assert_int_eq(sdp.payload_type, 96);
 ck_assert_int_eq(sdp.encoding, MAST_ENCODING_L24);
 ck_assert_int_eq(sdp.sample_rate, 48000);
 ck_assert_int_eq(sdp.channel_count, 8);
-ck_assert_int_eq(sdp.packet_duration, 1);
+ck_assert_float_eq(sdp.packet_duration, 1);
 
 
 
@@ -60,7 +60,7 @@ ck_assert_int_eq(sdp.payload_type, 97);
 ck_assert_int_eq(sdp.encoding, MAST_ENCODING_L24);
 ck_assert_int_eq(sdp.sample_rate, 48000);
 ck_assert_int_eq(sdp.channel_count, 2);
-ck_assert_int_eq(sdp.packet_duration, 1);
+ck_assert_float_eq(sdp.packet_duration, 1);
 
 
 #test test_mast_sdp_parse_file_doesnt_exist
@@ -88,7 +88,27 @@ ck_assert_int_eq(sdp.payload_type, 96);
 ck_assert_int_eq(sdp.encoding, MAST_ENCODING_L24);
 ck_assert_int_eq(sdp.sample_rate, 48000);
 ck_assert_int_eq(sdp.channel_count, 2);
-ck_assert_int_eq(sdp.packet_duration, 0);
+ck_assert_float_eq(sdp.packet_duration, 0);
+
+
+#test test_sdp_parse_livewire_stl
+mast_sdp_t sdp;
+int result;
+
+// Example found on Twitter: https://twitter.com/verySetya/status/1079900945725644800
+result = mast_sdp_parse_file(FIXTURE_DIR "livewire-stl.sdp", &sdp);
+ck_assert_uint_eq(result, 0);
+ck_assert_str_eq(sdp.address, "239.192.0.123");
+ck_assert_str_eq(sdp.port, "5004");
+ck_assert_str_eq(sdp.session_id, "3");
+ck_assert_str_eq(sdp.session_origin, "192.168.1.8");
+ck_assert_str_eq(sdp.session_name, "PlayerMain @ PLAYER");
+ck_assert_str_eq(sdp.information, "STL Main Output");
+ck_assert_int_eq(sdp.payload_type, 96);
+ck_assert_int_eq(sdp.encoding, MAST_ENCODING_L24);
+ck_assert_int_eq(sdp.sample_rate, 48000);
+ck_assert_int_eq(sdp.channel_count, 2);
+ck_assert_float_eq(sdp.packet_duration, 5.442);
 
 
 

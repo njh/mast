@@ -146,7 +146,7 @@ typedef struct
     int encoding;
     int sample_rate;
     int channel_count;
-    int packet_duration;
+    float packet_duration;
 
 } mast_sdp_t;
 

@@ -117,7 +117,7 @@ static void sdp_attribute_parse(mast_sdp_t *sdp, char* line, int line_num)
             if (channel_count) sdp->channel_count = atoi(channel_count);
         }
     } else if (strcmp(attr, "ptime") == 0) {
-        sdp->packet_duration = atoi(line);
+        sdp->packet_duration = atof(line);
     }
 }
 

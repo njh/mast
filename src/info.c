@@ -117,7 +117,7 @@ int main(int argc, char *argv[])
     printf("Encoding        : %s\n", mast_encoding_name(sdp.encoding));
     printf("Sample Rate     : %d Hz\n", sdp.sample_rate);
     printf("Channel Count   : %d\n", sdp.channel_count);
-    printf("Packet Duration : %d ms\n", sdp.packet_duration);
+    printf("Packet Duration : %f ms\n", sdp.packet_duration);
 	printf("\n");
 
     // Display information about the packet received
