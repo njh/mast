@@ -22,7 +22,7 @@ ck_assert_int_eq(sdp.sample_rate, 0);
 ck_assert_int_eq(sdp.channel_count, 0);
 ck_assert_float_eq(sdp.packet_duration, 0);
 ck_assert_str_eq(sdp.ptp_gmid, "");
-
+ck_assert_int_eq(sdp.clock_offset, 0);
 
 
 #test test_mast_sdp_parse_file_lf
@@ -43,7 +43,7 @@ ck_assert_int_eq(sdp.sample_rate, 48000);
 ck_assert_int_eq(sdp.channel_count, 8);
 ck_assert_float_eq(sdp.packet_duration, 1);
 ck_assert_str_eq(sdp.ptp_gmid, "39-A7-94-FF-FE-07-CB-D0");
-
+ck_assert_int_eq(sdp.clock_offset, 963214424);
 
 
 #test test_mast_sdp_parse_file_crlf
@@ -64,6 +64,7 @@ ck_assert_int_eq(sdp.sample_rate, 48000);
 ck_assert_int_eq(sdp.channel_count, 2);
 ck_assert_float_eq(sdp.packet_duration, 1);
 ck_assert_str_eq(sdp.ptp_gmid, "00-00-00-FF-FE-00-00-00");
+ck_assert_int_eq(sdp.clock_offset, 3560866135);
 
 
 #test test_mast_sdp_parse_file_doesnt_exist
@@ -93,6 +94,7 @@ ck_assert_int_eq(sdp.sample_rate, 48000);
 ck_assert_int_eq(sdp.channel_count, 2);
 ck_assert_float_eq(sdp.packet_duration, 0);
 ck_assert_str_eq(sdp.ptp_gmid, "54-58-10-FF-FE-62-13-45");
+ck_assert_int_eq(sdp.clock_offset, 0);
 
 
 #test test_sdp_parse_livewire_stl
@@ -114,6 +116,7 @@ ck_assert_int_eq(sdp.sample_rate, 48000);
 ck_assert_int_eq(sdp.channel_count, 2);
 ck_assert_float_eq(sdp.packet_duration, 5.442);
 ck_assert_str_eq(sdp.ptp_gmid, "");
+ck_assert_int_eq(sdp.clock_offset, 0);
 
 
 #test test_sdp_parse_ntp_clock
@@ -134,6 +137,7 @@ ck_assert_int_eq(sdp.sample_rate, 44100);
 ck_assert_int_eq(sdp.channel_count, 2);
 ck_assert_float_eq(sdp.packet_duration, 0);
 ck_assert_str_eq(sdp.ptp_gmid, "");
+ck_assert_int_eq(sdp.clock_offset, 0);
 
 
 #test test_defaults
@@ -146,6 +150,7 @@ ck_assert_int_eq(sdp.encoding, MAST_ENCODING_L24);
 ck_assert_int_eq(sdp.sample_rate, 48000);
 ck_assert_int_eq(sdp.channel_count, 2);
 ck_assert_str_eq(sdp.ptp_gmid, "");
+ck_assert_int_eq(sdp.clock_offset, 0);
 
 #test test_set_address
 mast_sdp_t sdp;

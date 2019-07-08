@@ -139,6 +139,17 @@ static void sdp_attribute_parse(mast_sdp_t *sdp, char* line, int line_num)
         } else {
             mast_warn("SDP Clock Source is not PTP");
         }
+    } else if (strcmp(attr, "mediaclk") == 0) {
+        char *mediaclk_type = strsep(&line, "=");
+        char *clock_offset = strsep(&line, " ");
+
+        if (mediaclk_type && strcmp(mediaclk_type, "direct") == 0) {
+            if (clock_offset) {
+                sdp->clock_offset = atoll(clock_offset);
+            }
+        } else {
+            mast_warn("SDP Media Clock is not set to direct: %s", mediaclk_type);
+        }
     }
 }
 

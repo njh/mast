@@ -149,6 +149,7 @@ typedef struct
     float packet_duration;
 
     char ptp_gmid[24];
+    uint64_t clock_offset;
 } mast_sdp_t;
 
 
