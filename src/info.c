@@ -76,7 +76,7 @@ static void parse_opts(int argc, char **argv)
 
 int main(int argc, char *argv[])
 {
-	mast_rtp_packet_t packet;
+    mast_rtp_packet_t packet;
     mast_socket_t sock;
     int result;
 
@@ -92,15 +92,15 @@ int main(int argc, char *argv[])
 
 
     // Wait for an RTP packet
-	result = mast_rtp_recv(&sock, &packet);
-	if (result < 0) exit(-1);
+    result = mast_rtp_recv(&sock, &packet);
+    if (result < 0) exit(-1);
 
-	// Is the Payload Type what we were expecting?
-	if (sdp.payload_type == -1) {
-		mast_sdp_set_payload_type(&sdp, packet.payload_type);
-	} else if (sdp.payload_type != packet.payload_type) {
-		mast_warn("RTP packet Payload Type does not match SDP: %d", packet.payload_type);
-	}
+    // Is the Payload Type what we were expecting?
+    if (sdp.payload_type == -1) {
+        mast_sdp_set_payload_type(&sdp, packet.payload_type);
+    } else if (sdp.payload_type != packet.payload_type) {
+        mast_warn("RTP packet Payload Type does not match SDP: %d", packet.payload_type);
+    }
 
     // Display information about the session
     printf("\n");
@@ -112,13 +112,13 @@ int main(int argc, char *argv[])
     printf("Description     : %s\n", sdp.information );
     printf("\n");
 
-	printf("Payload Details\n");
-	printf("===============\n");
+    printf("Payload Details\n");
+    printf("===============\n");
     printf("Encoding        : %s\n", mast_encoding_name(sdp.encoding));
     printf("Sample Rate     : %d Hz\n", sdp.sample_rate);
     printf("Channel Count   : %d\n", sdp.channel_count);
     printf("Packet Duration : %f ms\n", sdp.packet_duration);
-	printf("\n");
+    printf("\n");
 
     // Display information about the packet received
     printf("RTP Header\n");

@@ -125,8 +125,8 @@ int mast_read_file_string(const char* filename, char* buffer, size_t buffer_len)
             filename,
             strerror(errno)
         );
-        
-    // FIXME: check that buffer wasn't too small
+
+        // FIXME: check that buffer wasn't too small
 
     } else {
         // Terminate the string
