@@ -78,6 +78,7 @@ int main(int argc, char *argv[])
 {
     mast_rtp_packet_t packet;
     mast_socket_t sock;
+    uint64_t tai;
     int result;
 
     mast_sdp_set_defaults(&sdp);
@@ -106,29 +107,34 @@ int main(int argc, char *argv[])
     printf("\n");
     printf("Session Information\n");
     printf("===================\n");
-    printf("Session ID      : %s-%s\n", sdp.session_origin, sdp.session_id);
-    printf("Dest Address    : %s:%s\n", sdp.address, sdp.port );
-    printf("Session Name    : %s\n", sdp.session_name );
-    printf("Description     : %s\n", sdp.information );
+    printf("Session ID       : %s-%s\n", sdp.session_origin, sdp.session_id);
+    printf("Dest Address     : %s:%s\n", sdp.address, sdp.port );
+    printf("Session Name     : %s\n", sdp.session_name );
+    printf("Description      : %s\n", sdp.information );
+    printf("PTP Grandmaster  : %s\n", sdp.ptp_gmid );
+    printf("RTP Clock Offset : %llu\n", sdp.clock_offset );
     printf("\n");
 
     printf("Payload Details\n");
     printf("===============\n");
-    printf("Encoding        : %s\n", mast_encoding_name(sdp.encoding));
-    printf("Sample Rate     : %d Hz\n", sdp.sample_rate);
-    printf("Channel Count   : %d\n", sdp.channel_count);
-    printf("Packet Duration : %f ms\n", sdp.packet_duration);
+    printf("Encoding         : %s\n", mast_encoding_name(sdp.encoding));
+    printf("Sample Rate      : %d Hz\n", sdp.sample_rate);
+    printf("Channel Count    : %d\n", sdp.channel_count);
+    printf("Packet Duration  : %f ms\n", sdp.packet_duration);
     printf("\n");
 
     // Display information about the packet received
     printf("RTP Header\n");
     printf("==========\n");
-    printf("Payload type    : %u\n", packet.payload_type );
-    printf("Payload size    : %u bytes\n", packet.payload_length );
-    printf("Sequence Number : %u\n", packet.sequence );
-    printf("Timestamp       : %u\n", packet.timestamp );
-    printf("SSRC Identifier : 0x%8.8x\n", packet.ssrc );
-    printf("Marker Bit      : %s\n", packet.marker ? "Set" : "Not Set");
+    printf("Payload type     : %u\n", packet.payload_type );
+    printf("Payload size     : %u bytes\n", packet.payload_length );
+    printf("SSRC Identifier  : 0x%8.8x\n", packet.ssrc );
+    printf("Marker Bit       : %s\n", packet.marker ? "Set" : "Not Set");
+    printf("Sequence Number  : %u\n", packet.sequence );
+
+    tai = (((uint64_t)packet.timestamp + sdp.clock_offset) / sdp.sample_rate );
+    printf("Timestamp        : %u\n", packet.timestamp );
+    printf("TAI Seconds      : %llu\n", tai);
     printf("\n");
 
     mast_socket_close(&sock);
