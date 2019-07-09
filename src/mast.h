@@ -134,22 +134,22 @@ int mast_sap_send_sdp_string(mast_socket_t *sock, const char* sdp, uint8_t messa
 
 typedef struct
 {
-    char address[NI_MAXHOST];
-    char port[NI_MAXSERV];
+    char address[NI_MAXHOST];  // c= 
+    char port[NI_MAXSERV];     // m=
 
-    char session_id[256];
-    char session_origin[256];
-    char session_name[256];
-    char information[256];
+    char session_id[256];      // o=
+    char session_origin[256];  // o=
+    char session_name[256];    // s=
+    char information[256];     // i=
 
-    int payload_type;
-    int encoding;
-    int sample_rate;
-    int channel_count;
-    float packet_duration;
+    int payload_type;          // m=
+    int encoding;              // a=rtpmap
+    int sample_rate;           // a=rtpmap
+    int channel_count;         // a=rtpmap
+    float packet_duration;     // a=ptime
 
-    char ptp_gmid[24];
-    uint64_t clock_offset;
+    char ptp_gmid[24];         // a=ts-refclk
+    uint64_t clock_offset;     // a=mediaclk
 } mast_sdp_t;
 
 
