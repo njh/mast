@@ -1,0 +1,111 @@
+#include "bytestoint.h"
+
+#suite Bytes to Int
+
+#test test_bytesToInt16_0
+uint8_t buf[2] = {0x00, 0x00};
+ck_assert_int_eq(bytesToInt16(buf), 0);
+
+#test test_bytesToInt16_1
+uint8_t buf[2] = {0x00, 0x01};
+ck_assert_int_eq(bytesToInt16(buf), 1);
+
+#test test_bytesToInt16_ffff
+uint8_t buf[2] = {0xff, 0xff};
+ck_assert_int_eq(bytesToInt16(buf), -1);
+
+#test test_bytesToInt16_7fff
+uint8_t buf[2] = {0x7f, 0xff};
+ck_assert_int_eq(bytesToInt16(buf), 32767);
+
+#test test_bytesToInt16_8000
+uint8_t buf[2] = {0x80, 0x00};
+ck_assert_int_eq(bytesToInt16(buf), -32768);
+
+
+
+#test test_bytesToUInt16_0
+uint8_t buf[2] = {0x00, 0x00};
+ck_assert_int_eq(bytesToUInt16(buf), 0);
+
+#test test_bytesToUInt16_1
+uint8_t buf[2] = {0x00, 0x01};
+ck_assert_int_eq(bytesToUInt16(buf), 1);
+
+#test test_bytesToUInt16_ffff
+uint8_t buf[2] = {0xff, 0xff};
+ck_assert_int_eq(bytesToUInt16(buf), 65535);
+
+#test test_bytesToUInt16_7fff
+uint8_t buf[2] = {0x7f, 0xff};
+ck_assert_int_eq(bytesToUInt16(buf), 32767);
+
+#test test_bytesToUInt16_8000
+uint8_t buf[2] = {0x80, 0x00};
+ck_assert_int_eq(bytesToUInt16(buf), 32768);
+
+
+
+#test test_bytesToInt24_0
+uint8_t buf[3] = {0x00, 0x00, 0x00};
+ck_assert_int_eq(bytesToInt24(buf), 0);
+
+#test test_bytesToInt24_1
+uint8_t buf[3] = {0x00, 0x00, 0x01};
+ck_assert_int_eq(bytesToInt24(buf), 256);
+
+#test test_bytesToInt24_ffffff
+uint8_t buf[3] = {0xff, 0xff, 0xff};
+ck_assert_int_eq(bytesToInt24(buf), -256);
+
+#test test_bytesToInt24_7fffff
+uint8_t buf[3] = {0x7f, 0xff, 0xff};
+ck_assert_int_eq(bytesToInt24(buf), 2147483392);
+
+#test test_bytesToInt24_800000
+uint8_t buf[3] = {0x80, 0x00, 0x00};
+ck_assert_int_eq(bytesToInt24(buf), -2147483648);
+
+
+
+#test test_bytesToInt32_0
+uint8_t buf[4] = {0x00, 0x00, 0x00, 0x00};
+ck_assert_int_eq(bytesToInt32(buf), 0);
+
+#test test_bytesToInt32_1
+uint8_t buf[4] = {0x00, 0x00, 0x00, 0x01};
+ck_assert_int_eq(bytesToInt32(buf), 1);
+
+#test test_bytesToInt32_ffffffff
+uint8_t buf[4] = {0xff, 0xff, 0xff, 0xff};
+ck_assert_int_eq(bytesToInt32(buf), -1);
+
+#test test_bytesToInt32_7fffffff
+uint8_t buf[4] = {0x7f, 0xff, 0xff, 0xff};
+ck_assert_int_eq(bytesToInt32(buf), 2147483647);
+
+#test test_bytesToInt32_80000000
+uint8_t buf[4] = {0x80, 0x00, 0x00, 0x00};
+ck_assert_int_eq(bytesToInt32(buf), -2147483648);
+
+
+
+#test test_bytesToUInt32_0
+uint8_t buf[4] = {0x00, 0x00, 0x00, 0x00};
+ck_assert_int_eq(bytesToUInt32(buf), 0);
+
+#test test_bytesToUInt32_1
+uint8_t buf[4] = {0x00, 0x00, 0x00, 0x01};
+ck_assert_int_eq(bytesToUInt32(buf), 1);
+
+#test test_bytesToUInt32_ffffffff
+uint8_t buf[4] = {0xff, 0xff, 0xff, 0xff};
+ck_assert_int_eq(bytesToUInt32(buf), 4294967295);
+
+#test test_bytesToUInt32_7fffffff
+uint8_t buf[4] = {0x7f, 0xff, 0xff, 0xff};
+ck_assert_int_eq(bytesToUInt32(buf), 2147483647);
+
+#test test_bytesToUInt32_80000000
+uint8_t buf[4] = {0x80, 0x00, 0x00, 0x00};
+ck_assert_int_eq(bytesToUInt32(buf), 2147483648);

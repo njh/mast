@@ -30,13 +30,13 @@ int mast_rtp_parse( mast_rtp_packet_t* packet )
     packet->payload_type = bitMask(packet->buffer[1], 0x7F, 0);
 
     // Bytes 3 and 4
-    packet->sequence = bytesToInt16(&packet->buffer[2]);
+    packet->sequence = bytesToUInt16(&packet->buffer[2]);
 
     // Bytes 5-8
-    packet->timestamp = bytesToInt32(&packet->buffer[4]);
+    packet->timestamp = bytesToUInt32(&packet->buffer[4]);
 
     // Bytes 9-12
-    packet->ssrc = bytesToInt32(&packet->buffer[8]);
+    packet->ssrc = bytesToUInt32(&packet->buffer[8]);
 
     // Calculate the size of the payload
     // FIXME: skip over header extension

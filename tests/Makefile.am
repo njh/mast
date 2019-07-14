@@ -3,6 +3,7 @@ AM_CFLAGS = @CHECK_CFLAGS@ \
             -I$(top_srcdir)/src
 
 check_PROGRAMS = \
+  10_check_bytestoint.cmd \
   10_check_utils.cmd \
   20_check_rtp.cmd \
   20_check_sap.cmd \
@@ -12,6 +13,11 @@ TESTS = $(check_PROGRAMS)
 
 .tc.c:
 	checkmk $< > $@ || rm -f $@
+
+10_check_bytestoint_cmd_SOURCES = \
+  10_check_bytestoint.c \
+  $(top_srcdir)/src/bytestoint.h
+10_check_bytestoint_cmd_LDADD = @CHECK_LIBS@
 
 10_check_utils_cmd_SOURCES = \
   10_check_utils.c \
