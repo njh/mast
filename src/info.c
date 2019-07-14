@@ -11,6 +11,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <signal.h>
+#include <inttypes.h>
 
 #include "mast.h"
 
@@ -112,7 +113,7 @@ int main(int argc, char *argv[])
     printf("Session Name     : %s\n", sdp.session_name );
     printf("Description      : %s\n", sdp.information );
     printf("PTP Grandmaster  : %s\n", sdp.ptp_gmid );
-    printf("RTP Clock Offset : %llu\n", sdp.clock_offset );
+    printf("RTP Clock Offset : %" PRIu64 "\n", sdp.clock_offset );
     printf("\n");
 
     printf("Payload Details\n");
@@ -134,7 +135,7 @@ int main(int argc, char *argv[])
 
     tai = (((uint64_t)packet.timestamp + sdp.clock_offset) / sdp.sample_rate );
     printf("Timestamp        : %u\n", packet.timestamp );
-    printf("TAI Seconds      : %llu\n", tai);
+    printf("TAI Seconds      : %" PRIu64 "\n", tai);
     printf("\n");
 
     mast_socket_close(&sock);
