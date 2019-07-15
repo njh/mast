@@ -1,6 +1,7 @@
 
 #include "mast.h"
 #include "hext.h"
+#include "mast-assert.h"
 
 #suite SDP
 
@@ -20,9 +21,7 @@ ck_assert_int_eq(sdp.payload_type, 0);
 ck_assert_int_eq(sdp.encoding, -1);
 ck_assert_int_eq(sdp.sample_rate, 0);
 ck_assert_int_eq(sdp.channel_count, 0);
-// FIXME: check on Travis doesn't support ck_assert_float_eq
-// ck_assert_float_eq(sdp.packet_duration, 0.0f);
-ck_assert(sdp.packet_duration == 0.0f);
+mast_assert_float_eq_3dp(sdp.packet_duration, 0.0f);
 ck_assert_str_eq(sdp.ptp_gmid, "");
 ck_assert_int_eq(sdp.clock_offset, 0);
 
@@ -43,9 +42,7 @@ ck_assert_int_eq(sdp.payload_type, 96);
 ck_assert_int_eq(sdp.encoding, MAST_ENCODING_L24);
 ck_assert_int_eq(sdp.sample_rate, 48000);
 ck_assert_int_eq(sdp.channel_count, 8);
-// FIXME: check on Travis doesn't support ck_assert_float_eq
-// ck_assert_float_eq(sdp.packet_duration, 1.0f);
-ck_assert(sdp.packet_duration == 1.0f);
+mast_assert_float_eq_3dp(sdp.packet_duration, 1.0f);
 ck_assert_str_eq(sdp.ptp_gmid, "39-A7-94-FF-FE-07-CB-D0");
 ck_assert_int_eq(sdp.clock_offset, 963214424);
 
@@ -66,9 +63,7 @@ ck_assert_int_eq(sdp.payload_type, 97);
 ck_assert_int_eq(sdp.encoding, MAST_ENCODING_L24);
 ck_assert_int_eq(sdp.sample_rate, 48000);
 ck_assert_int_eq(sdp.channel_count, 2);
-// FIXME: check on Travis doesn't support ck_assert_float_eq
-// ck_assert_float_eq(sdp.packet_duration, 1.0f);
-ck_assert(sdp.packet_duration == 1.0f);
+mast_assert_float_eq_3dp(sdp.packet_duration, 1.0f);
 ck_assert_str_eq(sdp.ptp_gmid, "00-00-00-FF-FE-00-00-00");
 ck_assert_int_eq(sdp.clock_offset, 3560866135);
 
@@ -98,9 +93,7 @@ ck_assert_int_eq(sdp.payload_type, 96);
 ck_assert_int_eq(sdp.encoding, MAST_ENCODING_L24);
 ck_assert_int_eq(sdp.sample_rate, 48000);
 ck_assert_int_eq(sdp.channel_count, 2);
-// FIXME: check on Travis doesn't support ck_assert_float_eq
-// ck_assert_float_eq(sdp.packet_duration, 0.0f);
-ck_assert(sdp.packet_duration == 0.0f);
+mast_assert_float_eq_3dp(sdp.packet_duration, 0.0f);
 ck_assert_str_eq(sdp.ptp_gmid, "54-58-10-FF-FE-62-13-45");
 ck_assert_int_eq(sdp.clock_offset, 0);
 
@@ -122,9 +115,7 @@ ck_assert_int_eq(sdp.payload_type, 96);
 ck_assert_int_eq(sdp.encoding, MAST_ENCODING_L24);
 ck_assert_int_eq(sdp.sample_rate, 48000);
 ck_assert_int_eq(sdp.channel_count, 2);
-// FIXME: check on Travis doesn't support ck_assert_float_eq
-// ck_assert_float_eq(sdp.packet_duration, 5.442f);
-ck_assert(sdp.packet_duration == 5.442f);
+mast_assert_float_eq_3dp(sdp.packet_duration, 5.442f);
 ck_assert_str_eq(sdp.ptp_gmid, "");
 ck_assert_int_eq(sdp.clock_offset, 0);
 
@@ -145,9 +136,7 @@ ck_assert_int_eq(sdp.payload_type, 10);
 ck_assert_int_eq(sdp.encoding, MAST_ENCODING_L16);
 ck_assert_int_eq(sdp.sample_rate, 44100);
 ck_assert_int_eq(sdp.channel_count, 2);
-// FIXME: check on Travis doesn't support ck_assert_float_eq
-// ck_assert_float_eq(sdp.packet_duration, 0.0f);
-ck_assert(sdp.packet_duration == 0.0f);
+mast_assert_float_eq_3dp(sdp.packet_duration, 0.0f);
 ck_assert_str_eq(sdp.ptp_gmid, "");
 ck_assert_int_eq(sdp.clock_offset, 0);
 
@@ -161,9 +150,7 @@ ck_assert_int_eq(sdp.payload_type, -1);
 ck_assert_int_eq(sdp.encoding, MAST_ENCODING_L24);
 ck_assert_int_eq(sdp.sample_rate, 48000);
 ck_assert_int_eq(sdp.channel_count, 2);
-// FIXME: check on Travis doesn't support ck_assert_float_eq
-// ck_assert_float_eq(sdp.packet_duration, 0.0f);
-ck_assert(sdp.packet_duration == 0.0f);
+mast_assert_float_eq_3dp(sdp.packet_duration, 0.0f);
 ck_assert_str_eq(sdp.ptp_gmid, "");
 ck_assert_int_eq(sdp.clock_offset, 0);
 

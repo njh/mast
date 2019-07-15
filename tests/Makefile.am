@@ -29,6 +29,7 @@ TESTS = $(check_PROGRAMS)
   20_check_rtp.c \
   hext.c \
   hext.h \
+  mast-assert.h \
   $(top_srcdir)/src/rtp.c \
   $(top_srcdir)/src/socket.c \
   $(top_srcdir)/src/utils.c \
@@ -40,6 +41,7 @@ TESTS = $(check_PROGRAMS)
   20_check_sap.c \
   hext.c \
   hext.h \
+  mast-assert.h \
   $(top_srcdir)/src/sap.c \
   $(top_srcdir)/src/socket.c \
   $(top_srcdir)/src/utils.c \
@@ -50,6 +52,7 @@ TESTS = $(check_PROGRAMS)
   20_check_sdp.c \
   hext.c \
   hext.h \
+  mast-assert.h \
   $(top_srcdir)/src/sdp.c \
   $(top_srcdir)/src/utils.c \
   $(top_srcdir)/src/mast.h
