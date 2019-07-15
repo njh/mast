@@ -1,9 +1,11 @@
 AM_CFLAGS = @CHECK_CFLAGS@ \
             -DFIXTURE_DIR=\"$(srcdir)/fixtures/\" \
             -I$(top_srcdir)/src
+LIBS = -lm @CHECK_LIBS@
 
 check_PROGRAMS = \
   10_check_bytestoint.cmd \
+  10_check_peak.cmd \
   10_check_utils.cmd \
   20_check_rtp.cmd \
   20_check_sap.cmd \
@@ -17,13 +19,20 @@ TESTS = $(check_PROGRAMS)
 10_check_bytestoint_cmd_SOURCES = \
   10_check_bytestoint.c \
   $(top_srcdir)/src/bytestoint.h
-10_check_bytestoint_cmd_LDADD = @CHECK_LIBS@
+
+10_check_peak_cmd_SOURCES = \
+  10_check_peak.c \
+  hext.c \
+  hext.h \
+  mast-assert.h \
+  $(top_srcdir)/src/peak.c \
+  $(top_srcdir)/src/utils.c \
+  $(top_srcdir)/src/mast.h
 
 10_check_utils_cmd_SOURCES = \
   10_check_utils.c \
   $(top_srcdir)/src/utils.c \
   $(top_srcdir)/src/mast.h
-10_check_utils_cmd_LDADD = @CHECK_LIBS@
 
 20_check_rtp_cmd_SOURCES = \
   20_check_rtp.c \
@@ -35,7 +44,6 @@ TESTS = $(check_PROGRAMS)
   $(top_srcdir)/src/utils.c \
   $(top_srcdir)/src/bytestoint.h \
   $(top_srcdir)/src/mast.h
-20_check_rtp_cmd_LDADD = @CHECK_LIBS@
 
 20_check_sap_cmd_SOURCES = \
   20_check_sap.c \
@@ -46,7 +54,6 @@ TESTS = $(check_PROGRAMS)
   $(top_srcdir)/src/socket.c \
   $(top_srcdir)/src/utils.c \
   $(top_srcdir)/src/mast.h
-20_check_sap_cmd_LDADD = @CHECK_LIBS@
 
 20_check_sdp_cmd_SOURCES = \
   20_check_sdp.c \
@@ -56,9 +63,10 @@ TESTS = $(check_PROGRAMS)
   $(top_srcdir)/src/sdp.c \
   $(top_srcdir)/src/utils.c \
   $(top_srcdir)/src/mast.h
-20_check_sdp_cmd_LDADD = @CHECK_LIBS@
 
 EXTRA_DIST = \
+  fixtures/audio-raw-l16-44100-2.hext \
+  fixtures/audio-raw-l24-44100-2.hext \
   fixtures/aes67-multicast-example.sdp \
   fixtures/dante-aes67-1.sdp \
   fixtures/livewire-stl.sdp \

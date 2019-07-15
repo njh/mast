@@ -19,6 +19,7 @@
 #include <netinet/in.h>
 #include <net/if.h>
 #include <netdb.h>
+#include <math.h>
 
 #include <sndfile.h>
 
@@ -36,6 +37,7 @@
 #define MAST_DEFAULT_SAMPLE_RATE    48000
 #define MAST_DEFAULT_ENCODING       MAST_ENCODING_L24
 #define MAST_DEFAULT_CHANNEL_COUNT  2
+#define MAST_MAX_CHANNEL_COUNT      64
 
 
 
@@ -94,6 +96,15 @@ typedef struct
 int mast_rtp_parse( mast_rtp_packet_t* packet );
 int mast_rtp_recv( mast_socket_t* socket, mast_rtp_packet_t* packet );
 
+
+// ------- Audio Peak measurement ---------
+
+#define MAST_POWER_TO_DB(power)    (20.0f * log10f(power))
+
+void mast_peak_init(int channels);
+float mast_peak_read_and_reset(int channel);
+void mast_peak_process_l16(uint8_t* payload, int payload_length);
+void mast_peak_process_l24(uint8_t* payload, int payload_length);
 
 
 // ------- SAP packet handling ---------

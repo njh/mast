@@ -59,6 +59,9 @@ AM_CONDITIONAL(BUILD_DOC, test x$BUILD_DOC = xYes)
 
 dnl ############## Library Checks
 
+AC_CHECK_LIB([m], [log10f])
+AC_CHECK_LIB([mx], [log10f])
+
 dnl Check for libsndfile (it is optional)
 PKG_CHECK_MODULES(SNDFILE, sndfile >= 1.0.0,
   [ HAVE_SNDFILE="Yes" ],

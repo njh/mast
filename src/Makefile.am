@@ -1,3 +1,4 @@
+LIBS = -lm
 
 bin_PROGRAMS = mast-info mast-sap-client mast-sap-server mast-recorder
 

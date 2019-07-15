@@ -1,0 +1,71 @@
+#include "mast.h"
+#include "mast-assert.h"
+#include "hext.h"
+
+#define PACKET_SIZE    (288)
+
+#suite Peak
+
+
+#test test_mast_peak_init
+mast_peak_init(2);
+ck_assert(isinf(mast_peak_read_and_reset(0)));
+ck_assert(isinf(mast_peak_read_and_reset(1)));
+
+
+
+#test test_single_stereo_peak_l16
+uint8_t buffer[17640];
+int len = hext_filename_to_buffer(FIXTURE_DIR "audio-raw-l16-44100-2.hext", buffer, sizeof(buffer));
+
+mast_peak_init(2);
+mast_peak_process_l16(buffer, len);
+
+mast_assert_float_eq_3dp(mast_peak_read_and_reset(0), -13.420f);
+mast_assert_float_eq_3dp(mast_peak_read_and_reset(1), -13.122f);
+ck_assert(isinf(mast_peak_read_and_reset(0)));
+ck_assert(isinf(mast_peak_read_and_reset(1)));
+
+
+
+#test test_single_stereo_peak_l24
+uint8_t buffer[26460];
+int len = hext_filename_to_buffer(FIXTURE_DIR "audio-raw-l24-44100-2.hext", buffer, sizeof(buffer));
+
+mast_peak_init(2);
+mast_peak_process_l24(buffer, len);
+
+mast_assert_float_eq_3dp(mast_peak_read_and_reset(0), -13.420f);
+mast_assert_float_eq_3dp(mast_peak_read_and_reset(1), -13.123f);
+ck_assert(isinf(mast_peak_read_and_reset(0)));
+ck_assert(isinf(mast_peak_read_and_reset(1)));
+
+
+
+#test test_single_stereo_peak_l16_multi_part
+uint8_t buffer[26460];
+int len = hext_filename_to_buffer(FIXTURE_DIR "audio-raw-l16-44100-2.hext", buffer, sizeof(buffer));
+int i;
+
+mast_peak_init(2);
+for (i=0; i < (len - PACKET_SIZE); i += PACKET_SIZE) {
+	mast_peak_process_l16(&buffer[i], PACKET_SIZE);
+}
+
+mast_assert_float_eq_3dp(mast_peak_read_and_reset(0), -13.420f);
+mast_assert_float_eq_3dp(mast_peak_read_and_reset(1), -13.122f);
+
+
+
+#test test_single_stereo_peak_l24_multi_part
+uint8_t buffer[26460];
+int len = hext_filename_to_buffer(FIXTURE_DIR "audio-raw-l24-44100-2.hext", buffer, sizeof(buffer));
+int i;
+
+mast_peak_init(2);
+for (i=0; i < (len - PACKET_SIZE); i += PACKET_SIZE) {
+	mast_peak_process_l24(&buffer[i], PACKET_SIZE);
+}
+
+mast_assert_float_eq_3dp(mast_peak_read_and_reset(0), -13.420f);
+mast_assert_float_eq_3dp(mast_peak_read_and_reset(1), -13.123f);
