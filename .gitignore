@@ -40,6 +40,7 @@ build/
 
 # Built binaries
 /src/mast-info
+/src/mast-meter
 /src/mast-sap-client
 /src/mast-sap-server
 /src/mast-recorder

@@ -1,9 +1,23 @@
 LIBS = -lm
 
-bin_PROGRAMS = mast-info mast-sap-client mast-sap-server mast-recorder
+bin_PROGRAMS = \
+    mast-info \
+    mast-meter \
+    mast-sap-client \
+    mast-sap-server \
+    mast-recorder
 
 mast_info_SOURCES = \
 	info.c \
+	utils.c \
+	rtp.c \
+	socket.c \
+	sdp.c \
+	mast.h
+
+mast_meter_SOURCES = \
+	meter.c \
+	peak.c \
 	utils.c \
 	rtp.c \
 	socket.c \
