@@ -146,7 +146,7 @@ typedef struct
     int encoding;              // a=rtpmap
     int sample_rate;           // a=rtpmap
     int channel_count;         // a=rtpmap
-    float packet_duration;     // a=ptime
+    double packet_duration;    // a=ptime
 
     char ptp_gmid[24];         // a=ts-refclk
     uint64_t clock_offset;     // a=mediaclk
