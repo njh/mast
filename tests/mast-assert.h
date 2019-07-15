@@ -18,9 +18,9 @@
 
 // Assert that two floating point numbers are the same to 3 decimal places
 #define mast_assert_float_eq_3dp(X, Y) do { \
-  float _ck_x = (X); \
-  float _ck_y = (Y); \
-  ck_assert_msg((int)(_ck_x*1000) == (int)(_ck_y*1000), "Assertion '%s' failed: %s == %f, %s == %f", #X" == "#Y, #X, _ck_x, #Y, _ck_y); \
+  long _ck_x = (X) * 1000; \
+  long _ck_y = (Y) * 1000; \
+  ck_assert_msg(_ck_x == _ck_y, "Assertion '%s' failed: %s == %ld, %s == %ld", #X" == "#Y, #X, _ck_x, #Y, _ck_y); \
 } while (0)
 
 #endif
