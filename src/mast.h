@@ -103,6 +103,7 @@ int mast_rtp_recv( mast_socket_t* socket, mast_rtp_packet_t* packet );
 
 void mast_peak_init(int channels);
 float mast_peak_read_and_reset(int channel);
+float mast_peak_read_and_reset_all();
 void mast_peak_process_l16(uint8_t* payload, int payload_length);
 void mast_peak_process_l24(uint8_t* payload, int payload_length);
 

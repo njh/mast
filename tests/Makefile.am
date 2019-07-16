@@ -25,6 +25,7 @@ TESTS = $(check_PROGRAMS)
   hext.c \
   hext.h \
   mast-assert.h \
+  $(top_srcdir)/src/bytestoint.h \
   $(top_srcdir)/src/peak.c \
   $(top_srcdir)/src/utils.c \
   $(top_srcdir)/src/mast.h

@@ -38,6 +38,21 @@ float mast_peak_read_and_reset(int channel)
     return value;
 }
 
+float mast_peak_read_and_reset_all()
+{
+    float peak = -INFINITY;
+    int channel;
+
+    for(channel=0; channel<channel_count; channel++) {
+        if (peak < peaks[channel]) {
+            peak = peaks[channel];
+        }
+        peaks[channel] = -INFINITY;
+    }
+
+    return peak;
+}
+
 void mast_peak_process_l16(uint8_t* payload, int payload_length)
 {
     int16_t peaks_int[MAST_MAX_CHANNEL_COUNT];
