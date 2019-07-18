@@ -146,7 +146,7 @@ int mast_sap_send_sdp_string(mast_socket_t *sock, const char* sdp, uint8_t messa
 
 typedef struct
 {
-    char address[NI_MAXHOST];  // c= 
+    char address[NI_MAXHOST];  // c=
     char port[NI_MAXSERV];     // m=
 
     char session_id[256];      // o=
