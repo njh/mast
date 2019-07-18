@@ -7,60 +7,47 @@ MAST - Multicast Audio Streaming Toolkit
 What is MAST ?
 --------------
 
-MAST is an audio streaming broadcaster and client using RTP over
-IPv4 and IPv6 Multicast/Unicast.
+MAST is a set of command line tools for working with multicast Audio over IP streams that use the Real Time Protocol (RTP).
+It can be used to interoperate with audio streams that are compatible with the [AES67] standard.
 
-Unlike VAT and RAT, which are designed primerily for audio conferencing, MAST
-is designed to be used for audio distribution and broadcast. It is currently limited 
-to recieving a single audio source, unlike RAT which can mix serveral sources.
-
-It supports many of the audio payload types in the Audio-visual Profile (RTP/AVP).
-
-MAST is licenced under the GNU General Public License, see the file COPYING for details.
+MAST is licenced under the permissive MIT License, see the file [LICENSE.md](/LICENSE.md) for details.
 
 
 
 Tools in MAST
 -------------
 
-| Tool           | Description                                         |
-|----------------|-----------------------------------------------------|
-| mast_info      | Display information about first RTP packet received |
-| mast_cast      | Live Audio broadcaster that sources audio from JACK |
-| mast_filecast  | Audio file broadcaster                              |
-| mast_record    | Record/archive audio stream to audio file           |
-| mast_rawcast   | Directly broadcast a previously encoded audio file  |
-| mast_rawrecord | Record/archive raw streams directly to disk         |
+MAST aims to follow the [Unix Philosophy] of "_programs that do one thing and do it well_".
+
+| Tool            | Description                                         |
+|-----------------|-----------------------------------------------------|
+| mast-info       | Display information about a RTP stream              |
+| mast-recorder   | Record/archive audio stream to an audio file        |
+| mast-meter      | Programme Peak Meter for checking audio levels      |
+| mast-sap-client | Listen for [SAP] packets and write them to disk     |
+| mast-sap-server | Periodically transmit [SAP] packets from SDP files  |
 
 
-Supported Payloads
-------------------
+Supported Payload Types
+-----------------------
 
-| PT    | Clock Rate | Channels | Encoding Name             |
-|-------|------------|----------|---------------------------|
-| 0     |  8000Hz    | Mono     | u-law encoded             |
-| 3     |  8000Hz    | Mono     | GSM                       |
-| 7     |  8000Hz    | Mono     | LPC                       |
-| 8     |  8000Hz    | Mono     | A-law encoded             |
-| 10    | 44.1kHz    | Stereo   | Raw 16-bit linear audio   |
-| 11    | 44.1kHz    | Mono     | Raw 16-bit linear audio   |
-| 14    | -          | -        | MPEG Audio (encoder only) |
+MAST supports a number of different payload types from the [RTP audio video profile]:
+
+* [L16] - 16-bit linear PCM
+* [L24] - 24-bit linear PCM
+
+It is intended that additional payload types will be added back in the future.
 
 
-Details are here:
-http://www.iana.org/assignments/rtp-parameters
+What happened to MAST v1?
+-------------------------
+
+MAST v2 is a re-write of [MAST v1](https://github.com/njh/mast/tree/v1), with a focus on high quality linear audio on local area networks, rather distribution over the Internet.
 
 
-
-
-Current Limitations
--------------------
-
-- No mixer support (can only recieve single source).
-- No sample rate conversion support.
-- No upmixing/downmixing support.
-- No clock skew error correction.
-- mast_rawcast currently only supports GSM and MPEG Audio.
-- due to problems with oRTP, only 8000Hz streams can be recieved.
-
-
+[AES67]: https://en.wikipedia.org/wiki/AES67
+[SAP]:   https://en.wikipedia.org/wiki/Session_Announcement_Protocol
+[L16]:   https://www.ietf.org/go/rfc4856
+[L24]:   https://www.iana.org/go/rfc3190
+[RTP audio video profile]: https://en.wikipedia.org/wiki/RTP_audio_video_profile
+[Unix Philosophy]: https://en.wikipedia.org/wiki/Unix_philosophy
