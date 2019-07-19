@@ -210,7 +210,7 @@ static int _choose_best_interface(sa_family_t family, char* ifname)
 
         // Found one!
         retval = 0;
-        strncpy(ifname, cur->ifa_name, IFNAMSIZ);
+        strncpy(ifname, cur->ifa_name, IFNAMSIZ-1);
         break;
     }
 

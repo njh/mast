@@ -28,7 +28,7 @@ static void sdp_origin_parse(mast_sdp_t *sdp, char* line, int line_num)
     addr = strsep(&line, " ");       // 6: Address
 
     if (session_id) {
-        strcpy(sdp->session_id, session_id);
+        strncpy(sdp->session_id, session_id, sizeof(sdp->session_id)-1);
     } else {
         mast_error("Failed to parse session id on line %d", line_num);
     }
@@ -42,7 +42,7 @@ static void sdp_origin_parse(mast_sdp_t *sdp, char* line, int line_num)
     }
 
     if (addr) {
-        strcpy(sdp->session_origin, addr);
+        strncpy(sdp->session_origin, addr, sizeof(sdp->session_origin)-1);
     } else {
         mast_error("Failed to parse origin address on line %d", line_num);
     }
@@ -130,7 +130,7 @@ static void sdp_attribute_parse(mast_sdp_t *sdp, char* line, int line_num)
             }
 
             if (ptp_gmid) {
-                strcpy(sdp->ptp_gmid, ptp_gmid);
+                strncpy(sdp->ptp_gmid, ptp_gmid, sizeof(sdp->ptp_gmid)-1);
             }
 
             if (ptp_domain && strcmp(ptp_domain, "0") != 0) {
@@ -190,11 +190,11 @@ static int sdp_parse_line(char* line, mast_sdp_t* sdp, int line_num)
         break;
 
     case 's':
-        strcpy(sdp->session_name, &line[2]);
+        strncpy(sdp->session_name, &line[2], sizeof(sdp->session_name)-1);
         break;
 
     case 'i':
-        strcpy(sdp->information, &line[2]);
+        strncpy(sdp->information, &line[2], sizeof(sdp->information)-1);
         break;
 
     case 'c':
