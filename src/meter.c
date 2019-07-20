@@ -314,7 +314,7 @@ int main(int argc, char *argv[])
 
     while(running) {
         mast_rtp_packet_t packet;
-        unsigned int samples;
+        unsigned int frames;
 
         int result = mast_rtp_recv(&sock, &packet);
         if (result < 0) break;
@@ -334,8 +334,8 @@ int main(int argc, char *argv[])
 
         mast_peak_process_l24(packet.payload, packet.payload_length);
 
-        samples = ((packet.payload_length / 3) / sdp.channel_count);
-        time += (samples * 1000) / sdp.sample_rate;
+        frames = ((packet.payload_length / 3) / sdp.channel_count);
+        time += (frames * 1000) / sdp.sample_rate;
         if (time > period) {
             display_meter(sdp.channel_count);
             time = 0;
