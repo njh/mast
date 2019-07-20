@@ -14,6 +14,7 @@
 
 #include "mast.h"
 
+#define SYNC_TO_DISC_PERIOD  (10)
 
 // Globals
 const char * ifname = NULL;
@@ -100,9 +101,22 @@ static void parse_opts(int argc, char **argv)
     }
 }
 
+static int sync_sndfile(SNDFILE *sndfile)
+{
+    // Write the header to file, so other processes can read it
+    sf_command(sndfile, SFC_UPDATE_HEADER_NOW, NULL, 0);
+
+    // Force sync to disk
+    sf_write_sync(sndfile);
+
+    return 0;
+}
+
+
 int main(int argc, char *argv[])
 {
     SNDFILE * file = NULL;
+    unsigned int time = 0;
     mast_socket_t sock;
     int result;
 
@@ -123,6 +137,7 @@ int main(int argc, char *argv[])
 
     while(running) {
         mast_rtp_packet_t packet;
+        unsigned int frames;
 
         int result = mast_rtp_recv(&sock, &packet);
         if (result < 0) break;
@@ -145,6 +160,14 @@ int main(int argc, char *argv[])
             mast_writer_write(file, packet.payload, packet.payload_length);
         } else {
             mast_error("Failed to open output file");
+        }
+
+        frames = (packet.payload_length / 3) / sdp.channel_count;
+        time += (frames * 1000) / sdp.sample_rate;
+        if (time > (SYNC_TO_DISC_PERIOD * 1000)) {
+            mast_debug("Syncing file to disc");
+            sync_sndfile(file);
+            time = 0;
         }
     }
 
