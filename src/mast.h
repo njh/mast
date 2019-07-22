@@ -67,36 +67,6 @@ int mast_socket_send(mast_socket_t* sock, void* data, unsigned int len);
 void mast_socket_close(mast_socket_t* sock);
 
 
-// ------- RTP packet handling ---------
-
-#define RTP_MAX_PAYLOAD     (1440)
-#define RTP_HEADER_LENGTH   (12)
-
-typedef struct
-{
-    uint8_t version;
-    uint8_t padding;
-    uint8_t extension;
-    uint8_t csrc_count;
-    uint8_t marker;
-    uint8_t payload_type;
-
-    uint16_t sequence;
-    uint32_t timestamp;
-    uint32_t ssrc;
-
-    uint16_t payload_length;
-    uint8_t *payload;
-
-    uint16_t length;
-    uint8_t buffer[1500];
-
-} mast_rtp_packet_t;
-
-int mast_rtp_parse( mast_rtp_packet_t* packet );
-int mast_rtp_recv( mast_socket_t* socket, mast_rtp_packet_t* packet );
-
-
 // ------- Audio Peak measurement ---------
 
 #define MAST_POWER_TO_DB(power)    (20.0f * log10f(power))
@@ -176,6 +146,38 @@ void mast_sdp_set_port(mast_sdp_t *sdp, const char *port);
 void mast_sdp_set_address(mast_sdp_t *sdp, const char *address);
 void mast_sdp_set_encoding(mast_sdp_t *sdp, int encoding);
 void mast_sdp_set_encoding_name(mast_sdp_t *sdp, const char* encoding_name);
+
+
+
+// ------- RTP packet handling ---------
+
+#define RTP_MAX_PAYLOAD     (1440)
+#define RTP_HEADER_LENGTH   (12)
+
+typedef struct
+{
+    uint8_t version;
+    uint8_t padding;
+    uint8_t extension;
+    uint8_t csrc_count;
+    uint8_t marker;
+    uint8_t payload_type;
+
+    uint16_t sequence;
+    uint32_t timestamp;
+    uint32_t ssrc;
+
+    uint16_t payload_length;
+    uint8_t *payload;
+
+    uint16_t length;
+    uint8_t buffer[1500];
+
+} mast_rtp_packet_t;
+
+int mast_rtp_parse( mast_rtp_packet_t* packet );
+int mast_rtp_recv( mast_socket_t* socket, mast_rtp_packet_t* packet );
+
 
 
 // ------- Audio File Writing ---------
