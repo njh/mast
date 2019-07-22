@@ -112,7 +112,7 @@ static void sdp_attribute_parse(mast_sdp_t *sdp, char* line, int line_num)
             char *sample_rate = strsep(&line, "/");
             char *channel_count = strsep(&line, "/");
 
-            if (encoding) sdp->encoding = mast_encoding_lookup(encoding);
+            if (encoding) mast_sdp_set_encoding_name(sdp, encoding);
             if (sample_rate) sdp->sample_rate = atoi(sample_rate);
             if (channel_count) sdp->channel_count = atoi(channel_count);
         }
@@ -280,8 +280,8 @@ void mast_sdp_set_defaults(mast_sdp_t *sdp)
     mast_sdp_set_port(sdp, MAST_DEFAULT_PORT);
 
     sdp->payload_type = -1;
+    mast_sdp_set_encoding(sdp, MAST_DEFAULT_ENCODING);
     sdp->sample_rate = MAST_DEFAULT_SAMPLE_RATE;
-    sdp->encoding = MAST_DEFAULT_ENCODING;
     sdp->channel_count = MAST_DEFAULT_CHANNEL_COUNT;
 }
 
@@ -308,14 +308,48 @@ void mast_sdp_set_payload_type(mast_sdp_t *sdp, int payload_type)
     sdp->payload_type = payload_type;
 
     if (payload_type == 10) {
-        sdp->encoding = MAST_ENCODING_L16;
+        mast_sdp_set_encoding(sdp, MAST_ENCODING_L16);
         sdp->sample_rate = 44100;
         sdp->channel_count = 2;
     } else if (payload_type == 11) {
-        sdp->encoding = MAST_ENCODING_L16;
+        mast_sdp_set_encoding(sdp, MAST_ENCODING_L16);
         sdp->sample_rate = 44100;
         sdp->channel_count = 1;
     } else if (payload_type < 96) {
         mast_error("Unsupported static payload type: %d", payload_type);
+    }
+}
+
+void mast_sdp_set_encoding(mast_sdp_t *sdp, int encoding)
+{
+    sdp->encoding = encoding;
+
+    switch(encoding) {
+    case MAST_ENCODING_L8:
+        sdp->sample_size = 8;
+        break;
+    case MAST_ENCODING_L16:
+    case MAST_ENCODING_PCMU:
+    case MAST_ENCODING_PCMA:
+    case MAST_ENCODING_G722:
+    case MAST_ENCODING_GSM:
+        sdp->sample_size = 16;
+        break;
+    case MAST_ENCODING_L24:
+        sdp->sample_size = 24;
+        break;
+    default:
+        sdp->sample_size = 0;
+        sdp->encoding = -1;
+        break;
+    }
+}
+
+void mast_sdp_set_encoding_name(mast_sdp_t *sdp, const char* encoding_name)
+{
+    int encoding = mast_encoding_lookup(encoding_name);
+    mast_sdp_set_encoding(sdp, encoding);
+    if (encoding < 0) {
+        mast_error("Unsupported encoding: %s", encoding_name);
     }
 }

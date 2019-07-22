@@ -156,6 +156,7 @@ typedef struct
 
     int payload_type;          // m=
     int encoding;              // a=rtpmap
+    int sample_size;           // Size of the samples based on the encoding (16/24)
     int sample_rate;           // a=rtpmap
     int channel_count;         // a=rtpmap
     double packet_duration;    // a=ptime
@@ -172,6 +173,8 @@ void mast_sdp_set_defaults(mast_sdp_t *sdp);
 void mast_sdp_set_payload_type(mast_sdp_t *sdp, int payload_type);
 void mast_sdp_set_port(mast_sdp_t *sdp, const char *port);
 void mast_sdp_set_address(mast_sdp_t *sdp, const char *address);
+void mast_sdp_set_encoding(mast_sdp_t *sdp, int encoding);
+void mast_sdp_set_encoding_name(mast_sdp_t *sdp, const char* encoding_name);
 
 
 // ------- Audio File Writing ---------
