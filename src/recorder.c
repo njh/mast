@@ -137,7 +137,6 @@ int main(int argc, char *argv[])
 
     while(running) {
         mast_rtp_packet_t packet;
-        unsigned int frames;
 
         int result = mast_rtp_recv(&sock, &packet);
         if (result < 0) break;
@@ -162,9 +161,8 @@ int main(int argc, char *argv[])
             mast_error("Failed to open output file");
         }
 
-        frames = (packet.payload_length / 3) / sdp.channel_count;
-        time += (frames * 1000) / sdp.sample_rate;
-        if (time > (SYNC_TO_DISC_PERIOD * 1000)) {
+        time += mast_rtp_packet_duration(&packet, &sdp);
+        if (time > (SYNC_TO_DISC_PERIOD * 1000000)) {
             mast_debug("Syncing file to disc");
             sync_sndfile(file);
             time = 0;

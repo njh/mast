@@ -28,3 +28,11 @@ ck_assert_int_eq(packet.payload[0], 0xf8);
 ck_assert_int_eq(packet.payload[1], 0x88);
 ck_assert_int_eq(packet.payload[2], 0x63);
 ck_assert_int_eq(packet.payload[3], 0xf8);
+
+
+#test test_packet_duration
+mast_rtp_packet_t packet;
+mast_sdp_t sdp;
+mast_sdp_set_defaults(&sdp);  // L24/48000/2
+packet.payload_length = 288;
+ck_assert_int_eq(mast_rtp_packet_duration(&packet, &sdp), 1000);

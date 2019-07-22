@@ -42,6 +42,7 @@ TESTS = $(check_PROGRAMS)
   mast-assert.h \
   $(top_srcdir)/src/rtp.c \
   $(top_srcdir)/src/socket.c \
+  $(top_srcdir)/src/sdp.c \
   $(top_srcdir)/src/utils.c \
   $(top_srcdir)/src/bytestoint.h \
   $(top_srcdir)/src/mast.h

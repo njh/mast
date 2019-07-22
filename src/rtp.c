@@ -62,3 +62,9 @@ int mast_rtp_recv( mast_socket_t* socket, mast_rtp_packet_t* packet )
 
     return mast_rtp_parse(packet);
 }
+
+int mast_rtp_packet_duration(mast_rtp_packet_t* packet, mast_sdp_t* sdp)
+{
+    int frames = ((packet->payload_length / (sdp->sample_size / 8)) / sdp->channel_count);
+    return (frames * 1000000) / sdp->sample_rate;
+}

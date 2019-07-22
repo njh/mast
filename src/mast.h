@@ -178,6 +178,9 @@ typedef struct
 int mast_rtp_parse( mast_rtp_packet_t* packet );
 int mast_rtp_recv( mast_socket_t* socket, mast_rtp_packet_t* packet );
 
+// Return the duration of a packet in microseconds
+int mast_rtp_packet_duration(mast_rtp_packet_t* packet, mast_sdp_t* sdp);
+
 
 
 // ------- Audio File Writing ---------
