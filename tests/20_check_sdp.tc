@@ -10,7 +10,7 @@ mast_sdp_t sdp;
 int result;
 
 result = mast_sdp_parse_string("v=0\n", &sdp);
-ck_assert_uint_eq(result, 0);
+ck_assert_uint_eq(result, -1);
 ck_assert_str_eq(sdp.address, "");
 ck_assert_str_eq(sdp.port, "");
 ck_assert_str_eq(sdp.session_id, "");
@@ -160,6 +160,25 @@ ck_assert_int_eq(sdp.channel_count, 2);
 mast_assert_float_eq_3dp(sdp.packet_duration, 0.0f);
 ck_assert_str_eq(sdp.ptp_gmid, "");
 ck_assert_int_eq(sdp.clock_offset, 0);
+
+#test test_is_valid
+mast_sdp_t sdp;
+mast_sdp_set_defaults(&sdp);
+mast_sdp_set_address(&sdp, "239.65.125.63");
+ck_assert(mast_sdp_is_valid(&sdp) == TRUE);
+
+#test test_is_valid_no_address
+mast_sdp_t sdp;
+mast_sdp_set_defaults(&sdp);
+ck_assert(mast_sdp_is_valid(&sdp) == FALSE);
+
+#test test_is_valid_no_encoding
+mast_sdp_t sdp;
+mast_sdp_set_defaults(&sdp);
+mast_sdp_set_address(&sdp, "239.65.125.63");
+mast_sdp_set_encoding(&sdp, -1);
+ck_assert(mast_sdp_is_valid(&sdp) == FALSE);
+
 
 #test test_set_address
 mast_sdp_t sdp;

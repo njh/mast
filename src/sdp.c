@@ -269,8 +269,12 @@ int mast_sdp_parse_string(const char* str, mast_sdp_t* sdp)
         }
     }
 
-    // Success
-    return 0;
+    if (mast_sdp_is_valid(sdp)) {
+        // Success
+        return 0;
+    } else {
+        return -1;
+    }
 }
 
 void mast_sdp_set_defaults(mast_sdp_t *sdp)
@@ -283,6 +287,20 @@ void mast_sdp_set_defaults(mast_sdp_t *sdp)
     mast_sdp_set_encoding(sdp, MAST_DEFAULT_ENCODING);
     sdp->sample_rate = MAST_DEFAULT_SAMPLE_RATE;
     sdp->channel_count = MAST_DEFAULT_CHANNEL_COUNT;
+}
+
+int mast_sdp_is_valid(mast_sdp_t *sdp)
+{
+    if (strlen(sdp->address) == 0 ||
+            strlen(sdp->port) == 0 ||
+            sdp->encoding == -1 ||
+            sdp->sample_size == 0 ||
+            sdp->sample_rate == 0 ||
+            sdp->channel_count == 0) {
+        return FALSE;
+    } else {
+        return TRUE;
+    }
 }
 
 void mast_sdp_set_address(mast_sdp_t *sdp, const char *address)
