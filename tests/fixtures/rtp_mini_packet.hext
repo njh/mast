@@ -1,5 +1,5 @@
-80           # Version, padding, extension, CSRC count
-61           # Marker and payload type
+80           # Flags V=2, P=0, E=0, CC=0
+61           # M=0, PT=97
 ee14         # Sequence
 a2 32 12 4c  # Timestamp
 e9 f8 d8 33  # SSRC

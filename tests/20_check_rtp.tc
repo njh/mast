@@ -6,7 +6,7 @@
 
 #suite RTP Packet
 
-#test test_parse
+#test test_parse_mini
 mast_rtp_packet_t packet;
 packet.length = hext_filename_to_buffer(FIXTURE_DIR "rtp_mini_packet.hext", packet.buffer, sizeof(packet.buffer));
 ck_assert_int_eq(packet.length, 24);
@@ -30,9 +30,34 @@ ck_assert_int_eq(packet.payload[2], 0x63);
 ck_assert_int_eq(packet.payload[3], 0xf8);
 
 
+#test test_parse_l24_48000_2_1ms
+mast_rtp_packet_t packet;
+packet.length = hext_filename_to_buffer(FIXTURE_DIR "rtp_l24-48000-2_1ms.hext", packet.buffer, sizeof(packet.buffer));
+ck_assert_int_eq(packet.length, 300);
+
+mast_rtp_parse(&packet);
+ck_assert_int_eq(packet.version, 2);
+ck_assert_int_eq(packet.padding, 0);
+ck_assert_int_eq(packet.extension, 0);
+ck_assert_int_eq(packet.csrc_count, 0);
+ck_assert_int_eq(packet.marker, 0);
+ck_assert_int_eq(packet.payload_type, 97);
+
+ck_assert_int_eq(packet.sequence, 46106);
+ck_assert_int_eq(packet.timestamp, 435907792);
+ck_assert_int_eq(packet.ssrc, 0x08c5b98b);
+
+ck_assert_int_eq(packet.payload_length, 288);
+ck_assert_int_eq(packet.payload[0], 0x07);
+ck_assert_int_eq(packet.payload[1], 0x9d);
+ck_assert_int_eq(packet.payload[2], 0x4e);
+
+
 #test test_packet_duration
 mast_rtp_packet_t packet;
 mast_sdp_t sdp;
 mast_sdp_set_defaults(&sdp);  // L24/48000/2
-packet.payload_length = 288;
+
+packet.length = hext_filename_to_buffer(FIXTURE_DIR "rtp_l24-48000-2_1ms.hext", packet.buffer, sizeof(packet.buffer));
+mast_rtp_parse(&packet);
 ck_assert_int_eq(mast_rtp_packet_duration(&packet, &sdp), 1000);

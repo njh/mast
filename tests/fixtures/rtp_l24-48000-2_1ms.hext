@@ -1,0 +1,20 @@
+80           # Flags V=2, P=0, E=0, CC=0
+61           # M=0, PT=97
+b41a         # Sequence
+19 fb 6c d0  # Timestamp
+08 c5 b9 8b  # SSRC
+
+# 288 bytes of payload
+# 1 frame = 2 channels * 24 bits
+07 9d 4e 07 ce 4a 04 e0 82 05 01 04 00 f1 d0 00 f9 cb fe ec 2e fe e1 a4
+02 b9 82 02 c3 2f 0a df 22 0b 1f 75 0e ea 7a 0f 49 ff 09 83 30 09 ca b9
+ff 8e 53 ff 96 ef f9 7c a8 f9 51 34 fa 9d 7e fa 6f e9 00 ce 8d 00 c6 96
+07 07 62 07 2e e6 08 44 15 08 7b df 03 f9 34 04 18 d5 fe e1 a2 fe df 72
+fd 92 75 fd 7e f5 ff 86 aa ff 7c 58 01 77 e2 01 7d 18 02 9e e8 02 ad 60
+03 ca 07 03 e3 6c 03 b6 af 03 ce 7d 00 ec 44 00 f3 16 fe 05 2c fd f9 6e
+fe f5 0d fe e9 fb 02 12 8b 02 1a 7e 01 fa e1 02 05 0a fe 7c 1b fe 74 6b
+fd 08 fe fc f6 1c ff 87 c0 ff 7e 32 01 c8 0f 01 cf 45 01 93 13 01 9d 31
+00 90 b4 00 95 ed fe 03 6c fd f7 21 f8 6d 3a f8 39 fd f3 9f 0e f3 4c b8
+f4 3a 9a f3 e5 9f f8 f7 f8 f8 bc da fe 27 92 fe 14 a4 01 51 63 01 58 f8
+ff 83 b1 ff 84 6a f9 29 ae f9 01 13 f4 2a 0d f3 dd 7b f3 4d 35 f2 f5 05
+f3 99 6b f3 3d fb f5 47 48 f4 fb 49 fb 57 54 fb 33 af 02 a4 a1 02 af 29
