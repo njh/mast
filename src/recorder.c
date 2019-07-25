@@ -18,7 +18,7 @@
 
 // Globals
 const char * ifname = NULL;
-const char* filename = "recording.wav";
+const char* filename = "recording-%Y%m%d-%H%M%S.wav";
 mast_sdp_t sdp;
 
 static void usage()

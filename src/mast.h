@@ -39,6 +39,11 @@
 #define MAST_DEFAULT_CHANNEL_COUNT  2
 #define MAST_MAX_CHANNEL_COUNT      64
 
+#ifdef PATH_MAX
+#define MAST_MAX_FILEPATH_LEN       PATH_MAX
+#else
+#define MAST_MAX_FILEPATH_LEN       (4096)
+#endif
 
 
 // ------- Network Sockets ---------
@@ -185,7 +190,7 @@ int mast_rtp_packet_duration(mast_rtp_packet_t* packet, mast_sdp_t* sdp);
 
 // ------- Audio File Writing ---------
 
-SNDFILE *mast_writer_open(const char* path, mast_sdp_t *sdp);
+SNDFILE *mast_writer_open(const char* format, mast_sdp_t *sdp);
 void mast_writer_write(SNDFILE *file, uint8_t* payload, int payload_length);
 
 

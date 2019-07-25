@@ -14,11 +14,25 @@
 
 
 
-SNDFILE * mast_writer_open(const char* path, mast_sdp_t *sdp)
+SNDFILE * mast_writer_open(const char* format, mast_sdp_t *sdp)
 {
+    time_t now = time(0);
+    struct tm tstruct;
+    char filepath[MAST_MAX_FILEPATH_LEN];
     SF_INFO sfinfo;
 
-    mast_info("Opening output file: %s", path);
+    // FIXME: use audio steam media clock instead
+    now = time(0);
+    localtime_r(&now, &tstruct);
+
+    // Append custom filepath to end of the root directory path
+    // Ensure custom filepath is constructed OK by checking number of characters appended
+    // This also catches the possible error that an empty format string has been supplied
+    if(strftime(filepath, MAST_MAX_FILEPATH_LEN, format, &tstruct) <= 0)
+        return NULL;
+
+
+    mast_info("Opening output file: %s", filepath);
 
     sfinfo.format = SF_FORMAT_WAV | SF_ENDIAN_FILE;
     sfinfo.samplerate = sdp->sample_rate;
@@ -43,7 +57,7 @@ SNDFILE * mast_writer_open(const char* path, mast_sdp_t *sdp)
         return NULL;
     }
 
-    return sf_open(path, SFM_WRITE, &sfinfo);
+    return sf_open(filepath, SFM_WRITE, &sfinfo);
 }
 
 void mast_writer_write(SNDFILE *file, uint8_t* payload, int payload_length)
