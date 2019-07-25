@@ -7,6 +7,7 @@
 */
 
 #include <stdlib.h>
+#include <time.h>
 #include <sndfile.h>
 
 #include "mast.h"
