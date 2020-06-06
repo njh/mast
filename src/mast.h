@@ -137,6 +137,7 @@ typedef struct
     double packet_duration;    // a=ptime
 
     char ptp_gmid[24];         // a=ts-refclk
+    unsigned int ptp_domain;   // a=ts-refclk
     uint64_t clock_offset;     // a=mediaclk
 } mast_sdp_t;
 
