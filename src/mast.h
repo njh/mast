@@ -159,6 +159,7 @@ void mast_sdp_set_encoding_name(mast_sdp_t *sdp, const char* encoding_name);
 
 #define RTP_MAX_PAYLOAD     (1440)
 #define RTP_HEADER_LENGTH   (12)
+#define RTP_VERSION	    (2)
 
 typedef struct
 {
