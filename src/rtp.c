@@ -17,7 +17,7 @@
 
 int mast_rtp_parse( mast_rtp_packet_t* packet )
 {
-    int header_len = RTP_HEADER_LENGTH;
+    size_t header_len = RTP_HEADER_LENGTH;
 
     // Byte 1
     packet->version = bitMask(packet->buffer[0], 0x02, 6);
@@ -39,12 +39,37 @@ int mast_rtp_parse( mast_rtp_packet_t* packet )
     packet->ssrc = bytesToUInt32(&packet->buffer[8]);
 
     // Calculate the size of the payload
-    // FIXME: skip over header extension
     header_len += (packet->csrc_count * 4);
+
+    if (packet->extension) {
+	uint16_t ext_header_len;
+
+	if (packet->length < header_len + 4)
+	    return -1;
+
+	/* ignore extension header ID at buffer + header_len */
+	ext_header_len = bytesToUInt16(&packet->buffer[header_len + 2]);
+	header_len += 4 + (ext_header_len * 4);
+    }
+
+    if (packet->length < header_len)
+	return -1;
+
     packet->payload_length = packet->length - header_len;
     packet->payload = packet->buffer + header_len;
 
-    // FIXME: Remove padding from payload_length
+    if (packet->padding) {
+	uint8_t padding_len;
+
+	if (packet->payload_length < 1)
+	    return -1;
+
+	padding_len = packet->payload[packet->payload_length - 1];
+	if (padding_len < 1 || padding_len > packet->payload_length)
+	    return -1;
+
+	packet->payload_length -= padding_len;
+    }
 
     // Success
     return 0;

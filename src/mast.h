@@ -137,6 +137,7 @@ typedef struct
     double packet_duration;    // a=ptime
 
     char ptp_gmid[24];         // a=ts-refclk
+    unsigned int ptp_domain;   // a=ts-refclk
     uint64_t clock_offset;     // a=mediaclk
 } mast_sdp_t;
 
@@ -158,6 +159,7 @@ void mast_sdp_set_encoding_name(mast_sdp_t *sdp, const char* encoding_name);
 
 #define RTP_MAX_PAYLOAD     (1440)
 #define RTP_HEADER_LENGTH   (12)
+#define RTP_VERSION	    (2)
 
 typedef struct
 {
@@ -186,7 +188,27 @@ int mast_rtp_recv( mast_socket_t* socket, mast_rtp_packet_t* packet );
 // Return the duration of a packet in microseconds
 int mast_rtp_packet_duration(mast_rtp_packet_t* packet, mast_sdp_t* sdp);
 
+#define RTP_SEQ_MOD         (1<<16)
+#define RTP_MIN_SEQUENTIAL  2
 
+typedef struct {
+    uint16_t max_seq;
+    uint32_t cycles;
+    uint32_t base_seq;
+    uint32_t bad_seq;
+    uint32_t probation;
+    uint32_t received;
+    uint32_t expected_prior;
+    uint32_t received_prior;
+    uint32_t transit;
+    uint32_t jitter;
+} mast_rtp_sequence_state_t;
+
+void
+mast_rtp_init_sequence(mast_rtp_sequence_state_t *s, uint16_t seq);
+
+int
+mast_rtp_update_sequence(mast_rtp_sequence_state_t *s, uint16_t seq);
 
 // ------- Audio File Writing ---------
 

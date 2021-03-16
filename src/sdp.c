@@ -77,6 +77,7 @@ static void sdp_media_parse(mast_sdp_t *sdp, char* line, int line_num)
     char *port = strsep(&line, " ");
     char *proto = strsep(&line, " ");
     char *fmt = strsep(&line, " ");
+    char *pEnd = NULL;
 
     if (media == NULL || strcmp(media, "audio") != 0) {
         mast_error("SDP media type is not audio: %s", media);
@@ -92,7 +93,7 @@ static void sdp_media_parse(mast_sdp_t *sdp, char* line, int line_num)
         mast_error("SDP transport protocol is not RTP/AVP: %s", proto);
     }
 
-    if (fmt == NULL || strlen(fmt) > 2) {
+    if (fmt == NULL || strtoul(fmt, &pEnd, 10) > 127 || *pEnd) {
         mast_error("SDP media format is not valid: %s", fmt);
     } else {
         mast_sdp_set_payload_type(sdp, atoi(fmt));
@@ -133,8 +134,10 @@ static void sdp_attribute_parse(mast_sdp_t *sdp, char* line, int line_num)
                 strncpy(sdp->ptp_gmid, ptp_gmid, sizeof(sdp->ptp_gmid)-1);
             }
 
-            if (ptp_domain && strcmp(ptp_domain, "0") != 0) {
-                mast_warn("PTP domain is not 0: %s", ptp_version);
+            if (ptp_domain)  {
+		sdp->ptp_domain = atoi(ptp_domain);
+		if (sdp->ptp_domain)
+		    mast_warn("PTP domain is not 0: %s", ptp_version);
             }
         } else {
             mast_warn("SDP Clock Source is not PTP");
