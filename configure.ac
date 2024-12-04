@@ -1,15 +1,15 @@
 
-dnl Require autoconf version >= 2.57
-AC_PREREQ(2.57)
+dnl Require autoconf version >= 2.71
+AC_PREREQ([2.71])
 
 
 dnl ############# Initialisation
 
-AC_INIT([mast], [2.0.0], [njh@aelius.com])
+AC_INIT([mast],[2.0.0],[njh@aelius.com])
 
 AC_CONFIG_SRCDIR(src/mast.h)
 AC_CONFIG_AUX_DIR(build) 
-AC_CANONICAL_SYSTEM
+AC_CANONICAL_TARGET
 
 dnl Version 1.7 of automake is recommended
 AM_INIT_AUTOMAKE(1.7)
@@ -84,7 +84,6 @@ AM_CONDITIONAL(HAVE_CHECK, test x"$have_check" = "xyes" &&
 
 dnl ############## Header Checks
 
-AC_HEADER_STDC
 AC_CHECK_HEADERS([stdlib.h string.h unistd.h signal.h malloc.h])
 
 
