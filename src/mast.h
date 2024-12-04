@@ -196,7 +196,7 @@ void mast_writer_write(SNDFILE *file, uint8_t* payload, int payload_length);
 
 // ------- Utilities ---------
 
-enum {
+typedef enum {
     MAST_ENCODING_L8,
     MAST_ENCODING_L16,
     MAST_ENCODING_L24,
